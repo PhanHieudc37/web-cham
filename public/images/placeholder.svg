@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" role="img" aria-labelledby="title">
+  <title id="title">Chưa có ảnh sản phẩm</title>
+  <path fill="#F2F2F2" d="M0 0h1200v1200H0z"/>
+  <g fill="none" stroke="#6B6B6B" stroke-width="4">
+    <path d="M450 450h300v300H450z"/>
+    <path d="m450 690 95-95 65 65 55-55 85 85"/>
+    <circle cx="655" cy="535" r="23"/>
+  </g>
+</svg>
