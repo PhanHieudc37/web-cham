@@ -20,7 +20,7 @@ Theo yêu cầu ngày 27/10/2026: tạo bản tương tác riêng cho bạn bè 
 - Chỉ duyệt thiết kế: trang chủ, danh mục, tìm kiếm không dấu, chi tiết màu/size, giỏ mẫu và hướng dẫn góp ý.
 - Dữ liệu minh họa cố định; không nhận đơn, không thanh toán, không tổng tiền/quote/tồn kho thật; không thu thập thông tin khách hàng. Các bộ lọc trong bản duyệt chạy tại trình duyệt; services SQL của web thật vẫn theo kiến trúc gốc.
 - Không cần Supabase và không đưa biến môi trường hay server lên GitHub Pages. Font tự lưu kèm giấy phép; ảnh SVG tự vẽ, không lấy từ shop khác.
-- Xuất bản bằng workflow `.github/workflows/preview-pages.yml`, chỉ upload `.preview-dist`. Link dự kiến `https://phanhieudc37.github.io/web-cham/`; trạng thái xác nhận ghi trong `docs/PREVIEW-REPORT.md`.
+- **Đã xuất bản** bằng workflow `.github/workflows/preview-pages.yml`, chỉ upload `.preview-dist`: [phanhieudc37.github.io/web-cham](https://phanhieudc37.github.io/web-cham/). Workflow success, HTTP 200, 6 kịch bản trình duyệt trên URL thật đều pass; bằng chứng trong `docs/PREVIEW-REPORT.md`.
 - Tiêu chí: lint/typecheck/test/build của web gốc pass, build preview pass; Playwright kiểm tra 375/768/1280px và thao tác; xuất bản thành công và kiểm tra URL thật trước bàn giao.
 - Supabase hiện đã được cài nhưng phiên làm việc chưa có công cụ truy cập project và `.env` chưa có kết nối thật. Phase 1 giữ trạng thái chưa nghiệm thu.
 

@@ -18,7 +18,9 @@ Ngày: 27/10/2026. Phạm vi bổ sung do chủ shop yêu cầu để bạn bè 
 - `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build` và build preview: **pass trước push**. Test nghiệp vụ: 20 ca gồm integration PostgreSQL thật; test preview: 6 kịch bản pass.
 - Playwright: 6 kịch bản gồm layout tại 375/768/1280px, không tràn ngang, chọn màu/size/giỏ; tìm không dấu, lọc/sắp xếp/reload; menu/overlay/Esc/focus; query HTML được hiển thị dạng text; ảnh tải đủ, không gọi dịch vụ ngoài, không form thông tin cá nhân.
 - Đã xem ảnh desktop/mobile và chi tiết sản phẩm, tăng cỡ chữ nhỏ cho sản phẩm và thông tin lựa chọn.
-- URL chia sẻ dự kiến: `https://phanhieudc37.github.io/web-cham/`. Chỉ coi đã xuất bản sau khi workflow thành công và URL thật được kiểm tra.
+- **Đã xuất bản thành công:** [phanhieudc37.github.io/web-cham](https://phanhieudc37.github.io/web-cham/), HTTP 200, xác nhận đúng commit source `933c849730e810aa75e5997ff8a9c5739a118cab` qua `preview-version.json`.
+- Workflow [40476098450](https://github.com/PhanHieudc37/web-cham/actions/runs/40476098450): cả job build và deploy đều success. Chạy lại **6 kịch bản Playwright trên chính URL công khai: tất cả pass**, gồm 375/768/1280px và các tương tác.
+- Local đã kiểm tra HTTP 200 tại `http://localhost:4173/web-cham/`; mở lại bằng `npm run preview:dev`. Artifact 49 file, khoảng 0,58 MB; đã quét không có giá trị secret trong `.env` và `.env.test.local`. Database kiểm thử đã dừng sau kiểm tra.
 
 ## Còn lại
 

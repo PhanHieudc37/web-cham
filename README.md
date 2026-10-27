@@ -19,7 +19,7 @@ Mở [localhost:4173/web-cham](http://localhost:4173/web-cham/). Thử danh mụ
 
 `npm run preview:build` xuất bản tĩnh vào `.preview-dist`; `npm run preview:test` kiểm tra bằng Chromium. Font Be Vietnam Pro tự lưu trong `preview/fonts/` cùng giấy phép SIL Open Font License. Các SVG do dự án tự vẽ. Không sao chép tài sản của shop khác.
 
-Workflow **Publish design preview** chỉ đưa `.preview-dist` lên GitHub Pages khi thay đổi source preview trên `main`, hoặc chạy thủ công tại tab Actions. URL dự kiến: [phanhieudc37.github.io/web-cham](https://phanhieudc37.github.io/web-cham/). Xem [báo cáo bản duyệt](docs/PREVIEW-REPORT.md) để biết kết quả kiểm tra và xuất bản thực tế.
+Workflow **Publish design preview** chỉ đưa `.preview-dist` lên GitHub Pages khi thay đổi source preview trên `main`, hoặc chạy thủ công tại tab Actions. **Đã xuất bản và kiểm tra:** [phanhieudc37.github.io/web-cham](https://phanhieudc37.github.io/web-cham/). Xem [báo cáo bản duyệt](docs/PREVIEW-REPORT.md) để biết kết quả kiểm tra và xuất bản thực tế.
 
 GitHub Pages dành cho bản thiết kế góp ý này. Web bán hàng thật cần Next.js server và Supabase, triển khai theo các phase trong plan. Workflow không đọc `.env` hoặc sử dụng secret database.
 
