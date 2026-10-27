@@ -1,0 +1,23 @@
+// Original vector illustrations for design review; no third-party product imagery.
+export function garment(shape, color) {
+  const start = `<g fill="${color}" stroke="#30302b" stroke-opacity=".2" stroke-width="2" stroke-linejoin="round" filter="url(#shadow)">`;
+  let body;
+  if (shape === "tee" || shape === "shirt") {
+    const outline = 'm290 215 130-58q80 65 160 0l130 58 115 155-128 79-45-65 12 352q-164 32-328 0l12-352-45 65-128-79z';
+    body = `<path d="${outline}"/><path fill="url(#fabric)" stroke="none" d="${outline}"/><path fill="none" stroke-opacity=".3" d="M420 157q80 82 160 0M335 390l-2 326m334-326 2 326M290 215l58 169m362-169-58 169M337 717q163 24 326 0"/>`;
+    if (shape === "shirt") body += `<path d="m420 157 80 49-52 67-42-108m174-8-80 49 52 67 42-108" stroke-opacity=".35"/><path d="M500 206v536" fill="none"/>${[300,375,450,525,600,675].map(y=>`<circle cx="509" cy="${y}" r="3.5" fill="#d8d3c7"/>`).join('')}<path fill="none" d="M554 325h70v78q-35 30-70 0z"/>`;
+    else body += '<path fill="none" stroke-opacity=".1" d="m380 320-8 320m253-320 10 320m-180-370-10 405"/><rect x="472" y="191" width="56" height="23" rx="2" fill="#f7f5ef"/><text x="500" y="206" fill="#34332d" stroke="none" font-family="sans-serif" font-size="10" text-anchor="middle">CHAM</text>';
+  } else if (shape === "hoodie") {
+    const outline='M419 150q81-87 162 0l31 60 99 32 101 365-110 34-62-226 14 324q-154 35-308 0l14-324-62 226-110-34 101-365 99-32z';
+    body=`<path d="${outline}"/><path fill="url(#fabric)" stroke="none" d="${outline}"/><path fill="none" stroke-opacity=".4" d="M419 150q11 120 81 130 70-10 81-130M500 280q-58-19-81-130m81 130q58-19 81-130M458 276v164m84-164v164M399 562h202l18 95H381zM346 716q154 29 308 0"/>`;
+  } else if (shape === "pants" || shape === "shorts") {
+    const end=shape==='pants'?829:626;
+    const outline=`M330 143h340l42 ${end-143}-187 10-25-${end-362}-25 ${end-362}-187-10z`;
+    body=`<path d="${outline}"/><path fill="url(#fabric)" stroke="none" d="${outline}"/><path fill="none" stroke-opacity=".4" d="M330 177h340M500 180v180m0-168h27v125l-27 26M350 180q30 120-28 137m328-137q-30 120 28 137M307 ${end-22}l167 6m54 0 167-6"/>${[365,440,560,635].map(x=>`<path fill="none" d="M${x} 142v40h9v-40"/>`).join('')}<circle cx="511" cy="160" r="5" fill="#b1a993"/>`;
+  } else body=`<path fill="none" stroke="${color}" stroke-width="32" d="M383 386V229q0-117 117-117t117 117v157"/><path d="m290 330 420 0 24 417q-234 45-468 0z"/><path fill="url(#fabric)" stroke="none" d="m290 330 420 0 24 417q-234 45-468 0z"/><path fill="none" stroke-opacity=".3" d="m312 349-21 376q209 32 418 0l-21-376M383 330v125m234-125v125"/><text x="500" y="566" font-family="sans-serif" font-size="50" font-weight="700" letter-spacing="-3" text-anchor="middle" fill="${color==='#242424'?'#d6d2c7':'#37362f'}" stroke="none">cham.</text>`;
+  return `${start}${body}</g>`;
+}
+export const definitions='<defs><filter id="shadow" x="-50%" y="-40%" width="200%" height="200%"><feDropShadow dx="12" dy="24" stdDeviation="15" flood-color="#24211a" flood-opacity=".15"/></filter><linearGradient id="fabric" x1="0" y1="0" x2="1" y2=".35"><stop stop-color="#fff" stop-opacity=".17"/><stop offset=".22" stop-color="#fff" stop-opacity="0"/><stop offset=".45" stop-color="#000" stop-opacity=".08"/><stop offset=".55" stop-color="#fff" stop-opacity=".13"/><stop offset=".8" stop-color="#000" stop-opacity=".08"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient></defs>';
+export const productArtwork=(shape,color)=>`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 1000 1000">${definitions}<path fill="#f2f2f0" d="M0 0h1000v1000H0z"/><ellipse cx="510" cy="860" rx="230" ry="20" fill="#39362d" opacity=".035"/>${garment(shape,color)}</svg>`;
+export const heroArtwork=()=>`<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000">${definitions}<ellipse cx="520" cy="930" rx="370" ry="28" fill="#605a4c" opacity=".08"/><g transform="translate(360 210) rotate(12 500 500) scale(.58)">${garment('pants','#82725E')}</g><g transform="translate(10 50) rotate(-11 500 500) scale(.76)">${garment('tee','#E4DECF')}</g><g transform="translate(405 445) rotate(9 500 500) scale(.42)">${garment('bag','#242424')}</g><path d="M145 863h100m-50-50v100" stroke="#767968"/></svg>`;
+export const collectionArtwork=()=>`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="700" viewBox="0 0 1000 780">${definitions}<circle cx="570" cy="390" r="310" fill="#d7dccf"/><g transform="translate(-20 -100) rotate(-8 500 500) scale(.83)">${garment('hoodie','#91918D')}</g><g transform="translate(430 180) rotate(12 500 500) scale(.48)">${garment('bag','#E4DECF')}</g></svg>`;

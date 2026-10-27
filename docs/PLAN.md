@@ -7,10 +7,22 @@
 ## Tiến độ thực tế — 27/10/2026
 
 - **Phase 0:** đã nghiệm thu; commit `e346d1f`.
-- **GitHub:** đã push lên repo công khai [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`. Đây là lưu code, chưa deploy website.
+- **GitHub:** code trong repo công khai [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`. Có thêm milestone bản duyệt giao diện tĩnh trên GitHub Pages theo yêu cầu riêng, xem bên dưới.
 - **Phase 1:** đã có schema, migration và seed; kiểm tra trên PostgreSQL local riêng đã pass. **Chưa nghiệm thu** vì chưa có kết nối Supabase để chạy trên `cham-stu-dev`. Xem `docs/PHASE-1-REPORT.md`.
 - **Phase 2 trở đi:** chưa thực hiện. Chỉ chuyển tiếp sau khi Phase 1 đạt đủ tiêu chí.
 - Tiếp tục chạy web local theo yêu cầu; chưa triển khai production hay các phần mở rộng Phase 14.
+
+### Milestone bổ sung — bản duyệt giao diện trên GitHub Pages
+
+Theo yêu cầu ngày 27/10/2026: tạo bản tương tác riêng cho bạn bè xem và góp ý trước khi triển khai hệ thống thật. Đây là phạm vi bổ sung được giao, không thay việc nghiệm thu các phase 1–13.
+
+- Source: `preview/`; build: `npm run preview:build`; local: `npm run preview:dev`.
+- Chỉ duyệt thiết kế: trang chủ, danh mục, tìm kiếm không dấu, chi tiết màu/size, giỏ mẫu và hướng dẫn góp ý.
+- Dữ liệu minh họa cố định; không nhận đơn, không thanh toán, không tổng tiền/quote/tồn kho thật; không thu thập thông tin khách hàng. Các bộ lọc trong bản duyệt chạy tại trình duyệt; services SQL của web thật vẫn theo kiến trúc gốc.
+- Không cần Supabase và không đưa biến môi trường hay server lên GitHub Pages. Font tự lưu kèm giấy phép; ảnh SVG tự vẽ, không lấy từ shop khác.
+- Xuất bản bằng workflow `.github/workflows/preview-pages.yml`, chỉ upload `.preview-dist`. Link dự kiến `https://phanhieudc37.github.io/web-cham/`; trạng thái xác nhận ghi trong `docs/PREVIEW-REPORT.md`.
+- Tiêu chí: lint/typecheck/test/build của web gốc pass, build preview pass; Playwright kiểm tra 375/768/1280px và thao tác; xuất bản thành công và kiểm tra URL thật trước bàn giao.
+- Supabase hiện đã được cài nhưng phiên làm việc chưa có công cụ truy cập project và `.env` chưa có kết nối thật. Phase 1 giữ trạng thái chưa nghiệm thu.
 
 ---
 

@@ -6,6 +6,23 @@ Hiện tại: Phase 0 đã nghiệm thu; **Phase 1 đang chờ kết nối Supab
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
+## Bản xem thử cho bạn bè góp ý
+
+Có bản duyệt giao diện riêng tại `preview/`, không cần database hoặc `.env`. Trang chủ Next.js gốc vẫn theo tiến độ phase; bản duyệt không thay thế các chức năng bán hàng đang phát triển.
+
+```bash
+npm ci
+npm run preview:dev
+```
+
+Mở [localhost:4173/web-cham](http://localhost:4173/web-cham/). Thử danh mục, tìm kiếm không dấu, xem sản phẩm, chọn màu/size và giỏ mẫu. Giỏ chỉ giữ trong bộ nhớ của tab, tải lại sẽ xóa. Không có đặt hàng, thanh toán hay thu thập thông tin cá nhân; mọi sản phẩm, giá và ảnh đều minh họa. Chưa có trang admin hoặc checkout thật trong bản duyệt.
+
+`npm run preview:build` xuất bản tĩnh vào `.preview-dist`; `npm run preview:test` kiểm tra bằng Chromium. Font Be Vietnam Pro tự lưu trong `preview/fonts/` cùng giấy phép SIL Open Font License. Các SVG do dự án tự vẽ. Không sao chép tài sản của shop khác.
+
+Workflow **Publish design preview** chỉ đưa `.preview-dist` lên GitHub Pages khi thay đổi source preview trên `main`, hoặc chạy thủ công tại tab Actions. URL dự kiến: [phanhieudc37.github.io/web-cham](https://phanhieudc37.github.io/web-cham/). Xem [báo cáo bản duyệt](docs/PREVIEW-REPORT.md) để biết kết quả kiểm tra và xuất bản thực tế.
+
+GitHub Pages dành cho bản thiết kế góp ý này. Web bán hàng thật cần Next.js server và Supabase, triển khai theo các phase trong plan. Workflow không đọc `.env` hoặc sử dụng secret database.
+
 ## Chạy local
 
 Cần Node.js từ 22.15 và npm. Cài thư viện bằng `npm ci`.

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Bản duyệt thiết kế Cham.stu. Sản phẩm minh họa, không nhận đơn hàng.">
+  <meta name="theme-color" content="#111111">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <title>Cham.stu — Bản xem thử giao diện</title>
+  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./assets/style.css">
+  <script type="module" src="./assets/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Bỏ qua menu</a>
+  <div class="preview-notice">BẢN XEM THỬ GIAO DIỆN <span>·</span> Sản phẩm minh họa, không nhận đơn hàng</div>
+  <header class="header">
+    <div class="header-inner container">
+      <button class="icon-button mobile-menu" id="menu-button" aria-label="Mở menu"></button>
+      <a class="wordmark" href="#home" aria-label="Cham.stu — Trang chủ">cham.stu<span>®</span></a>
+      <nav class="desktop-nav" aria-label="Menu chính">
+        <a href="#shop?category=new">NEW ARRIVAL</a>
+        <div class="shop-menu"><a href="#shop" class="shop-trigger">SHOP <span>⌄</span></a>
+          <div class="mega-menu"><div><p>KHÁM PHÁ</p><a href="#shop">Tất cả sản phẩm</a><a href="#shop?category=best">Bán chạy</a><a href="#shop?category=new">Mới xuất hiện</a></div><div><p>DANH MỤC</p><a href="#shop?category=tops">Áo</a><a href="#shop?category=bottoms">Quần</a><a href="#shop?category=accessories">Phụ kiện</a></div><a class="menu-feature" href="#shop?category=sale"><span>MỘT CHÚT MỚI MẺ.</span><strong>Khám phá bản phối của bạn ↗</strong></a></div>
+        </div>
+        <a href="#shop?category=best">BEST SELLER</a>
+        <a class="sale-link" href="#shop?category=sale">SALE</a>
+        <a href="#about">VỀ CHAM.STU</a>
+      </nav>
+      <div class="header-actions"><button class="icon-button" id="search-button" aria-label="Tìm kiếm"></button><button class="icon-button cart-button" id="cart-button" aria-label="Mở giỏ mẫu"><span id="bag-icon"></span><span class="cart-count" id="cart-count" hidden>0</span></button></div>
+    </div>
+  </header>
+  <main id="main" tabindex="-1"></main>
+  <footer class="footer"><div class="container footer-grid"><div class="footer-brand"><a class="wordmark" href="#home">cham.stu<span>®</span></a><p>Ít hơn. Nhưng là bạn.</p><span class="eyebrow">BẢN DUYỆT THIẾT KẾ / 01</span></div><div><h2>KHÁM PHÁ</h2><a href="#shop?category=new">Sản phẩm mới</a><a href="#shop?category=tops">Áo</a><a href="#shop?category=bottoms">Quần</a><a href="#shop?category=accessories">Phụ kiện</a></div><div><h2>VỀ BẢN XEM THỬ</h2><a href="#about">Thông tin bản mẫu</a><button class="text-button" id="review-button">Gợi ý khi góp ý</button><p class="footer-note">Ảnh và sản phẩm đều là minh họa.<br>Thông tin shop sẽ được bổ sung sau.</p></div></div><div class="container footer-bottom"><span>© <span id="year"></span> Cham.stu</span><span>Chỉ duyệt giao diện · Chưa mở bán</span><a href="#home">Về đầu trang ↑</a></div></footer>
+  <dialog id="menu-dialog" class="drawer menu-drawer" aria-labelledby="menu-title"><div class="drawer-heading"><h2 id="menu-title">CHAM.STU</h2><button class="icon-button" data-close aria-label="Đóng menu"></button></div><nav aria-label="Menu di động"><a href="#home">Trang chủ ↗</a><a href="#shop?category=new">New Arrival ↗</a><a href="#shop">Tất cả sản phẩm ↗</a><a href="#shop?category=tops">Áo ↗</a><a href="#shop?category=bottoms">Quần ↗</a><a href="#shop?category=accessories">Phụ kiện ↗</a><a href="#shop?category=sale">Sale ↗</a><a href="#about">Về bản xem thử ↗</a></nav><p class="drawer-note">Bản mẫu để góp ý giao diện.<br>Chưa có đơn hàng hoặc thanh toán thật.</p></dialog>
+  <dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title"><div class="drawer-heading"><h2 id="search-title">BẠN ĐANG TÌM GÌ?</h2><button class="icon-button" data-close aria-label="Đóng tìm kiếm"></button></div><label class="sr-only" for="search-input">Tên sản phẩm</label><input id="search-input" type="search" placeholder="Thử tìm “áo thun” hoặc “quan”" autocomplete="off"><div id="search-results" class="search-results"></div></dialog>
+  <dialog id="product-dialog" class="product-dialog" aria-labelledby="product-title"><button class="icon-button product-close" data-close aria-label="Đóng chi tiết sản phẩm"></button><div id="product-content"></div></dialog>
+  <dialog id="cart-dialog" class="drawer cart-drawer" aria-labelledby="cart-title"><div class="drawer-heading"><h2 id="cart-title">GIỎ MẪU <span id="cart-title-count">(0)</span></h2><button class="icon-button" data-close aria-label="Đóng giỏ mẫu"></button></div><p class="drawer-note">Thử chọn sản phẩm và phối màu. Giỏ mẫu không tạo đơn hay tính tiền thanh toán.</p><div id="cart-content"></div><div class="cart-bottom"><p>Ảnh, giá và lựa chọn chỉ dùng duyệt thiết kế.</p><button class="button primary" id="continue-shopping">TIẾP TỤC KHÁM PHÁ <span>↗</span></button></div></dialog>
+  <dialog id="review-dialog" class="review-dialog" aria-labelledby="review-title"><div class="drawer-heading"><h2 id="review-title">BẠN THẤY THẾ NÀO?</h2><button class="icon-button" data-close aria-label="Đóng gợi ý góp ý"></button></div><p>Bạn có thể gửi góp ý trực tiếp cho chủ shop, tập trung vào:</p><ol><li>Màu sắc, bố cục và phong cách có hợp với Cham.stu không?</li><li>Chữ và nút có dễ đọc, dễ bấm trên điện thoại không?</li><li>Tìm sản phẩm, chọn màu/size và mở giỏ có dễ hiểu không?</li><li>Phần nào khiến bạn bối rối hoặc muốn thay đổi?</li></ol><p class="muted">Trang này không thu thập hoặc gửi thông tin của bạn.</p></dialog>
+  <div id="status" class="sr-only" role="status" aria-live="polite"></div>
+  <noscript><p class="container">Vui lòng bật JavaScript để xem bản thiết kế tương tác.</p></noscript>
+</body>
+</html>

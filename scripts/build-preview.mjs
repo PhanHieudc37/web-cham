@@ -1,0 +1,20 @@
+import { mkdirSync, copyFileSync, cpSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { productArtwork, heroArtwork, collectionArtwork } from "./preview-art.mjs";
+
+mkdirSync(".preview-dist/assets", { recursive: true });
+const result = spawnSync(process.execPath, ["node_modules/typescript/bin/tsc", "-p", "preview/tsconfig.json"], { stdio: "inherit" });
+if (result.status !== 0) process.exit(result.status ?? 1);
+const { products } = await import("../.preview-dist/assets/catalog.js");
+copyFileSync("preview/index.html", ".preview-dist/index.html");
+copyFileSync("preview/style.css", ".preview-dist/assets/style.css");
+copyFileSync("src/app/icon.svg", ".preview-dist/assets/icon.svg");
+cpSync("preview/fonts", ".preview-dist/assets/fonts", { recursive: true });
+for (const product of products) for (const color of product.colors) writeFileSync(`.preview-dist/assets/${product.id}-${color.code}.svg`, productArtwork(product.shape, color.hex));
+writeFileSync(".preview-dist/assets/hero.svg", heroArtwork());
+writeFileSync(".preview-dist/assets/collection.svg", collectionArtwork());
+writeFileSync(".preview-dist/.nojekyll", "");
+writeFileSync(".preview-dist/robots.txt", "User-agent: *\nDisallow: /\n");
+const revision = spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" });
+writeFileSync(".preview-dist/preview-version.json", JSON.stringify({ kind: "static-design-preview", commit: process.env.GITHUB_SHA ?? revision.stdout?.trim() ?? "local" }));
+console.log("Built static design preview in .preview-dist; no environment files or database credentials included.");
