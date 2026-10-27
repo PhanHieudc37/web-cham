@@ -16,6 +16,14 @@ const optionalPostgresUrl = z.preprocess(
   postgresUrl.optional(),
 );
 
+export const databaseEnvSchema = z.object({ DATABASE_URL: postgresUrl });
+export const seedEnvSchema = databaseEnvSchema.extend({
+  BETTER_AUTH_SECRET: requiredText.min(32, "Phải có ít nhất 32 ký tự"),
+  BETTER_AUTH_URL: webUrl,
+  ADMIN_SEED_EMAIL: z.email({ error: "Cần email admin hợp lệ" }),
+  ADMIN_SEED_PASSWORD: requiredText.min(8, "Mật khẩu admin phải có ít nhất 8 ký tự"),
+});
+
 // This schema contains no process.env access and is safe for Next's config loader.
 export const localEnvSchema = z.object({
   NEXT_PUBLIC_SITE_URL: webUrl,

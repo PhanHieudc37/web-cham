@@ -4,6 +4,16 @@
 
 ---
 
+## Tiến độ thực tế — 27/10/2026
+
+- **Phase 0:** đã nghiệm thu; commit `e346d1f`.
+- **GitHub:** đã push lên repo công khai [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`. Đây là lưu code, chưa deploy website.
+- **Phase 1:** đã có schema, migration và seed; kiểm tra trên PostgreSQL local riêng đã pass. **Chưa nghiệm thu** vì chưa có kết nối Supabase để chạy trên `cham-stu-dev`. Xem `docs/PHASE-1-REPORT.md`.
+- **Phase 2 trở đi:** chưa thực hiện. Chỉ chuyển tiếp sau khi Phase 1 đạt đủ tiêu chí.
+- Tiếp tục chạy web local theo yêu cầu; chưa triển khai production hay các phần mở rộng Phase 14.
+
+---
+
 ## 1. Mục tiêu
 
 - Đây là website bán hàng chính thức của **Cham.stu**, vận hành lâu dài và **không phụ thuộc Shopee**. Shop tự quản lý sản phẩm, tồn kho, đơn hàng và thanh toán trên hệ thống của mình.

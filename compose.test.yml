@@ -1,0 +1,19 @@
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    ports:
+      - "127.0.0.1:55432:5432"
+    environment:
+      POSTGRES_DB: cham_stu_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${TEST_POSTGRES_PASSWORD:?Configure .env.test.local first}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cham_stu_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    volumes:
+      - postgres-test:/var/lib/postgresql/data
+
+volumes:
+  postgres-test:

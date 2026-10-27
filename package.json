@@ -10,9 +10,11 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio",
+    "db:generate": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs generate",
+    "db:migrate": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs migrate",
+    "db:studio": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs studio",
+    "db:auth": "node scripts/generate-auth-schema.mjs",
+    "db:test:setup": "node scripts/setup-test-database.mjs",
     "db:seed": "tsx --conditions=react-server src/server/db/seed.ts"
   },
   "dependencies": {
