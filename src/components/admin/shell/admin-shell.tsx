@@ -15,8 +15,8 @@ import { ChangePassword } from "../change-password";
 const navigation = [
   { href: "/admin", label: "Tổng quan", icon: LayoutGrid, ready: true },
   { href: "/admin/orders", label: "Đơn hàng", icon: ShoppingBag, ready: false },
-  { href: "/admin/products", label: "Sản phẩm", icon: Package, ready: false },
-  { href: "/admin/categories", label: "Danh mục", icon: LayoutList, ready: false },
+  { href: "/admin/products", label: "Sản phẩm", icon: Package, ready: true },
+  { href: "/admin/categories", label: "Danh mục", icon: LayoutList, ready: true },
   { href: "/admin/collections", label: "Bộ sưu tập", icon: Tags, ready: false },
   { href: "/admin/banners", label: "Banner", icon: Images, ready: false },
   { href: "/admin/messages", label: "Tin nhắn", icon: MessageSquare, ready: false },
@@ -26,7 +26,7 @@ const navigation = [
 export function AdminShell({ person, pendingOrders, newMessages, children }: { person: SessionUserDTO; pendingOrders: number; newMessages: number; children: React.ReactNode }) {
   const path = usePathname(), router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false), [passwordOpen, setPasswordOpen] = useState(false), [leaving, setLeaving] = useState(false);
-  const title = navigation.find((item) => item.href === path)?.label ?? "Quản trị";
+  const title = navigation.find((item) => item.href === path || (item.href !== "/admin" && path.startsWith(`${item.href}/`)))?.label ?? "Quản trị";
   const sidebar = <div className="flex h-full flex-col">
     <Link href="/admin" onClick={() => setMenuOpen(false)} className="flex h-24 items-center gap-3 px-6"><span className="flex size-10 items-center justify-center rounded-md bg-stone-900 text-lg font-semibold text-white">c.</span><span><span className="block text-lg font-semibold tracking-tight">Cham.stu</span><span className="text-[10px] font-medium tracking-[0.18em] text-stone-500">TRANG QUẢN TRỊ</span></span></Link>
     <div className="px-6 pt-3 pb-2 text-[10px] font-semibold tracking-[0.18em] text-stone-400">QUẢN LÝ CỬA HÀNG</div>

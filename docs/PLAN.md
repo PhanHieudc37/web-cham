@@ -10,7 +10,8 @@
 - **GitHub:** code trong repo công khai [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`. Có thêm milestone bản duyệt giao diện tĩnh trên GitHub Pages theo yêu cầu riêng, xem bên dưới.
 - **Phase 1:** **đã nghiệm thu trên Supabase `cham-stu-dev`**: đủ 20 bảng/RLS, migration và seed hai lượt không nhân đôi, Studio đọc được dữ liệu, admin và bucket public `media` đã tạo. Lint/typecheck/20 test/build pass. Project do chủ shop tạo ở Tokyo, khác Singapore dự kiến; xem `docs/PHASE-1-REPORT.md`.
 - **Phase 2:** đã hoàn tất logic/services và nghiệm thu trên PostgreSQL kiểm thử riêng: 66 test pass (gồm 23 integration), lint/typecheck/build pass; xem `docs/PHASE-2-REPORT.md`.
-- **Phase 3:** **đã nghiệm thu** theo yêu cầu riêng ngày 28/10/2026: đăng nhập, guard server, khung admin và tài khoản; 95 test, 9 E2E admin, lint/typecheck/build pass. Login/trang tài khoản/logout đã xác minh với admin thật trên Supabase qua local. Xem `docs/PHASE-3-REPORT.md`. Bước tiếp theo là Phase 4, chưa triển khai.
+- **Phase 3:** **đã nghiệm thu** theo yêu cầu riêng ngày 28/10/2026: đăng nhập, guard server, khung admin và tài khoản; 95 test, 9 E2E admin, lint/typecheck/build pass. Login/trang tài khoản/logout đã xác minh với admin thật trên Supabase qua local. Xem `docs/PHASE-3-REPORT.md`.
+- **Phase 4:** **đã nghiệm thu** danh mục, sản phẩm, resize/upload ảnh, màu/size/SKU, tồn kho và lịch sử; 114 test, 7 E2E catalog, 9 E2E admin, lint/typecheck/build pass. Đã kiểm tra 375/768/1280px và mở các trang qua Supabase dev thật trên local. Xem `docs/PHASE-4-REPORT.md`. Chưa thực hiện Phase 5.
 - Tiếp tục chạy web local theo yêu cầu; chưa triển khai production hay các phần mở rộng Phase 14.
 
 ### Milestone bổ sung — bản duyệt giao diện trên GitHub Pages

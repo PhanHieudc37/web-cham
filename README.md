@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–3 đã nghiệm thu**, gồm Supabase dev, services nghiệp vụ, đăng nhập/phân quyền và khung quản trị với trang tài khoản. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Trang chủ thật chưa có chức năng bán hàng; bước tiếp theo là Phase 4 (quản trị danh mục, sản phẩm, ảnh, tồn kho). Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện.
+Hiện tại: **Phase 0–4 đã nghiệm thu**, gồm Supabase dev, services nghiệp vụ, đăng nhập/phân quyền, tài khoản và quản trị danh mục/sản phẩm/ảnh/tồn kho. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Trang chủ thật chưa có chức năng bán hàng; bước tiếp theo là Phase 5 (bộ sưu tập, banner và cài đặt). Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện.
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
@@ -50,11 +50,14 @@ npm run test
 npm run build
 npm run e2e
 npm run e2e:admin
+npm run e2e:catalog
 ```
 
 E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang chủ, font và tràn ngang tại 375/768/1280px. Lần đầu có thể cần `npx playwright install chromium`. Bốn luồng bán hàng E2E sẽ làm ở Phase 12.
 
 `npm run e2e:admin` kiểm tra đăng nhập, quyền truy cập, tài khoản, đổi mật khẩu và responsive trên PostgreSQL test riêng. Lệnh tự tạo lại tài khoản test, xóa bảng user/session/account liên quan và rate limit **trong database kiểm thử**. Không chạy đồng thời với `npm run test` vì dùng cùng fixture. Có kiểm tra chặn địa chỉ dev/prod trước khi seed. Không chạy server khác ở cổng 3100 khi kiểm tra.
+
+`npm run e2e:catalog` kiểm tra danh mục, form sản phẩm, ảnh, tồn kho và responsive. Lệnh xóa/tạo lại catalog trong **database test riêng**, tải ảnh thử lên bucket `media` dev đang cấu hình và tự xóa đúng các đường dẫn ảnh nó vừa tạo. Không trỏ Storage vào production khi chạy E2E. Chạy các bộ E2E và `npm run test` lần lượt, không đồng thời.
 
 ## Đăng nhập và tài khoản quản trị
 
@@ -64,11 +67,24 @@ E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang ch�
 4. Thành viên đổi mật khẩu trong menu tài khoản góc trên. Cần nhập mật khẩu cũ; đổi xong thu hồi các phiên khác.
 5. Trong danh sách tài khoản, quản trị viên có thể đổi vai trò, khóa/mở khóa hoặc đặt lại mật khẩu. Khóa/đổi vai trò/đặt lại mật khẩu sẽ thu hồi các phiên của tài khoản bị thay đổi. Không thể tự khóa/tự hạ quyền; luôn giữ ít nhất một admin hoạt động.
 
-Nhân viên không thấy và không truy cập được Tài khoản/Cài đặt; các action cũng kiểm tra quyền ở server. Đăng ký công khai bị tắt. Các mục sản phẩm, đơn hàng… ghi "Sắp có" trong khung admin, chỉ được mở khi phase tương ứng hoàn tất; tổng quan hiện là trang chào, chưa có số liệu kinh doanh của Phase 10.
+Nhân viên không thấy và không truy cập được Tài khoản/Cài đặt; các action cũng kiểm tra quyền ở server. Đăng ký công khai bị tắt. Danh mục và Sản phẩm đã dùng được; Đơn hàng, Bộ sưu tập, Banner và Tin nhắn còn ghi "Sắp có"; tổng quan hiện là trang chào, chưa có số liệu kinh doanh của Phase 10.
 
 **Quên mật khẩu nhân viên:** admin vào Tài khoản, bấm biểu tượng chìa khóa của nhân viên, nhập mật khẩu tạm mới và gửi riêng cho họ. Mật khẩu cũ và phiên cũ không còn dùng được.
 
 **Mất toàn bộ tài khoản admin:** sửa `ADMIN_SEED_EMAIL` thành email mới chưa có trong hệ thống và đặt `ADMIN_SEED_PASSWORD` mạnh trong `.env`; chạy `npm run db:seed` **không thêm `--sample`**. Seed thêm admin còn thiếu và giữ dữ liệu shop hiện có. Không đổi mật khẩu của email đã tồn tại bằng cách chạy lại seed. Sau khi đăng nhập tài khoản mới, khóa tài khoản cũ nếu cần.
+
+## Danh mục, sản phẩm, ảnh và tồn kho
+
+- **Danh mục:** thêm nhóm cấp một hoặc chọn nhóm cấp một làm cha. Có ảnh, hiển thị/ẩn, sắp thứ tự bằng ↑ ↓. Chỉ xóa khi không còn sản phẩm và danh mục con. Đường dẫn không được trùng danh mục/bộ sưu tập hoặc `all`, `new-arrival`, `best-seller`, `sale`.
+- **Sản phẩm → Thêm sản phẩm:** nhập tên/mã, giá VND, mô tả và chọn danh mục. Mã được viết hoa. Đường dẫn tự sinh; nhập thủ công nếu muốn. Đổi đường dẫn của sản phẩm đã bán sẽ làm link cũ không còn dùng được.
+- **Ảnh:** chọn/kéo nhiều ảnh WebP/JPEG/PNG. Ảnh gốc tối đa 20 MB được xử lý trên trình duyệt về 1200×1200 nền trắng, giữ trọn ảnh và nén dưới 1 MB trước upload. Tối đa 12 ảnh. Dùng ↑ ↓ hoặc ngôi sao để đổi ảnh chính; gán màu và mô tả cho từng ảnh. Danh mục dùng chế độ giữ tỉ lệ, cạnh dài tối đa 1920px.
+- **Màu và size:** thêm màu, chọn size để tạo ma trận biến thể; mỗi ô có tồn kho và bật/tắt đang bán. Có đặt tồn hàng loạt, sửa SKU và ghi chú điều chỉnh. Biến thể bị gỡ được ngừng bán và giữ lại để đối chiếu đơn cũ; có thể xuất hiện lại ở trạng thái ngừng bán khi mở lại form.
+- **Bảng size:** chọn bảng có sẵn hoặc tạo bảng mới bằng nút trong form, nhập cột/dòng/số đo thật.
+- Chỉ chuyển sang **Đang bán** khi có ảnh và ít nhất một biến thể đang bán. Nhấn **Lưu sản phẩm**; lỗi mã/đường dẫn hiển thị ngay dưới ô tương ứng. Tab **Lịch sử tồn kho** ghi thay đổi, tồn sau, lý do và người thao tác.
+- Tồn kho lưu theo chênh lệch so với khi mở form, không ghi đè lượt bán phát sinh trong lúc chỉnh sửa. Sau khi lưu, form nhận lại tồn kho mới nhất từ server làm mốc cho lần lưu tiếp theo.
+- **Nhân bản** tạo bản Nháp, thêm `(bản sao)`/`-COPY`, tồn kho bằng 0. **Lưu trữ** ẩn sản phẩm; **Khôi phục** đưa về Nháp để kiểm tra trước khi mở bán lại. Ảnh dùng chung với bản sao chỉ bị xóa khỏi Storage khi không còn tham chiếu.
+
+Thông tin mẫu vẫn dùng ảnh placeholder. Chủ shop thay bằng ảnh, mô tả, giá và số đo thật trước khi bán. Bấm xem sản phẩm trên cửa hàng sẽ dùng route storefront được triển khai ở Phase 7; hiện web thật chưa mở đầy đủ các trang khách hàng.
 
 ## Database và triển khai
 
@@ -100,4 +116,4 @@ Dừng database khi không dùng: `docker compose --env-file .env.test.local -f 
 
 Chỉ chạy local ở giai đoạn này. GitHub đã có repo công khai và remote `origin`; chưa tạo hosting. `vercel.json` chỉ lưu region dự kiến trong plan, không triển khai gì. Các file `.env*` trừ `.env.example` được Git bỏ qua.
 
-Đọc [báo cáo Phase 0](docs/PHASE-0-REPORT.md), [Phase 1](docs/PHASE-1-REPORT.md), [Phase 2](docs/PHASE-2-REPORT.md) và [Phase 3](docs/PHASE-3-REPORT.md) để xem trạng thái nghiệm thu.
+Đọc [báo cáo Phase 0](docs/PHASE-0-REPORT.md), [Phase 1](docs/PHASE-1-REPORT.md), [Phase 2](docs/PHASE-2-REPORT.md), [Phase 3](docs/PHASE-3-REPORT.md) và [Phase 4](docs/PHASE-4-REPORT.md) để xem trạng thái nghiệm thu.
