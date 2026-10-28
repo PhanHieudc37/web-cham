@@ -209,6 +209,21 @@ describe.skipIf(!testUrl)("business transactions on PostgreSQL", () => {
     expect((await catalog.getMenu()).categories).toEqual([]);
     await expect(catalog.getProductDetail("ao-thun-do")).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
+  it("exposes only bounded availability for product size selection and rejects hidden statuses", async () => {
+    await database.db.insert(productVariants).values([
+      { productId: fixture.productId, colorId: fixture.colorId, size: "L", sku: "CS01-DEN-L", stock: 0 },
+      { productId: fixture.productId, colorId: fixture.colorId, size: "XL", sku: "CS01-DEN-XL", stock: 10, isActive: false },
+    ]);
+    await database.db.insert(settings).values({ key: "orders", value: { ...defaultSettings.orders, maxQtyPerLine: 2, lowStockThreshold: 10 } });
+    const detail = await catalog.getProductDetail("ao-thun-do");
+    expect(detail.sizes).toEqual(["M", "L"]);
+    expect(detail.variants.find((variant) => variant.size === "M")).toMatchObject({ available: true, maxQuantity: 2, lowStockCount: 5 });
+    for (const size of ["L", "XL"]) expect(detail.variants.find((variant) => variant.size === size)).toMatchObject({ available: false, maxQuantity: 0, lowStockCount: null });
+    for (const status of ["draft", "archived"] as const) {
+      await database.db.update(products).set({ status }).where(eq(products.id, fixture.productId));
+      await expect(catalog.getProductDetail("ao-thun-do")).rejects.toMatchObject({ code: "NOT_FOUND" });
+    }
+  });
   it("keeps sold-out products last for every sort, paginates in SQL, and scopes facets", async () => {
     for (let index = 0; index < 13; index++) {
       const id = randomUUID(), colorId = randomUUID();

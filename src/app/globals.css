@@ -119,3 +119,6 @@ body:has(.shop-sheet) [data-slot="sheet-overlay"] { background: rgb(0 0 0 / 40%)
 .shop-fade { animation: shop-fade 250ms ease-out; }
 @keyframes shop-fade { from { opacity: 0; } to { opacity: 1; } }
 @media (max-width: 767px) { body:has([data-sticky-buy-bar]) .shop-floating { bottom: 100px; } }
+@media (min-width: 768px) and (max-width: 1023px) { body:has([data-sticky-buy-bar]) .shop-floating { bottom: 100px; } }
+.sold-out-size::after { content: ""; position: absolute; inset: 50% 0 auto; height: 1px; background: currentColor; transform: rotate(-45deg); }
+body:has(.shop-dialog) [data-slot="dialog-overlay"] { background: rgb(0 0 0 / 40%); backdrop-filter: none; }

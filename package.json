@@ -17,6 +17,7 @@
     "e2e:catalog": "playwright test --config playwright.catalog.config.ts",
     "e2e:content": "playwright test --config playwright.content.config.ts",
     "e2e:storefront": "playwright test --config playwright.storefront.config.ts",
+    "e2e:browsing": "playwright test --config playwright.browsing.config.ts",
     "db:generate": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs migrate",
     "db:studio": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs studio",

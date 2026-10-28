@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–6 đã triển khai**, gồm Supabase dev, services nghiệp vụ, quản trị và layout/trang chủ cửa hàng đọc database thật. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Trang sản phẩm/danh mục/tìm kiếm đầy đủ thuộc Phase 7; giỏ và thanh toán thuộc Phase 8–9, chưa mở bán. Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện. Xem [báo cáo Phase 6](docs/PHASE-6-REPORT.md) cho kết quả nghiệm thu.
+Hiện tại: **Phase 0–7 đã triển khai**, gồm Supabase dev, services nghiệp vụ, quản trị, trang chủ/danh mục/tìm kiếm/chi tiết sản phẩm đọc database thật. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Giỏ và thanh toán thuộc Phase 8–9, chưa mở bán. Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện. Xem [báo cáo Phase 7](docs/PHASE-7-REPORT.md) cho kết quả nghiệm thu.
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
@@ -53,6 +53,7 @@ npm run e2e:admin
 npm run e2e:catalog
 npm run e2e:content
 npm run e2e:storefront
+npm run e2e:browsing
 ```
 
 E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang chủ, font và tràn ngang tại 375/768/1280px. Lần đầu có thể cần `npx playwright install chromium`. Bốn luồng bán hàng E2E sẽ làm ở Phase 12.
@@ -68,6 +69,10 @@ E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang ch�
 ## Xem cửa hàng local
 
 Mở [localhost:3000](http://localhost:3000) sau `npm run dev`. Trang chủ lấy banner, danh mục, sản phẩm, collection và cài đặt từ Supabase dev. Sửa trong admin rồi tải lại cửa hàng để xem kết quả; không cần deploy. Nội dung trống tự ẩn, ảnh mẫu còn dùng placeholder. Menu/tìm kiếm hỗ trợ Esc và bấm overlay để đóng. Các liên kết đến trang của phase sau đã có đường dẫn nhưng nội dung chưa được triển khai.
+
+Danh mục `/collections/all` và các danh mục/bộ sưu tập hỗ trợ lọc, sắp xếp và phân trang trên URL; reload giữ lựa chọn. Trang `/search?q=ao+thun` tìm không dấu. Bấm sản phẩm để xem gallery, chọn màu/size và số lượng; size hết hàng/ngừng bán bị khóa, đổi màu đổi ảnh. Bảng size nằm trong dialog và accordion. Nút mua đang khóa với thông báo chuẩn bị mở bán, sẽ nối giỏ/checkout ở Phase 8–9.
+
+`npm run e2e:browsing` dùng PostgreSQL test riêng và ảnh SVG local được tạo/dọn tự động. Kiểm tra lọc/URL, tìm kiếm, chọn biến thể, vuốt ảnh, giới hạn số lượng, 404 và retry lỗi ở ba độ rộng. Có page lỗi tạm chỉ chạy với cờ test + database `_test` + header kiểm thử; teardown xóa cùng cache probe. Nếu dừng đột ngột, chạy `node -e "import('./e2e/browsing-fixtures.mjs').then(m => m.removeFixtures()); import('./e2e/content-cache-probe.mjs').then(m => m.removeProbe())"` để dọn. Không chạy đồng thời với các bộ test dùng cùng database.
 
 ## Đăng nhập và tài khoản quản trị
 
@@ -94,7 +99,7 @@ Nhân viên không thấy và không truy cập được Tài khoản/Cài đặ
 - Tồn kho lưu theo chênh lệch so với khi mở form, không ghi đè lượt bán phát sinh trong lúc chỉnh sửa. Sau khi lưu, form nhận lại tồn kho mới nhất từ server làm mốc cho lần lưu tiếp theo.
 - **Nhân bản** tạo bản Nháp, thêm `(bản sao)`/`-COPY`, tồn kho bằng 0. **Lưu trữ** ẩn sản phẩm; **Khôi phục** đưa về Nháp để kiểm tra trước khi mở bán lại. Ảnh dùng chung với bản sao chỉ bị xóa khỏi Storage khi không còn tham chiếu.
 
-Thông tin mẫu vẫn dùng ảnh placeholder. Chủ shop thay bằng ảnh, mô tả, giá và số đo thật trước khi bán. Bấm xem sản phẩm trên cửa hàng sẽ dùng route storefront được triển khai ở Phase 7; hiện web thật chưa mở đầy đủ các trang khách hàng.
+Thông tin mẫu vẫn dùng ảnh placeholder. Chủ shop thay bằng ảnh, mô tả, giá và số đo thật trước khi bán. Bấm xem sản phẩm sẽ mở trang storefront Phase 7; sản phẩm Nháp/Lưu trữ hoặc nằm trong danh mục ẩn trả 404. Các trang đặt hàng và chính sách tiếp tục theo phase được giao.
 
 ## Bộ sưu tập, banner và cài đặt shop
 
