@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–7 đã triển khai**, gồm Supabase dev, services nghiệp vụ, quản trị, trang chủ/danh mục/tìm kiếm/chi tiết sản phẩm đọc database thật. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Giỏ và thanh toán thuộc Phase 8–9, chưa mở bán. Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện. Xem [báo cáo Phase 7](docs/PHASE-7-REPORT.md) cho kết quả nghiệm thu.
+Hiện tại: **Phase 0–8 đã triển khai**, gồm Supabase dev, services nghiệp vụ, quản trị, storefront và giỏ hàng lấy giá/tồn kho/phí ship từ database thật. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Thanh toán thuộc Phase 9, chưa mở bán. Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện. Xem [báo cáo Phase 8](docs/PHASE-8-REPORT.md) cho kết quả nghiệm thu.
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
@@ -70,9 +70,11 @@ E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang ch�
 
 Mở [localhost:3000](http://localhost:3000) sau `npm run dev`. Trang chủ lấy banner, danh mục, sản phẩm, collection và cài đặt từ Supabase dev. Sửa trong admin rồi tải lại cửa hàng để xem kết quả; không cần deploy. Nội dung trống tự ẩn, ảnh mẫu còn dùng placeholder. Menu/tìm kiếm hỗ trợ Esc và bấm overlay để đóng. Các liên kết đến trang của phase sau đã có đường dẫn nhưng nội dung chưa được triển khai.
 
-Danh mục `/collections/all` và các danh mục/bộ sưu tập hỗ trợ lọc, sắp xếp và phân trang trên URL; reload giữ lựa chọn. Trang `/search?q=ao+thun` tìm không dấu. Bấm sản phẩm để xem gallery, chọn màu/size và số lượng; size hết hàng/ngừng bán bị khóa, đổi màu đổi ảnh. Bảng size nằm trong dialog và accordion. Nút mua đang khóa với thông báo chuẩn bị mở bán, sẽ nối giỏ/checkout ở Phase 8–9.
+Danh mục `/collections/all` và các danh mục/bộ sưu tập hỗ trợ lọc, sắp xếp và phân trang trên URL; reload giữ lựa chọn. Trang `/search?q=ao+thun` tìm không dấu. Bấm sản phẩm để xem gallery, chọn màu/size và số lượng; size hết hàng/ngừng bán bị khóa, đổi màu đổi ảnh. Bảng size nằm trong dialog và accordion. Nút “THÊM VÀO GIỎ” mở drawer; biểu tượng giỏ trên header cũng mở drawer. Trang `/cart` cho sửa số lượng, xóa hàng và lưu ghi chú; reload vẫn giữ giỏ. Giá/phí ship lấy lại từ server, có cảnh báo khi hết hàng hoặc ngừng bán. Thanh toán và mua ngay sẽ mở trong Phase 9.
 
 `npm run e2e:browsing` dùng PostgreSQL test riêng và ảnh SVG local được tạo/dọn tự động. Kiểm tra lọc/URL, tìm kiếm, chọn biến thể, vuốt ảnh, giới hạn số lượng, 404 và retry lỗi ở ba độ rộng. Có page lỗi tạm chỉ chạy với cờ test + database `_test` + header kiểm thử; teardown xóa cùng cache probe. Nếu dừng đột ngột, chạy `node -e "import('./e2e/browsing-fixtures.mjs').then(m => m.removeFixtures()); import('./e2e/content-cache-probe.mjs').then(m => m.removeProbe())"` để dọn. Không chạy đồng thời với các bộ test dùng cùng database.
+
+`npm run e2e:cart` dùng cùng setup/teardown riêng như browsing; kiểm tra giỏ ở 375/768/1280px, thay giá qua admin, giảm/hết kho, ngừng bán, freeship, reload, đồng bộ hai tab, lỗi mạng/thử lại, phản hồi cũ và giới hạn API. Không tạo đơn và không thay đổi dữ liệu bán hàng trên Supabase dev. Chạy lần lượt với các bộ test khác.
 
 ## Đăng nhập và tài khoản quản trị
 

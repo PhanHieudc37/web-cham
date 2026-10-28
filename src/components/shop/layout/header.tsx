@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShoppingBag } from "lucide-react";
+import { CartTrigger } from "../cart/CartTrigger";
 import type { MenuDTO, PublicSettingsDTO } from "@/types/dto";
 import { ShopImage } from "../common/shop-image";
 import { DesktopNavigation } from "./desktop-navigation";
@@ -17,7 +17,7 @@ export function Header({ menu, settings }: { menu: MenuDTO; settings: PublicSett
       <DesktopNavigation menu={menu} />
       <div className="ml-auto flex shrink-0 items-center gap-0 lg:ml-0">
         <SearchOverlay />
-        <Link href="/cart" className="shop-icon-button" aria-label="Giỏ hàng"><ShoppingBag size={20} strokeWidth={1.5} /></Link>
+        <CartTrigger />
       </div>
     </div>
   </header>;
