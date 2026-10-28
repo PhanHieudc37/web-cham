@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: Phase 0 đã nghiệm thu; **Phase 1 đang chờ kết nối Supabase để nghiệm thu**. Schema, migration và seed đã được kiểm tra với PostgreSQL local riêng. Trang chủ vẫn chỉ hiển thị thương hiệu; chưa có chức năng bán hàng.
+Hiện tại: **Phase 0 và Phase 1 đã nghiệm thu**, gồm migration/seed thật trên Supabase dev, 20 bảng bật RLS, admin đầu tiên và bucket public `media`. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Đang tiếp tục Phase 2; trang chủ thật chưa có chức năng bán hàng. Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện.
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
@@ -57,7 +57,7 @@ E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang ch�
 
 PostgreSQL dùng được; Supabase trong plan cung cấp PostgreSQL và Storage. Phase 1 đã có đủ 20 bảng, migration bật `pg_trgm`, RLS không có policy và seed chạy lại được. Schema auth sinh từ CLI Better Auth 1.7.14 qua `npm run db:auth`; script tự chuẩn hóa tên cột, thời gian và RLS theo thiết kế, không tự viết tay bảng auth.
 
-Khi có project Supabase dev, điền kết nối thật vào `.env`: `DATABASE_URL` (transaction pooler), `DIRECT_URL` (session pooler), `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` và tài khoản admin ban đầu `ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD`. Không dùng thông tin production để thử nghiệm.
+Máy phát triển hiện đã có kết nối Supabase dev trong `.env`: `DATABASE_URL` (transaction pooler), `DIRECT_URL` (session pooler), `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (chấp nhận Secret key mới `sb_secret_...`) và tài khoản admin ban đầu `ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD`. Không dùng thông tin production để thử nghiệm. Mật khẩu admin nằm trong `.env` riêng, không hiển thị trong README hoặc Git.
 
 ```bash
 npm run db:migrate

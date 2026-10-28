@@ -1,6 +1,16 @@
 # Báo cáo Phase 1 — Database và dữ liệu mẫu
 
-Ngày: 27/10/2026. **Chưa nghiệm thu hoàn tất: còn thiếu kết nối Supabase dev.**
+Cập nhật: **28/10/2026 — đã nghiệm thu Phase 1 trên Supabase dev.**
+
+## Nghiệm thu Supabase thật
+
+- Kết nối transaction pooler 6543 và session pooler 5432 đã pass; project `cham-stu-dev` do chủ shop tạo tại **Tokyo (`ap-northeast-1`)**, khác Singapore trong plan. Giữ project chủ shop đã cung cấp, ghi nhận sai khác; không tạo lại/xóa database.
+- Đã chạy migration và seed mẫu **hai lượt liên tiếp trên dev**. So sánh số dòng cả 20 bảng trước/sau lượt hai: không đổi. Có 12 sản phẩm, 90 biến thể, 30 màu, 12 ảnh, 12 danh mục, 2 bảng size, 10 settings, 1 collection/4 liên kết, 1 banner và 1 admin. Không có đơn hàng giả hoặc dữ liệu khách.
+- Tất cả 20 bảng ứng dụng bật RLS, không policy; extension `pg_trgm` có mặt. Không sửa migration đã áp dụng.
+- Admin tạo theo email chủ shop cung cấp; mật khẩu mạnh được sinh và lưu riêng ở `ADMIN_SEED_PASSWORD` trong `.env`. Không đưa tài khoản/mật khẩu hoặc key vào báo cáo/Git.
+- Secret key server mới đã được chủ shop điền vào `.env`, kiểm tra API Storage thành công; đã tạo public bucket `media`, MIME ảnh WebP/JPEG/PNG, tối đa 2 MB.
+- Drizzle Studio chạy ở cổng local 4984, API init trả PostgreSQL và API proxy đọc đủ 20 bảng/RLS cùng các số đếm dữ liệu mẫu từ Supabase. Xác nhận bằng API Studio, không tự nhận đã kiểm tra bằng ảnh giao diện.
+- Lint/typecheck/build pass; 20 unit/integration test pass trên PostgreSQL local riêng, không truncate Supabase dev. Phase không có thay đổi giao diện nên không chạy lại responsive.
 
 ## Đã làm và kiểm tra
 
@@ -23,10 +33,10 @@ Ngày: 27/10/2026. **Chưa nghiệm thu hoàn tất: còn thiếu kết nối Su
 | Đủ 20 bảng bật RLS, không policy, không timestamp thiếu múi giờ | Pass |
 | Mật khẩu admin hash hợp lệ, không lưu plaintext | Pass |
 | Chặn --sample trong production trước khi ghi | Pass |
-| Drizzle Studio | Khởi động/kết nối thành công với PostgreSQL kiểm thử; chưa kiểm tra trực quan bảng trên Studio |
-| Migrate/seed trên `cham-stu-dev` | **Chưa chạy: Supabase chưa kết nối** |
+| Drizzle Studio | Init/proxy HTTP 200, đọc đủ bảng và dữ liệu mẫu Supabase dev |
+| Migrate/seed trên `cham-stu-dev` | **Pass hai lượt, số dòng không đổi** |
 
-Phase này không thay đổi giao diện nên không kiểm tra lại responsive. Trang chủ vẫn là khung Phase 0. Không chuyển sang Phase 2 khi Phase 1 chưa đạt đủ nghiệm thu.
+Phase này không thay đổi giao diện nên không kiểm tra lại responsive. Trang chủ thật vẫn là khung Phase 0; bản xem thử GitHub Pages là milestone riêng. Phase 1 đủ điều kiện chuyển Phase 2 sau commit nghiệm thu.
 
 ## Điểm kỹ thuật và mâu thuẫn tài liệu
 
@@ -37,6 +47,4 @@ Phase này không thay đổi giao diện nên không kiểm tra lại responsiv
 
 ## Cần chủ shop cung cấp
 
-Cần kết nối tài khoản Supabase để tạo project **Free `cham-stu-dev`, Singapore**, bucket public `media` và điền các thông tin kết nối thật vào `.env`. Cần email admin ban đầu; mật khẩu có thể sinh riêng và lưu local. Không gửi secret qua chat hoặc commit Git. Hiện không có quyền truy cập Supabase đã được xác nhận nên chưa tạo project và không giả định đã kết nối.
-
-Sau khi có kết nối: chạy migrate và seed hai lượt trên dev, xem đủ bảng/dữ liệu bằng Studio, kiểm tra lại các lệnh bắt buộc, cập nhật báo cáo rồi mới nghiệm thu Phase 1 và chuyển Phase 2. Chưa deploy website, chưa thực hiện Phase 14.
+Chủ shop đã cung cấp project dev, mật khẩu database, email admin và server key. Phase 1 không còn thiếu thông tin. Cần duyệt ảnh, sản phẩm, chính sách và thông tin shop thật ở các phase giao diện sau. Chưa deploy production, chưa thực hiện Phase 14.
