@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–4 đã nghiệm thu**, gồm Supabase dev, services nghiệp vụ, đăng nhập/phân quyền, tài khoản và quản trị danh mục/sản phẩm/ảnh/tồn kho. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Trang chủ thật chưa có chức năng bán hàng; bước tiếp theo là Phase 5 (bộ sưu tập, banner và cài đặt). Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện.
+Hiện tại: **Phase 0–5 đã nghiệm thu**, gồm Supabase dev, services nghiệp vụ, đăng nhập/phân quyền và quản trị tài khoản/danh mục/sản phẩm/ảnh/tồn kho/bộ sưu tập/banner/cài đặt. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Trang chủ thật chưa có chức năng bán hàng; bước tiếp theo là Phase 6 (layout và trang chủ cửa hàng). Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện.
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
@@ -51,6 +51,7 @@ npm run build
 npm run e2e
 npm run e2e:admin
 npm run e2e:catalog
+npm run e2e:content
 ```
 
 E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang chủ, font và tràn ngang tại 375/768/1280px. Lần đầu có thể cần `npx playwright install chromium`. Bốn luồng bán hàng E2E sẽ làm ở Phase 12.
@@ -58,6 +59,8 @@ E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang ch�
 `npm run e2e:admin` kiểm tra đăng nhập, quyền truy cập, tài khoản, đổi mật khẩu và responsive trên PostgreSQL test riêng. Lệnh tự tạo lại tài khoản test, xóa bảng user/session/account liên quan và rate limit **trong database kiểm thử**. Không chạy đồng thời với `npm run test` vì dùng cùng fixture. Có kiểm tra chặn địa chỉ dev/prod trước khi seed. Không chạy server khác ở cổng 3100 khi kiểm tra.
 
 `npm run e2e:catalog` kiểm tra danh mục, form sản phẩm, ảnh, tồn kho và responsive. Lệnh xóa/tạo lại catalog trong **database test riêng**, tải ảnh thử lên bucket `media` dev đang cấu hình và tự xóa đúng các đường dẫn ảnh nó vừa tạo. Không trỏ Storage vào production khi chạy E2E. Chạy các bộ E2E và `npm run test` lần lượt, không đồng thời.
+
+`npm run e2e:content` kiểm tra bộ sưu tập, banner, mọi nhóm cài đặt và cache Next.js thật. Setup tạo một route đọc cache tạm, giới hạn bởi cờ test + database `_test` + đăng nhập; teardown xóa route đó. Route bị Git bỏ qua và không có trong build bình thường. Nếu dừng test đột ngột, chạy `node -e "import('./e2e/content-cache-probe.mjs').then(m => m.removeProbe())"` để dọn probe. Lệnh cũng dùng PostgreSQL test riêng và chỉ dọn các ảnh Storage do nó tạo.
 
 ## Đăng nhập và tài khoản quản trị
 
@@ -67,7 +70,7 @@ E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang ch�
 4. Thành viên đổi mật khẩu trong menu tài khoản góc trên. Cần nhập mật khẩu cũ; đổi xong thu hồi các phiên khác.
 5. Trong danh sách tài khoản, quản trị viên có thể đổi vai trò, khóa/mở khóa hoặc đặt lại mật khẩu. Khóa/đổi vai trò/đặt lại mật khẩu sẽ thu hồi các phiên của tài khoản bị thay đổi. Không thể tự khóa/tự hạ quyền; luôn giữ ít nhất một admin hoạt động.
 
-Nhân viên không thấy và không truy cập được Tài khoản/Cài đặt; các action cũng kiểm tra quyền ở server. Đăng ký công khai bị tắt. Danh mục và Sản phẩm đã dùng được; Đơn hàng, Bộ sưu tập, Banner và Tin nhắn còn ghi "Sắp có"; tổng quan hiện là trang chào, chưa có số liệu kinh doanh của Phase 10.
+Nhân viên không thấy và không truy cập được Tài khoản/Cài đặt; các action cũng kiểm tra quyền ở server. Đăng ký công khai bị tắt. Danh mục, Sản phẩm, Bộ sưu tập, Banner và Cài đặt đã dùng được; Đơn hàng và Tin nhắn còn ghi "Sắp có"; tổng quan hiện là trang chào, chưa có số liệu kinh doanh của Phase 10.
 
 **Quên mật khẩu nhân viên:** admin vào Tài khoản, bấm biểu tượng chìa khóa của nhân viên, nhập mật khẩu tạm mới và gửi riêng cho họ. Mật khẩu cũ và phiên cũ không còn dùng được.
 
@@ -85,6 +88,18 @@ Nhân viên không thấy và không truy cập được Tài khoản/Cài đặ
 - **Nhân bản** tạo bản Nháp, thêm `(bản sao)`/`-COPY`, tồn kho bằng 0. **Lưu trữ** ẩn sản phẩm; **Khôi phục** đưa về Nháp để kiểm tra trước khi mở bán lại. Ảnh dùng chung với bản sao chỉ bị xóa khỏi Storage khi không còn tham chiếu.
 
 Thông tin mẫu vẫn dùng ảnh placeholder. Chủ shop thay bằng ảnh, mô tả, giá và số đo thật trước khi bán. Bấm xem sản phẩm trên cửa hàng sẽ dùng route storefront được triển khai ở Phase 7; hiện web thật chưa mở đầy đủ các trang khách hàng.
+
+## Bộ sưu tập, banner và cài đặt shop
+
+- **Bộ sưu tập:** tạo tên/đường dẫn/mô tả, tải ảnh ngang giữ tỉ lệ; chọn Hiển thị/Trang chủ/Menu. Bấm **Thêm sản phẩm** để tìm theo tên/mã và tick nhiều sản phẩm; sắp ↑ ↓ hoặc gỡ trong form rồi Lưu. Các đường dẫn `all`, `new-arrival`, `best-seller`, `sale` là bộ sưu tập tự động, không dùng làm slug thủ công. Xóa bộ sưu tập không xóa sản phẩm. Danh sách phân trang 20 mục.
+- **Banner:** tải riêng ảnh desktop/mobile, nhập alt/link/chữ nút, kiểm tra cả hai bản xem trước; ảnh lệch tỉ lệ gợi ý có cảnh báo. Thời gian bắt đầu/kết thúc nhập theo **giờ Việt Nam**; để trống là không giới hạn. Banner chỉ được hiện khi bật hiển thị và đang trong khoảng lịch chạy. Có đổi thứ tự, sửa, xóa qua xác nhận.
+- **Cài đặt** chỉ admin: mỗi nhóm có nút Lưu riêng. Nhóm Thông báo & cam kết có ba khối lưu riêng cho thông báo, cam kết và tóm tắt đổi trả; thêm/xóa/sắp xếp bằng nút tương ứng.
+- **Vận chuyển:** nhập phí nguyên VND; để trống một ngưỡng freeship để tắt ngưỡng đó. Đạt số lượng hoặc tổng tiền cấu hình thì được miễn phí vận chuyển. Để trống cả hai để tắt freeship.
+- **Thanh toán:** chọn ngân hàng từ danh sách BIN VietQR lưu sẵn trong code, điền số tài khoản và chủ tài khoản. Tên chủ tài khoản tự chuyển in hoa/không dấu. QR xem trước dùng **10.000₫**, chỉ để kiểm tra thông tin, không cần chuyển tiền. Chuyển khoản chỉ bật khi đủ thông tin.
+- **Pháp lý/SEO:** chỉ điền thông tin đã có; logo shop, logo BCT và ảnh chia sẻ có thể upload bằng chế độ giữ tỉ lệ. Không tự thêm thông tin pháp lý hoặc kênh liên hệ không có thật. Cấu hình số giờ tự hủy đơn hiện chỉ được lưu, chưa chạy tác vụ tự hủy của Phase 14.
+- Sau khi lưu, cache liên quan được xóa ngay. Không cần deploy lại khi sửa phí ship/liên hệ/banner. Trong Phase 5, nghiệm thu bằng các service public đã cache; giao diện storefront đầy đủ thuộc Phase 6. Bản GitHub Pages minh họa vẫn độc lập với Supabase.
+
+Danh sách ngân hàng được lấy từ API VietQR ngày 28/10/2026 và lưu tại `src/lib/banks.ts`. Khi ngân hàng đổi BIN/tên, cập nhật từ nguồn chính thức rồi kiểm tra lại QR trước khi mở bán.
 
 ## Database và triển khai
 
@@ -116,4 +131,4 @@ Dừng database khi không dùng: `docker compose --env-file .env.test.local -f 
 
 Chỉ chạy local ở giai đoạn này. GitHub đã có repo công khai và remote `origin`; chưa tạo hosting. `vercel.json` chỉ lưu region dự kiến trong plan, không triển khai gì. Các file `.env*` trừ `.env.example` được Git bỏ qua.
 
-Đọc [báo cáo Phase 0](docs/PHASE-0-REPORT.md), [Phase 1](docs/PHASE-1-REPORT.md), [Phase 2](docs/PHASE-2-REPORT.md), [Phase 3](docs/PHASE-3-REPORT.md) và [Phase 4](docs/PHASE-4-REPORT.md) để xem trạng thái nghiệm thu.
+Đọc [báo cáo Phase 0](docs/PHASE-0-REPORT.md), [Phase 1](docs/PHASE-1-REPORT.md), [Phase 2](docs/PHASE-2-REPORT.md), [Phase 3](docs/PHASE-3-REPORT.md), [Phase 4](docs/PHASE-4-REPORT.md) và [Phase 5](docs/PHASE-5-REPORT.md) để xem trạng thái nghiệm thu.

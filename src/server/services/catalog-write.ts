@@ -10,13 +10,13 @@ import { categories, collections, productColors, products } from "@/server/db/sc
 import { AppError } from "@/server/errors";
 
 export async function lockCatalog(reader: DatabaseReader) { await reader.execute(sql`SELECT pg_advisory_xact_lock(726039)`); }
-export async function catalogSlug(reader: DatabaseReader, name: string, supplied: string | undefined, kind: "category" | "product", id?: string) {
+export async function catalogSlug(reader: DatabaseReader, name: string, supplied: string | undefined, kind: "category" | "collection" | "product", id?: string) {
   async function exists(slug: string) {
     if (kind === "product") return (await reader.select({ id: products.id }).from(products).where(and(eq(products.slug, slug), id ? ne(products.id, id) : undefined)).limit(1)).length > 0;
     if ((RESERVED_COLLECTION_SLUGS as readonly string[]).includes(slug)) return true;
     const [category, collection] = await Promise.all([
-      reader.select({ id: categories.id }).from(categories).where(and(eq(categories.slug, slug), id ? ne(categories.id, id) : undefined)).limit(1),
-      reader.select({ id: collections.id }).from(collections).where(eq(collections.slug, slug)).limit(1),
+      reader.select({ id: categories.id }).from(categories).where(and(eq(categories.slug, slug), id && kind === "category" ? ne(categories.id, id) : undefined)).limit(1),
+      reader.select({ id: collections.id }).from(collections).where(and(eq(collections.slug, slug), id && kind === "collection" ? ne(collections.id, id) : undefined)).limit(1),
     ]);
     return category.length > 0 || collection.length > 0;
   }

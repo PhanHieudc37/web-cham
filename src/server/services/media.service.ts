@@ -13,7 +13,7 @@ function getStorage() {
   if (!url || !key) throw new AppError("INTERNAL", "Chưa cấu hình dịch vụ lưu ảnh.");
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } }).storage.from("media");
 }
-export function assertStoredMedia(reference: MediaReference, folder: "products" | "categories") {
+export function assertStoredMedia(reference: MediaReference, folder: "products" | "categories" | "banners" | "settings") {
   if (reference.url === "/images/placeholder.svg" && reference.path === reference.url) return;
   if (!new RegExp(`^${folder}/\\d{4}/\\d{2}/[a-f0-9-]{36}\\.(webp|png|jpg)$`).test(reference.path)) throw new AppError("VALIDATION_ERROR", "Đường dẫn ảnh không hợp lệ.");
   const root = process.env.SUPABASE_URL;
@@ -34,7 +34,7 @@ export async function uploadMedia(file: File, folder: "products" | "banners" | "
 }
 export async function removeUnusedMedia(paths: string[]) {
   for (const path of [...new Set(paths)]) {
-    if (!/^(products|categories)\/\d{4}\/\d{2}\/[a-f0-9-]{36}\.(webp|png|jpg)$/.test(path)) continue;
+    if (!/^(products|categories|banners|settings)\/\d{4}\/\d{2}\/[a-f0-9-]{36}\.(webp|png|jpg)$/.test(path)) continue;
     try {
       const db = getDatabase();
       const [productRefs, categoryRefs, collectionRefs, bannerRefs, settingRefs] = await Promise.all([

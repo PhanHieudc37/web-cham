@@ -11,6 +11,7 @@ import { getSessionUser, requireRole, requireRolePage } from "./guards";
 import { createUserAction, setUserBanAction, setUserRoleAction, resetUserPasswordAction } from "@/server/actions/admin/users";
 import { updateSettingsAction } from "@/server/actions/admin/settings";
 import { defaultSettings } from "@/lib/validation/settings";
+import { deleteCollectionAction, deleteBannerAction, reorderContentAction, findCollectionProductsAction } from "@/server/actions/admin/content";
 
 describe("authoritative guards and direct action calls", () => {
   beforeEach(() => { vi.clearAllMocks(); mocks.getSession.mockResolvedValue({ user: { id: "staff-id", role: "admin" } }); mocks.findUser.mockResolvedValue([{ id: "staff-id", name: "Nhân viên", email: "staff@example.test", role: "staff", banned: false }]); });
@@ -43,5 +44,11 @@ describe("authoritative guards and direct action calls", () => {
     expect(await setUserRoleAction({ role: "admin" })).toMatchObject({ ok: false, error: { code: "VALIDATION_ERROR" } });
     mocks.getSession.mockResolvedValue(null);
     expect(await setUserBanAction({ userId: "some-user", banned: true })).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
+  });
+  it("protects all settings groups from staff and content mutations from anonymous requests", async () => {
+    for (const [key, value] of Object.entries(defaultSettings)) expect(await updateSettingsAction({ key, value })).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+    mocks.getSession.mockResolvedValue(null);
+    const id = "087994d5-1cc2-49bd-aed8-d9873526d145";
+    for (const result of await Promise.all([deleteCollectionAction({ id }), deleteBannerAction({ id }), reorderContentAction({ id, kind: "banners", direction: "up" }), findCollectionProductsAction({ query: "", page: 1 })])) expect(result).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
   });
 });

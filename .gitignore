@@ -37,6 +37,7 @@ yarn-error.log*
 
 /playwright-report/
 /test-results/
+/src/app/api/phase5-cache-probe/
 
 # vercel
 .vercel

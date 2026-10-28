@@ -128,8 +128,13 @@ export function createProductService(db: Database, removeMedia = removeUnusedMed
       await tx.update(productVariants).set({ isActive: false, updatedAt: new Date() }).where(and(eq(productVariants.productId, id), notInArray(productVariants.id, retainedIds)));
       await tx.delete(productImages).where(eq(productImages.productId, id));
       if (input.images.length) await tx.insert(productImages).values(input.images.map((image, index) => ({ productId: id, url: image.url, storagePath: image.storagePath, alt: image.alt || `${input.name}${image.colorCode ? ` ${input.colors.find((color) => color.code === image.colorCode)?.name ?? ""}` : ""}`, colorId: image.colorCode ? colorIds.get(image.colorCode) : null, sortOrder: index })));
-      await tx.delete(collectionProducts).where(eq(collectionProducts.productId, id));
-      if (input.collectionIds.length) await tx.insert(collectionProducts).values([...new Set(input.collectionIds)].map((collectionId) => ({ collectionId, productId: id })));
+      const previousLinks = await tx.select().from(collectionProducts).where(eq(collectionProducts.productId, id));
+      await tx.delete(collectionProducts).where(and(eq(collectionProducts.productId, id), input.collectionIds.length ? notInArray(collectionProducts.collectionId, input.collectionIds) : undefined));
+      for (const collectionId of [...new Set(input.collectionIds)]) {
+        if (previousLinks.some((link) => link.collectionId === collectionId)) continue;
+        const [last] = await tx.select({ position: sql<number>`coalesce(max(${collectionProducts.sortOrder}), -1)` }).from(collectionProducts).where(eq(collectionProducts.collectionId, collectionId));
+        await tx.insert(collectionProducts).values({ collectionId, productId: id, sortOrder: Number(last.position) + 1 });
+      }
       await refreshSearchText(tx, [id]);
       return { id, removed: oldImages.filter((image) => !input.images.some((next) => next.storagePath === image.storagePath)).map((image) => image.storagePath) };
     });
