@@ -1,0 +1,13 @@
+import Link from "next/link";
+import { ArrowUpRight, Check, ShieldCheck, Users } from "lucide-react";
+import { roleLabel } from "@/lib/auth";
+import { requireRolePage } from "@/server/auth/guards";
+
+export default async function AdminHome() {
+  const person = await requireRolePage("staff");
+  return <div className="space-y-7"><div><p className="mb-2 text-[10px] font-medium tracking-[0.18em] text-stone-400">KHÔNG GIAN LÀM VIỆC</p><h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Chào {person.name}.</h1><p className="mt-2 text-sm text-stone-500">Mọi việc của cửa hàng bắt đầu từ đây.</p></div>
+    <section className="relative overflow-hidden rounded-md border bg-white p-6 md:p-9"><div className="max-w-xl"><div className="mb-5 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-800"><span className="size-1.5 rounded-full bg-emerald-600" />Đã đăng nhập an toàn</div><h2 className="text-xl font-medium tracking-tight">Sẵn sàng cho ngày làm việc mới</h2><p className="mt-3 text-sm leading-7 text-stone-500">Bạn đang truy cập với vai trò {roleLabel(person.role).toLowerCase()}. Các chức năng quản lý sản phẩm và đơn hàng sẽ được bổ sung theo từng giai đoạn.</p></div><ShieldCheck aria-hidden="true" className="absolute right-8 bottom-6 hidden size-24 text-stone-100 xl:block" strokeWidth={1} /></section>
+    <div className="grid gap-5 md:grid-cols-2"><section className="rounded-md border bg-white p-6"><div className="mb-5 flex items-center gap-2 text-sm font-medium"><ShieldCheck size={17} />Tài khoản của bạn</div><dl className="space-y-4 text-sm"><div className="flex justify-between gap-4"><dt className="text-stone-500">Tên</dt><dd className="text-right break-words">{person.name}</dd></div><div className="flex justify-between gap-4"><dt className="text-stone-500">Email</dt><dd className="min-w-0 text-right break-all">{person.email}</dd></div><div className="flex justify-between gap-4"><dt className="text-stone-500">Vai trò</dt><dd>{roleLabel(person.role)}</dd></div></dl></section>
+      <section className="rounded-md border bg-white p-6"><h2 className="mb-5 text-sm font-medium">Lối tắt</h2>{person.role === "admin" && <Link href="/admin/users" className="mb-4 flex items-center gap-3 rounded-md border p-4 text-sm hover:bg-stone-50"><Users size={18} /><span className="flex-1">Quản lý tài khoản</span><ArrowUpRight size={16} /></Link>}<p className="flex items-start gap-2 text-xs leading-6 text-stone-500"><Check size={15} className="mt-1 shrink-0 text-emerald-700" />Bạn có thể đổi mật khẩu và đăng xuất trong menu tài khoản ở góc trên.</p></section></div>
+  </div>;
+}

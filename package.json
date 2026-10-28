@@ -13,6 +13,7 @@
     "preview:test": "playwright test --config playwright.preview.config.ts",
     "test": "vitest run",
     "e2e": "playwright test",
+    "e2e:admin": "playwright test --config playwright.admin.config.ts",
     "db:generate": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs migrate",
     "db:studio": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs studio",

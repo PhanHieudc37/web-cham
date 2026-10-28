@@ -86,3 +86,17 @@
     }
   }
 }
+
+.admin-theme {
+  --radius: 6px;
+}
+
+body:has(.admin-theme) {
+  --radius: 6px;
+}
+
+body:has(.admin-theme) [data-slot="button"] {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+}

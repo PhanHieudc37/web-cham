@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–2 đã nghiệm thu**, gồm migration/seed thật trên Supabase dev, 20 bảng bật RLS, admin đầu tiên, bucket public `media` và services nghiệp vụ với 66 test pass. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Trang chủ thật chưa có chức năng bán hàng; bước tiếp theo là Phase 3 (đăng nhập và khung admin). Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện.
+Hiện tại: **Phase 0–3 đã nghiệm thu**, gồm Supabase dev, services nghiệp vụ, đăng nhập/phân quyền và khung quản trị với trang tài khoản. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Trang chủ thật chưa có chức năng bán hàng; bước tiếp theo là Phase 4 (quản trị danh mục, sản phẩm, ảnh, tồn kho). Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện.
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
@@ -37,7 +37,7 @@ Cần Node.js từ 22.15 và npm. Cài thư viện bằng `npm ci`.
 3. Giữ URL local `http://localhost:3000`, bucket `media`; chạy `npm run dev`.
 4. Mở [localhost:3000](http://localhost:3000).
 
-Máy khởi tạo dự án đã có `.env` local và secret ngẫu nhiên riêng. Các trường dịch vụ để trống có chủ đích, không chứa thông tin kết nối giả.
+Máy phát triển đã có `.env` local, secret ngẫu nhiên riêng và kết nối Supabase dev thật. Các dịch vụ chưa cấu hình như Resend vẫn để trống; không điền thông tin kết nối giả.
 
 Phase 0 kiểm tra bốn biến local ngay khi khởi động và build. `getServerEnv()` yêu cầu thông tin PostgreSQL và Supabase khi dùng dịch vụ ở các phase sau. `npm start` kiểm tra toàn bộ biến production, gồm email; thiếu biến thì dừng và nêu tên biến, không in giá trị nhạy cảm. Build khung giao diện không cần kết nối dịch vụ.
 
@@ -49,9 +49,26 @@ npm run typecheck
 npm run test
 npm run build
 npm run e2e
+npm run e2e:admin
 ```
 
 E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang chủ, font và tràn ngang tại 375/768/1280px. Lần đầu có thể cần `npx playwright install chromium`. Bốn luồng bán hàng E2E sẽ làm ở Phase 12.
+
+`npm run e2e:admin` kiểm tra đăng nhập, quyền truy cập, tài khoản, đổi mật khẩu và responsive trên PostgreSQL test riêng. Lệnh tự tạo lại tài khoản test, xóa bảng user/session/account liên quan và rate limit **trong database kiểm thử**. Không chạy đồng thời với `npm run test` vì dùng cùng fixture. Có kiểm tra chặn địa chỉ dev/prod trước khi seed. Không chạy server khác ở cổng 3100 khi kiểm tra.
+
+## Đăng nhập và tài khoản quản trị
+
+1. Chạy `npm run dev`, mở [localhost:3000/admin/login](http://localhost:3000/admin/login).
+2. Dùng email trong `ADMIN_SEED_EMAIL` và mật khẩu trong `ADMIN_SEED_PASSWORD` của `.env` trên máy. Không gửi mật khẩu hoặc file `.env` cho người khác.
+3. Vào **Tài khoản → Thêm tài khoản**, nhập tên/email/mật khẩu tạm và chọn **Nhân viên** hoặc **Quản trị viên**. Tự gửi riêng mật khẩu tạm cho thành viên; hệ thống chưa gửi email cấp tài khoản.
+4. Thành viên đổi mật khẩu trong menu tài khoản góc trên. Cần nhập mật khẩu cũ; đổi xong thu hồi các phiên khác.
+5. Trong danh sách tài khoản, quản trị viên có thể đổi vai trò, khóa/mở khóa hoặc đặt lại mật khẩu. Khóa/đổi vai trò/đặt lại mật khẩu sẽ thu hồi các phiên của tài khoản bị thay đổi. Không thể tự khóa/tự hạ quyền; luôn giữ ít nhất một admin hoạt động.
+
+Nhân viên không thấy và không truy cập được Tài khoản/Cài đặt; các action cũng kiểm tra quyền ở server. Đăng ký công khai bị tắt. Các mục sản phẩm, đơn hàng… ghi "Sắp có" trong khung admin, chỉ được mở khi phase tương ứng hoàn tất; tổng quan hiện là trang chào, chưa có số liệu kinh doanh của Phase 10.
+
+**Quên mật khẩu nhân viên:** admin vào Tài khoản, bấm biểu tượng chìa khóa của nhân viên, nhập mật khẩu tạm mới và gửi riêng cho họ. Mật khẩu cũ và phiên cũ không còn dùng được.
+
+**Mất toàn bộ tài khoản admin:** sửa `ADMIN_SEED_EMAIL` thành email mới chưa có trong hệ thống và đặt `ADMIN_SEED_PASSWORD` mạnh trong `.env`; chạy `npm run db:seed` **không thêm `--sample`**. Seed thêm admin còn thiếu và giữ dữ liệu shop hiện có. Không đổi mật khẩu của email đã tồn tại bằng cách chạy lại seed. Sau khi đăng nhập tài khoản mới, khóa tài khoản cũ nếu cần.
 
 ## Database và triển khai
 
@@ -83,4 +100,4 @@ Dừng database khi không dùng: `docker compose --env-file .env.test.local -f 
 
 Chỉ chạy local ở giai đoạn này. GitHub đã có repo công khai và remote `origin`; chưa tạo hosting. `vercel.json` chỉ lưu region dự kiến trong plan, không triển khai gì. Các file `.env*` trừ `.env.example` được Git bỏ qua.
 
-Đọc [báo cáo Phase 0](docs/PHASE-0-REPORT.md), [Phase 1](docs/PHASE-1-REPORT.md) và [Phase 2](docs/PHASE-2-REPORT.md) để xem trạng thái nghiệm thu.
+Đọc [báo cáo Phase 0](docs/PHASE-0-REPORT.md), [Phase 1](docs/PHASE-1-REPORT.md), [Phase 2](docs/PHASE-2-REPORT.md) và [Phase 3](docs/PHASE-3-REPORT.md) để xem trạng thái nghiệm thu.
