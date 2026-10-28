@@ -100,3 +100,22 @@ body:has(.admin-theme) [data-slot="button"] {
   letter-spacing: normal;
   font-weight: 500;
 }
+
+@layer components {
+  .shop-container { @apply mx-auto max-w-[1280px] px-4 md:px-6; }
+  .shop-section { @apply mt-12 md:mt-[72px]; }
+  .shop-section-title { @apply text-center text-xl font-bold tracking-[0.08em] uppercase md:text-2xl; }
+  .shop-button { @apply inline-flex min-h-12 items-center justify-center border border-fg bg-white px-6 py-3 text-xs font-semibold tracking-wider text-fg uppercase transition-colors duration-200 hover:bg-fg hover:text-white; }
+  .shop-button-primary { @apply bg-fg text-white hover:bg-white hover:text-fg; }
+  .shop-icon-button { @apply flex size-11 shrink-0 items-center justify-center transition-opacity hover:opacity-60; }
+}
+
+.shop-header { box-shadow: 0 1px 0 transparent; }
+.shop-theme footer :focus-visible { outline-color: white; }
+.shop-header[data-scrolled] { box-shadow: 0 1px 0 var(--color-border); }
+body:has(.shop-sheet) [data-slot="sheet-overlay"] { background: rgb(0 0 0 / 40%); backdrop-filter: none; }
+.product-hover-image { opacity: 0; transition: opacity 300ms ease-out; }
+@media (hover: hover) { .product-card:hover .product-hover-image { opacity: 1; } }
+.shop-fade { animation: shop-fade 250ms ease-out; }
+@keyframes shop-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 767px) { body:has([data-sticky-buy-bar]) .shop-floating { bottom: 100px; } }

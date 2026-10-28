@@ -2,6 +2,18 @@ import type { OrderStatus, PaymentMethod, PaymentStatus } from "@/lib/constants"
 import type { Settings } from "@/lib/validation/settings";
 
 export type ImageDTO = { url: string; alt: string };
+export type MenuDTO = {
+  categories: { name: string; slug: string; imageUrl: string | null; children: { name: string; slug: string }[] }[];
+  collections: { title: string; slug: string }[];
+  featured: { title: string; slug: string; bannerUrl: string | null } | null;
+  hasSale: boolean;
+};
+export type HomeDTO = {
+  banners: { id: string; title: string; desktopImageUrl: string; mobileImageUrl: string; alt: string; href: string; ctaLabel: string }[];
+  categories: MenuDTO["categories"];
+  bestSeller: ProductCardDTO[]; newArrival: ProductCardDTO[]; sale: ProductCardDTO[];
+  collections: { title: string; slug: string; bannerUrl: string | null; products: ProductCardDTO[] }[];
+};
 export type ProductCardDTO = {
   id: string; slug: string; name: string; price: number; compareAtPrice: number | null; discountPercent: number | null;
   image: ImageDTO | null; hoverImage: ImageDTO | null; colors: { name: string; hex: string }[]; isNew: boolean; isSoldOut: boolean;

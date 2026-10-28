@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–5 đã nghiệm thu**, gồm Supabase dev, services nghiệp vụ, đăng nhập/phân quyền và quản trị tài khoản/danh mục/sản phẩm/ảnh/tồn kho/bộ sưu tập/banner/cài đặt. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Trang chủ thật chưa có chức năng bán hàng; bước tiếp theo là Phase 6 (layout và trang chủ cửa hàng). Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện.
+Hiện tại: **Phase 0–6 đã triển khai**, gồm Supabase dev, services nghiệp vụ, quản trị và layout/trang chủ cửa hàng đọc database thật. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Trang sản phẩm/danh mục/tìm kiếm đầy đủ thuộc Phase 7; giỏ và thanh toán thuộc Phase 8–9, chưa mở bán. Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện. Xem [báo cáo Phase 6](docs/PHASE-6-REPORT.md) cho kết quả nghiệm thu.
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
@@ -39,7 +39,7 @@ Cần Node.js từ 22.15 và npm. Cài thư viện bằng `npm ci`.
 
 Máy phát triển đã có `.env` local, secret ngẫu nhiên riêng và kết nối Supabase dev thật. Các dịch vụ chưa cấu hình như Resend vẫn để trống; không điền thông tin kết nối giả.
 
-Phase 0 kiểm tra bốn biến local ngay khi khởi động và build. `getServerEnv()` yêu cầu thông tin PostgreSQL và Supabase khi dùng dịch vụ ở các phase sau. `npm start` kiểm tra toàn bộ biến production, gồm email; thiếu biến thì dừng và nêu tên biến, không in giá trị nhạy cảm. Build khung giao diện không cần kết nối dịch vụ.
+Ứng dụng kiểm tra các biến local ngay khi khởi động và build. `getServerEnv()` yêu cầu thông tin PostgreSQL và Supabase khi dùng dịch vụ. `npm start` kiểm tra toàn bộ biến production, gồm email; thiếu biến thì dừng và nêu tên biến, không in giá trị nhạy cảm. Từ Phase 6, `npm run build` cần PostgreSQL để render trang chủ từ dữ liệu thật.
 
 ## Kiểm tra
 
@@ -52,6 +52,7 @@ npm run e2e
 npm run e2e:admin
 npm run e2e:catalog
 npm run e2e:content
+npm run e2e:storefront
 ```
 
 E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang chủ, font và tràn ngang tại 375/768/1280px. Lần đầu có thể cần `npx playwright install chromium`. Bốn luồng bán hàng E2E sẽ làm ở Phase 12.
@@ -61,6 +62,12 @@ E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang ch�
 `npm run e2e:catalog` kiểm tra danh mục, form sản phẩm, ảnh, tồn kho và responsive. Lệnh xóa/tạo lại catalog trong **database test riêng**, tải ảnh thử lên bucket `media` dev đang cấu hình và tự xóa đúng các đường dẫn ảnh nó vừa tạo. Không trỏ Storage vào production khi chạy E2E. Chạy các bộ E2E và `npm run test` lần lượt, không đồng thời.
 
 `npm run e2e:content` kiểm tra bộ sưu tập, banner, mọi nhóm cài đặt và cache Next.js thật. Setup tạo một route đọc cache tạm, giới hạn bởi cờ test + database `_test` + đăng nhập; teardown xóa route đó. Route bị Git bỏ qua và không có trong build bình thường. Nếu dừng test đột ngột, chạy `node -e "import('./e2e/content-cache-probe.mjs').then(m => m.removeProbe())"` để dọn probe. Lệnh cũng dùng PostgreSQL test riêng và chỉ dọn các ảnh Storage do nó tạo.
+
+`npm run e2e:storefront` kiểm tra trang chủ, menu, gợi ý tìm kiếm, rate limit, giảm chuyển động và cập nhật liên hệ từ admin ở 375/768/1280px. Dùng PostgreSQL test riêng, fixture ảnh local và cache probe được tạo/dọn như bộ content; không sửa dữ liệu thật. Chạy lần lượt với các bộ test khác. Cache public được tách theo database để không lẫn fixture với Supabase dev.
+
+## Xem cửa hàng local
+
+Mở [localhost:3000](http://localhost:3000) sau `npm run dev`. Trang chủ lấy banner, danh mục, sản phẩm, collection và cài đặt từ Supabase dev. Sửa trong admin rồi tải lại cửa hàng để xem kết quả; không cần deploy. Nội dung trống tự ẩn, ảnh mẫu còn dùng placeholder. Menu/tìm kiếm hỗ trợ Esc và bấm overlay để đóng. Các liên kết đến trang của phase sau đã có đường dẫn nhưng nội dung chưa được triển khai.
 
 ## Đăng nhập và tài khoản quản trị
 
@@ -97,7 +104,7 @@ Thông tin mẫu vẫn dùng ảnh placeholder. Chủ shop thay bằng ảnh, m�
 - **Vận chuyển:** nhập phí nguyên VND; để trống một ngưỡng freeship để tắt ngưỡng đó. Đạt số lượng hoặc tổng tiền cấu hình thì được miễn phí vận chuyển. Để trống cả hai để tắt freeship.
 - **Thanh toán:** chọn ngân hàng từ danh sách BIN VietQR lưu sẵn trong code, điền số tài khoản và chủ tài khoản. Tên chủ tài khoản tự chuyển in hoa/không dấu. QR xem trước dùng **10.000₫**, chỉ để kiểm tra thông tin, không cần chuyển tiền. Chuyển khoản chỉ bật khi đủ thông tin.
 - **Pháp lý/SEO:** chỉ điền thông tin đã có; logo shop, logo BCT và ảnh chia sẻ có thể upload bằng chế độ giữ tỉ lệ. Không tự thêm thông tin pháp lý hoặc kênh liên hệ không có thật. Cấu hình số giờ tự hủy đơn hiện chỉ được lưu, chưa chạy tác vụ tự hủy của Phase 14.
-- Sau khi lưu, cache liên quan được xóa ngay. Không cần deploy lại khi sửa phí ship/liên hệ/banner. Trong Phase 5, nghiệm thu bằng các service public đã cache; giao diện storefront đầy đủ thuộc Phase 6. Bản GitHub Pages minh họa vẫn độc lập với Supabase.
+- Sau khi lưu, cache liên quan được xóa ngay. Không cần deploy lại khi sửa phí ship/liên hệ/banner. Trang chủ Phase 6 đã đọc các service public này; API gợi ý có cache CDN tối đa 60 giây theo kiến trúc. Bản GitHub Pages minh họa vẫn độc lập với Supabase.
 
 Danh sách ngân hàng được lấy từ API VietQR ngày 28/10/2026 và lưu tại `src/lib/banks.ts`. Khi ngân hàng đổi BIN/tên, cập nhật từ nguồn chính thức rồi kiểm tra lại QR trước khi mở bán.
 

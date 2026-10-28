@@ -250,4 +250,24 @@ describe.skipIf(!testUrl)("business transactions on PostgreSQL", () => {
     await database.db.insert(settings).values({ key: "shipping", value: { ...defaultSettings.shipping, fee: 50000 } });
     await expect(service.placeOrder(values, ip)).rejects.toMatchObject({ code: "PRICE_CHANGED", details: { shippingFee: 50000 } });
   });
+  it("builds homepage limits and sale visibility only from visible catalog data", async () => {
+    await database.db.update(categories).set({ imageUrl: "/images/category.svg" }).where(eq(categories.id, fixture.parentId));
+    for (let index = 1; index <= 10; index++) {
+      const categoryId = randomUUID(), productId = randomUUID();
+      await database.db.insert(categories).values({ id: categoryId, name: `Nhóm ${index}`, slug: `nhom-${index}`, sortOrder: index, isActive: index !== 10 });
+      await database.db.insert(products).values({ id: productId, code: `HOME${index}`, name: `Áo ${index}`, slug: `home-${index}`, categoryId, price: 100000, compareAtPrice: 200000,
+        status: index === 9 ? "draft" : "active", isNew: true, isBestSeller: true, searchText: `ao ${index}` });
+    }
+    const home = await catalog.getHome();
+    expect(home.categories).toHaveLength(3);
+    expect(home.categories[0]).toMatchObject({ slug: "ao", imageUrl: "/images/category.svg" });
+    expect(home.bestSeller).toHaveLength(8); expect(home.newArrival).toHaveLength(8); expect(home.sale).toHaveLength(4);
+    expect((await catalog.getMenu()).hasSale).toBe(true);
+    for (const card of [...home.bestSeller, ...home.newArrival, ...home.sale]) expect(["home-9", "home-10"]).not.toContain(card.slug);
+    await database.db.update(products).set({ compareAtPrice: null });
+    expect((await catalog.getMenu()).hasSale).toBe(false); expect((await catalog.getHome()).sale).toEqual([]);
+    await database.db.update(categories).set({ isActive: false });
+    const empty = await catalog.getHome();
+    expect(empty.categories).toEqual([]); expect(empty.bestSeller).toEqual([]); expect(empty.newArrival).toEqual([]);
+  });
 });

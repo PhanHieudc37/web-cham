@@ -8,7 +8,7 @@ import { sortSizes } from "@/lib/domain/sizes";
 import { variantAvailability } from "@/lib/domain/variants";
 import { normalizeVietnamese } from "@/lib/normalize";
 import { parseListingFilters, type ListingFilters } from "@/lib/validation/listing";
-import type { ListingDTO, ProductCardDTO, ProductDetailDTO } from "@/types/dto";
+import type { HomeDTO, MenuDTO, ListingDTO, ProductCardDTO, ProductDetailDTO } from "@/types/dto";
 import { cached, CACHE_TAGS } from "@/server/cache";
 import { getDatabase, type DatabaseReader } from "@/server/db/client";
 import { banners, categories, collectionProducts, collections, productColors, productImages, products, productVariants, sizeCharts } from "@/server/db/schema";
@@ -165,26 +165,28 @@ export function createCatalogService(reader: DatabaseReader) {
     return cards(rows);
   }
 
-  async function getMenu() {
-    const [allCategories, visibleProducts, manual] = await Promise.all([
+  async function getMenu(): Promise<MenuDTO> {
+    const [allCategories, visibleProducts, manual, featured] = await Promise.all([
       reader.select().from(categories).where(eq(categories.isActive, true)).orderBy(asc(categories.sortOrder), asc(categories.id)),
       base().where(visible), reader.select({ title: collections.title, slug: collections.slug }).from(collections).where(and(eq(collections.isActive, true), eq(collections.showInMenu, true))).orderBy(asc(collections.sortOrder)),
+      reader.select({ title: collections.title, slug: collections.slug, bannerUrl: collections.bannerUrl }).from(collections).where(and(eq(collections.isActive, true), eq(collections.showOnHome, true))).orderBy(asc(collections.sortOrder), asc(collections.id)).limit(1),
     ]);
     const populated = new Set(visibleProducts.map(({ product }) => product.categoryId));
-    return { categories: allCategories.filter((category) => category.parentId === null).map((category) => ({ name: category.name, slug: category.slug,
+    return { categories: allCategories.filter((category) => category.parentId === null).map((category) => ({ name: category.name, slug: category.slug, imageUrl: category.imageUrl,
       children: allCategories.filter((child) => child.parentId === category.id && populated.has(child.id)).map(({ name, slug }) => ({ name, slug })), populated: populated.has(category.id) }))
-      .filter((category) => category.populated || category.children.length > 0).map(({ name, slug, children }) => ({ name, slug, children })), collections: manual };
+      .filter((category) => category.populated || category.children.length > 0).map(({ name, slug, imageUrl, children }) => ({ name, slug, imageUrl, children })), collections: manual,
+      featured: featured[0] ?? null, hasSale: visibleProducts.some(({ product }) => product.compareAtPrice !== null && product.compareAtPrice > product.price) };
   }
 
-  async function getHome() {
+  async function getHome(): Promise<HomeDTO> {
     const now = new Date();
-    const [activeBanners, homeCollections, bestSeller, newArrival] = await Promise.all([
+    const [activeBanners, homeCollections, bestSeller, newArrival, sale, menu] = await Promise.all([
       reader.select({ id: banners.id, title: banners.title, desktopImageUrl: banners.desktopImageUrl, mobileImageUrl: banners.mobileImageUrl, alt: banners.alt, href: banners.href, ctaLabel: banners.ctaLabel })
         .from(banners).where(and(eq(banners.isActive, true), or(isNull(banners.startsAt), lte(banners.startsAt, now)), or(isNull(banners.endsAt), gte(banners.endsAt, now)))).orderBy(asc(banners.sortOrder)),
-      reader.select({ title: collections.title, slug: collections.slug }).from(collections).where(and(eq(collections.isActive, true), eq(collections.showOnHome, true))).orderBy(asc(collections.sortOrder)),
-      getListing("best-seller"), getListing("new-arrival"),
+      reader.select({ title: collections.title, slug: collections.slug, bannerUrl: collections.bannerUrl }).from(collections).where(and(eq(collections.isActive, true), eq(collections.showOnHome, true))).orderBy(asc(collections.sortOrder)),
+      getListing("best-seller"), getListing("new-arrival"), getListing("sale"), getMenu(),
     ]);
-    return { banners: activeBanners, bestSeller: bestSeller.products.slice(0, 8), newArrival: newArrival.products.slice(0, 8),
+    return { banners: activeBanners, categories: menu.categories.slice(0, 3), bestSeller: bestSeller.products.slice(0, 8), newArrival: newArrival.products.slice(0, 8), sale: sale.products.slice(0, 4),
       collections: await Promise.all(homeCollections.map(async (collection) => ({ ...collection, products: (await getListing(collection.slug)).products.slice(0, 8) }))) };
   }
   return { getListing, search, getProductDetail, getRelatedProducts, getMenu, getHome };

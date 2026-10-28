@@ -1,15 +1,21 @@
-export default function HomePage() {
-  return (
-    <main className="mx-auto flex min-h-svh w-full max-w-[1280px] items-center justify-center px-4 py-12 md:px-6">
-      <div className="w-full max-w-xl border-y border-border py-16 text-center md:py-24">
-        <p className="mb-6 text-xs font-medium uppercase tracking-[0.16em] text-muted">
-          Đang chuẩn bị
-        </p>
-        <h1 className="text-5xl font-bold tracking-tight md:text-7xl">Cham.stu</h1>
-        <p className="mx-auto mt-6 max-w-xs text-sm leading-relaxed text-muted">
-          Cửa hàng đang được xây dựng.
-        </p>
-      </div>
-    </main>
-  );
+import { HeroSlider } from "@/components/shop/home/hero-slider";
+import { BrandStory, CategoryTiles, PolicyStrip } from "@/components/shop/home/home-sections";
+import { ProductSection } from "@/components/shop/common/product-card";
+import { getHome } from "@/server/services/catalog.service";
+import { getPublicSettings } from "@/server/services/settings.service";
+
+export default async function HomePage() {
+  const [home, settings] = await Promise.all([getHome(), getPublicSettings()]);
+  const storyImage = home.collections.find(({ bannerUrl }) => bannerUrl)?.bannerUrl ?? home.banners[0]?.desktopImageUrl ?? home.categories.find(({ imageUrl }) => imageUrl)?.imageUrl ?? null;
+  return <>
+    <h1 className="sr-only">{settings.shop.name}</h1>
+    <HeroSlider banners={home.banners} />
+    <CategoryTiles home={home} />
+    <ProductSection title="BEST SELLER" slug="best-seller" products={home.bestSeller} />
+    <ProductSection title="NEW ARRIVAL" slug="new-arrival" products={home.newArrival} />
+    {home.collections.map((collection) => <ProductSection key={collection.slug} title={collection.title} slug={collection.slug} products={collection.products} />)}
+    <ProductSection title="SALE" slug="sale" products={home.sale} />
+    <BrandStory settings={settings} image={storyImage} />
+    <PolicyStrip policies={settings.policies} />
+  </>;
 }

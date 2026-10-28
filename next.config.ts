@@ -4,7 +4,7 @@ import { localEnvSchema, parseEnvironment, serverEnvSchema } from "./src/lib/val
 
 export default function nextConfig(phase: string): NextConfig {
   const env = parseEnvironment(localEnvSchema, process.env);
-  // Building the Phase 0 shell needs no external service. Production startup does.
+  // Production startup validates all providers; the storefront build reads PostgreSQL.
   if (phase === PHASE_PRODUCTION_SERVER) {
     parseEnvironment(serverEnvSchema, process.env);
   }

@@ -379,6 +379,7 @@ DTO cho đơn hàng: `OrderSuccessDTO`, `OrderPublicDTO` (tra cứu, SĐT che b�
 ## 8. Cache
 
 - Mọi hàm đọc của `catalog.service` và `settings.service` được bọc bằng `cached(fn, keyParts, tags)` trong `src/server/cache.ts`.
+- Cache key có namespace băm từ host/database/user pooler, không gồm mật khẩu. Dữ liệu cache lưu trên đĩa của database kiểm thử và Supabase dev không dùng chung khi đổi môi trường trong cùng workspace.
 - Mỗi thao tác ghi gọi `invalidate(...tags)`.
 - File `cache.ts` dùng cơ chế cache của **đúng bản Next.js đang cài** (`unstable_cache` hoặc `"use cache"` + `cacheTag`, đọc docs của bản đó). Nhờ gói gọn ở một chỗ, sau này đổi cơ chế cache chỉ phải sửa một file.
 
