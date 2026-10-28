@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0 và Phase 1 đã nghiệm thu**, gồm migration/seed thật trên Supabase dev, 20 bảng bật RLS, admin đầu tiên và bucket public `media`. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Đang tiếp tục Phase 2; trang chủ thật chưa có chức năng bán hàng. Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện.
+Hiện tại: **Phase 0–2 đã nghiệm thu**, gồm migration/seed thật trên Supabase dev, 20 bảng bật RLS, admin đầu tiên, bucket public `media` và services nghiệp vụ với 66 test pass. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Trang chủ thật chưa có chức năng bán hàng; bước tiếp theo là Phase 3 (đăng nhập và khung admin). Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện.
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
@@ -83,4 +83,4 @@ Dừng database khi không dùng: `docker compose --env-file .env.test.local -f 
 
 Chỉ chạy local ở giai đoạn này. GitHub đã có repo công khai và remote `origin`; chưa tạo hosting. `vercel.json` chỉ lưu region dự kiến trong plan, không triển khai gì. Các file `.env*` trừ `.env.example` được Git bỏ qua.
 
-Đọc [báo cáo Phase 0](docs/PHASE-0-REPORT.md) và [báo cáo Phase 1](docs/PHASE-1-REPORT.md) để xem trạng thái nghiệm thu.
+Đọc [báo cáo Phase 0](docs/PHASE-0-REPORT.md), [Phase 1](docs/PHASE-1-REPORT.md) và [Phase 2](docs/PHASE-2-REPORT.md) để xem trạng thái nghiệm thu.

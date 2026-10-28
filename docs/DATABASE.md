@@ -363,7 +363,7 @@ Ngưỡng freeship luôn so với `subtotal` **trước** khi trừ giảm giá.
 ### 4.9 Mã đơn và access token
 
 - **Mã đơn** = `orders.codePrefix` (mặc định `CS`) + `yyMMdd` (giờ Việt Nam) + 4 chữ số ngẫu nhiên. Ví dụ: `CS2610274821`.
-- **Access token:** 32 byte ngẫu nhiên, mã hóa base64url. Chỉ trả cho khách một lần (trên URL trang thành công); DB chỉ lưu SHA-256 của token.
+- **Access token:** 32 byte bí mật, mã hóa base64url; DB chỉ lưu SHA-256 của token. Để đáp ứng cả yêu cầu gửi lại cùng `idempotencyKey` sau khi mất response ở mục 4.8, Phase 2 sinh token bằng HMAC-SHA256 với `BETTER_AUTH_SECRET`, thông điệp phân miền `order-access:v1` và UUID ngẫu nhiên của đơn + idempotency key. Không lưu token plaintext; chỉ trả khi tạo đơn hoặc gửi lại đúng key. Nếu đã xoay secret, đơn cũ vẫn xem được bằng token đã cấp; gửi lại key sẽ nhận `CONFLICT` kèm mã đơn để tra cứu bằng SĐT. Xem giải thích mâu thuẫn trong báo cáo Phase 2.
 - **Tra cứu đơn** dùng mã đơn + SĐT, không dùng token.
 
 ### 4.10 Trạng thái đơn (`lib/domain/order-status.ts`)

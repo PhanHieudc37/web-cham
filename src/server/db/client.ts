@@ -11,6 +11,8 @@ export function createDatabase(url: string) {
 }
 
 export type Database = ReturnType<typeof createDatabase>["db"];
+export type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+export type DatabaseReader = Database | Transaction;
 let database: ReturnType<typeof createDatabase> | undefined;
 
 export function getDatabase() {

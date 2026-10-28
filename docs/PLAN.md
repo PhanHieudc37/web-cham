@@ -9,7 +9,7 @@
 - **Phase 0:** đã nghiệm thu; commit `e346d1f`.
 - **GitHub:** code trong repo công khai [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`. Có thêm milestone bản duyệt giao diện tĩnh trên GitHub Pages theo yêu cầu riêng, xem bên dưới.
 - **Phase 1:** **đã nghiệm thu trên Supabase `cham-stu-dev`**: đủ 20 bảng/RLS, migration và seed hai lượt không nhân đôi, Studio đọc được dữ liệu, admin và bucket public `media` đã tạo. Lint/typecheck/20 test/build pass. Project do chủ shop tạo ở Tokyo, khác Singapore dự kiến; xem `docs/PHASE-1-REPORT.md`.
-- **Phase 2:** được giao tiếp tục theo yêu cầu hoàn thiện tài liệu ngày 28/10/2026; triển khai sau commit nghiệm thu Phase 1. Các phase tiếp theo giữ thứ tự kiểm tra và commit riêng; chưa thực hiện Phase 14 hoặc deploy production.
+- **Phase 2:** đã hoàn tất logic/services và nghiệm thu trên PostgreSQL kiểm thử riêng: 66 test pass (gồm 23 integration), lint/typecheck/build pass; xem `docs/PHASE-2-REPORT.md`. Chưa có giao diện bán hàng thật; bước tiếp theo là Phase 3 theo quy trình giao từng phase.
 - Tiếp tục chạy web local theo yêu cầu; chưa triển khai production hay các phần mở rộng Phase 14.
 
 ### Milestone bổ sung — bản duyệt giao diện trên GitHub Pages
