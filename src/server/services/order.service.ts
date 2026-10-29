@@ -36,15 +36,15 @@ export function createOrderService(db: Database, secret: string) {
     return { orderCode: order.code, accessToken };
   }
 
-  async function placeOrder(raw: CheckoutInput, ip: string): Promise<Placement> {
+  async function placeOrderWithOutcome(raw: CheckoutInput, ip: string): Promise<{ placement: Placement; createdOrderId: string | null }> {
     await rateLimit(`order:${ip}`, 5, 600, db);
-    if (raw.website) return { orderCode: createOrderCode("CS"), accessToken: randomBytes(32).toString("base64url") };
+    if (raw.website) return { placement: { orderCode: createOrderCode("CS"), accessToken: randomBytes(32).toString("base64url") }, createdOrderId: null };
     const input = checkoutSchema.parse(raw);
     return db.transaction(async (tx) => {
       // Serialize requests for this key before inspecting the unique idempotency row.
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${input.idempotencyKey}, 0))`);
       const [existing] = await tx.select().from(orders).where(eq(orders.idempotencyKey, input.idempotencyKey));
-      if (existing) return placement(existing);
+      if (existing) return { placement: placement(existing), createdOrderId: null };
       const rows = await loadCartRows(tx, input.lines.map((line) => line.variantId), true);
       const config = await readSettings(tx);
       const quote = await buildCartQuote(tx, input.lines, config, rows);
@@ -85,8 +85,11 @@ export function createOrderService(db: Database, secret: string) {
         await tx.update(products).set({ soldCount: sql`${products.soldCount} + ${quantity}` }).where(eq(products.id, productId));
       }
       await tx.insert(orderEvents).values({ orderId: id, type: "created", toStatus: "pending" });
-      return { orderCode: order.code, accessToken };
+      return { placement: { orderCode: order.code, accessToken }, createdOrderId: id };
     });
+  }
+  async function placeOrder(raw: CheckoutInput, ip: string): Promise<Placement> {
+    return (await placeOrderWithOutcome(raw, ip)).placement;
   }
 
   async function requireOrder(id: string, tx: DatabaseReader) {
@@ -193,7 +196,7 @@ export function createOrderService(db: Database, secret: string) {
       return { orderId };
     });
   }
-  return { placeOrder, updateStatus, markPaid: (id: string, actorId: string) => setPayment(id, "paid", actorId),
+  return { placeOrder, placeOrderWithOutcome, updateStatus, markPaid: (id: string, actorId: string) => setPayment(id, "paid", actorId),
     markRefunded: (id: string, actorId: string) => setPayment(id, "refunded", actorId), lookup, getSuccess, getAdminDetail, updateShipping, addNote };
 }
 

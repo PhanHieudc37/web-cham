@@ -54,7 +54,7 @@ describe.skipIf(!testUrl)("business transactions on PostgreSQL", () => {
   async function input(quantity = 1): Promise<CheckoutInput> {
     const lines = [{ variantId: fixture.variantId, quantity }];
     const quote = await quoteCart(lines, database.db);
-    return checkoutSchema.parse({ lines, customerName: "Khách kiểm thử", customerPhone: "0912345678", customerEmail: "test@example.test", province: "Hồ Chí Minh", ward: "Phường kiểm thử",
+    return checkoutSchema.parse({ lines, customerName: "Khách kiểm thử", customerPhone: "0912345678", customerEmail: "test@example.test", province: "TP. Hồ Chí Minh", ward: "Phường kiểm thử",
       addressLine: "Địa chỉ kiểm thử", paymentMethod: "cod", acceptedPolicies: true, expectedTotal: quote.total, idempotencyKey: randomUUID() });
   }
   async function place(quantity = 1) {
@@ -96,6 +96,13 @@ describe.skipIf(!testUrl)("business transactions on PostgreSQL", () => {
     await expect(service.placeOrder(values, ip)).rejects.toMatchObject({ code: "PRICE_CHANGED", details: { subtotal: 150000, total: 180000 } });
     expect(await stock()).toBe(5);
     expect((await database.db.select({ total: count() }).from(orders))[0].total).toBe(0);
+  });
+  it("identifies exactly one new placement across concurrent retries for post-commit notifications", async () => {
+    const values = await input();
+    const results = await Promise.all([service.placeOrderWithOutcome(values, ip), service.placeOrderWithOutcome(values, ip)]);
+    expect(results.filter((result) => result.createdOrderId !== null)).toHaveLength(1);
+    expect(results[0].placement).toEqual(results[1].placement);
+    expect(await stock()).toBe(4);
   });
   it("restores inventory and sold count exactly once on concurrent cancellation", async () => {
     const { order } = await place(2);

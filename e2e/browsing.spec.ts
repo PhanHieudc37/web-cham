@@ -144,7 +144,7 @@ for (const width of [375, 768, 1280]) test(`listing, search and product at ${wid
   const related = page.getByRole("region", { name: "SẢN PHẨM LIÊN QUAN", exact: true });
   await expect(related.getByTestId("product-card")).toHaveCount(4);
   await expect(related.locator('a[href="/products/ao-thun-hai-mau"]')).toHaveCount(0);
-  await expect(page.getByText("Shop đang chuẩn bị tính năng thanh toán.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "MUA NGAY", exact: true })).toBeEnabled();
   if (width < 1024) {
     await page.getByRole("button", { name: "Màu Đen", exact: true }).click();
     await related.scrollIntoViewIfNeeded();

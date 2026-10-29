@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cart";
+import { useUiStore } from "@/store/ui";
 import { useCartQuote } from "@/hooks/use-cart-quote";
 import { CartLineItem } from "./CartLineItem";
 
@@ -19,7 +21,8 @@ export function CartContents({ onNavigate }: { onNavigate?: () => void }) {
   </div>;
 }
 export function CartCheckoutButton() {
+  const router = useRouter();
   const { ready, quote } = useCartQuote();
   const blocked = !ready || !quote?.itemCount || quote.lines.some((line) => line.issue === "UNAVAILABLE" || line.issue === "OUT_OF_STOCK");
-  return <div><button type="button" disabled className="shop-button shop-button-primary w-full opacity-40">THANH TOÁN</button><p role="status" className="mt-3 text-center text-xs leading-6 text-muted">{blocked ? "Vui lòng kiểm tra các dòng sản phẩm và cập nhật giỏ hàng." : "Shop đang chuẩn bị tính năng thanh toán."}</p></div>;
+  return <div><button type="button" disabled={blocked} onClick={() => { useUiStore.getState().setCartOpen(false); router.push("/checkout"); }} className="shop-button shop-button-primary w-full disabled:opacity-40">THANH TOÁN</button>{blocked && <p role="status" className="mt-3 text-center text-xs leading-6 text-muted">Vui lòng kiểm tra các dòng sản phẩm và cập nhật giỏ hàng.</p>}</div>;
 }

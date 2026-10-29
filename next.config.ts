@@ -10,6 +10,8 @@ export default function nextConfig(phase: string): NextConfig {
   }
   return {
     poweredByHeader: false,
+    // Checkout action arguments contain personal data; success URLs carry bearer tokens.
+    logging: { serverFunctions: false, incomingRequests: { ignore: [/\/checkout\/success(?:\?|$)/] } },
     turbopack: {
       rules: {
         "*.css": { loaders: ["@tailwindcss/turbopack"], as: "*.css" },

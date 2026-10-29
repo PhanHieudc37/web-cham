@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–8 đã triển khai**, gồm Supabase dev, services nghiệp vụ, quản trị, storefront và giỏ hàng lấy giá/tồn kho/phí ship từ database thật. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Thanh toán thuộc Phase 9, chưa mở bán. Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện. Xem [báo cáo Phase 8](docs/PHASE-8-REPORT.md) cho kết quả nghiệm thu.
+Hiện tại: **Phase 0–9 đã triển khai**, gồm Supabase dev, quản trị sản phẩm/nội dung, storefront, giỏ và checkout khách với COD/chuyển khoản, tạo đơn/trừ kho và trang thành công riêng tư. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Email thật chờ cấu hình Resend; quản lý đơn trong admin thuộc Phase 10. Chưa mở bán production. Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện. Xem [báo cáo Phase 9](docs/PHASE-9-REPORT.md) cho kết quả nghiệm thu.
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
@@ -70,11 +70,21 @@ E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang ch�
 
 Mở [localhost:3000](http://localhost:3000) sau `npm run dev`. Trang chủ lấy banner, danh mục, sản phẩm, collection và cài đặt từ Supabase dev. Sửa trong admin rồi tải lại cửa hàng để xem kết quả; không cần deploy. Nội dung trống tự ẩn, ảnh mẫu còn dùng placeholder. Menu/tìm kiếm hỗ trợ Esc và bấm overlay để đóng. Các liên kết đến trang của phase sau đã có đường dẫn nhưng nội dung chưa được triển khai.
 
-Danh mục `/collections/all` và các danh mục/bộ sưu tập hỗ trợ lọc, sắp xếp và phân trang trên URL; reload giữ lựa chọn. Trang `/search?q=ao+thun` tìm không dấu. Bấm sản phẩm để xem gallery, chọn màu/size và số lượng; size hết hàng/ngừng bán bị khóa, đổi màu đổi ảnh. Bảng size nằm trong dialog và accordion. Nút “THÊM VÀO GIỎ” mở drawer; biểu tượng giỏ trên header cũng mở drawer. Trang `/cart` cho sửa số lượng, xóa hàng và lưu ghi chú; reload vẫn giữ giỏ. Giá/phí ship lấy lại từ server, có cảnh báo khi hết hàng hoặc ngừng bán. Thanh toán và mua ngay sẽ mở trong Phase 9.
+Danh mục `/collections/all` và các danh mục/bộ sưu tập hỗ trợ lọc, sắp xếp và phân trang trên URL; reload giữ lựa chọn. Trang `/search?q=ao+thun` tìm không dấu. Bấm sản phẩm để xem gallery, chọn màu/size và số lượng; size hết hàng/ngừng bán bị khóa, đổi màu đổi ảnh. Bảng size nằm trong dialog và accordion. Nút “THÊM VÀO GIỎ” mở drawer; biểu tượng giỏ trên header cũng mở drawer. Trang `/cart` cho sửa số lượng, xóa hàng và lưu ghi chú; reload vẫn giữ giỏ. Giá/phí ship lấy lại từ server, có cảnh báo khi hết hàng hoặc ngừng bán. “MUA NGAY” hoặc “THANH TOÁN” mở checkout; đơn đặt thử local được lưu ở Supabase dev.
 
 `npm run e2e:browsing` dùng PostgreSQL test riêng và ảnh SVG local được tạo/dọn tự động. Kiểm tra lọc/URL, tìm kiếm, chọn biến thể, vuốt ảnh, giới hạn số lượng, 404 và retry lỗi ở ba độ rộng. Có page lỗi tạm chỉ chạy với cờ test + database `_test` + header kiểm thử; teardown xóa cùng cache probe. Nếu dừng đột ngột, chạy `node -e "import('./e2e/browsing-fixtures.mjs').then(m => m.removeFixtures()); import('./e2e/content-cache-probe.mjs').then(m => m.removeProbe())"` để dọn. Không chạy đồng thời với các bộ test dùng cùng database.
 
 `npm run e2e:cart` dùng cùng setup/teardown riêng như browsing; kiểm tra giỏ ở 375/768/1280px, thay giá qua admin, giảm/hết kho, ngừng bán, freeship, reload, đồng bộ hai tab, lỗi mạng/thử lại, phản hồi cũ và giới hạn API. Không tạo đơn và không thay đổi dữ liệu bán hàng trên Supabase dev. Chạy lần lượt với các bộ test khác.
+
+`npm run e2e:checkout` cũng dùng database `_test` và fixture local, tạo đơn COD/chuyển khoản thử, kiểm tra tồn kho, chống gửi trùng, đổi giá, hết hàng, lỗi form, URL/token và sao chép thông tin. Có dữ liệu ngân hàng giả và ảnh QR fixture để kiểm tra URL/số tiền/nội dung; không chuyển tiền thật. Ép email về chế độ dev, không gửi ra ngoài. Chạy lần lượt với các bộ test khác và dọn probe như browsing nếu dừng đột ngột.
+
+## Checkout và email local
+
+Chọn sản phẩm/màu/size rồi bấm “MUA NGAY”. Điền thông tin giao hàng, chọn một trong 34 tỉnh/thành, phường/xã và địa chỉ cụ thể; không có ô quận/huyện. COD dùng được ngay. Muốn hiện chuyển khoản, admin điền đủ ngân hàng, số tài khoản và chủ tài khoản trong Cài đặt → Thanh toán. Trang thành công tính tiền từ đơn đã lưu, QR mang đúng số tiền và mã đơn; giữ link riêng tư của đơn, không đăng công khai.
+
+Giá đổi sau khi mở checkout thì khách phải đồng ý tổng mới; hết kho sẽ có cảnh báo. Gửi lại cùng phiên đặt hàng không tạo đơn thứ hai. Thành công mới xóa giỏ và mã chống trùng. Các trang chính sách đầy đủ và giao diện quản lý đơn tiếp tục theo Phase 10–11.
+
+Chưa có `RESEND_API_KEY` thì server log xác nhận email dev với mã đơn/loại thông báo và che thông tin khách/token. Để gửi thật, xác minh domain trên [Resend](https://resend.com/docs/send-with-nextjs), điền `RESEND_API_KEY`, `EMAIL_FROM` và `SHOP_NOTIFY_EMAIL` vào `.env` riêng rồi khởi động lại local. Không gửi key qua chat hoặc đưa lên Git. Khách chỉ nhận email khi đã điền email lúc đặt đơn; email lỗi không làm mất đơn. Telegram chỉ gửi khi có đủ `TELEGRAM_BOT_TOKEN` và `TELEGRAM_CHAT_ID`. Chưa xác minh gửi email thật trên tài khoản shop vì hiện các biến này chưa được cấu hình.
 
 ## Đăng nhập và tài khoản quản trị
 

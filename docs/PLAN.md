@@ -4,7 +4,7 @@
 
 ---
 
-## Tiến độ thực tế — 28/10/2026
+## Tiến độ thực tế — 29/10/2026
 
 - **Phase 0:** đã nghiệm thu; commit `e346d1f`.
 - **GitHub:** code trong repo công khai [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`. Có thêm milestone bản duyệt giao diện tĩnh trên GitHub Pages theo yêu cầu riêng, xem bên dưới.
@@ -15,7 +15,8 @@
 - **Phase 5:** **đã nghiệm thu** bộ sưu tập, banner và các nhóm cài đặt; 129 test, 7 E2E content và 16 E2E hồi quy pass; lint/typecheck/build pass. Đã chứng minh cache public cập nhật ngay sau khi lưu, không restart/deploy. Kiểm tra UI ở 375/768/1280px. Xem `docs/PHASE-5-REPORT.md`.
 - **Phase 6:** **đã nghiệm thu** layout và trang chủ cửa hàng từ database, menu desktop/mobile, gợi ý tìm kiếm, footer/liên hệ và slider; 132 test, 6 E2E storefront, 7 E2E content hồi quy và 3 E2E trang chủ Supabase dev thật pass. Lint/typecheck/build pass, không tràn ngang ở 375/768/1280px. Xem `docs/PHASE-6-REPORT.md`.
 - **Phase 7:** **đã nghiệm thu** danh mục/bộ sưu tập, lọc/sort/phân trang theo URL, tìm không dấu, chi tiết sản phẩm/ảnh theo màu/size/tồn kho, skeleton/error/HTTP 404; 133 test, 9 E2E browsing và 6 E2E storefront hồi quy pass. Lint/typecheck/build pass, kiểm tra 375/768/1280px và 9 lượt trang trên Supabase dev thật. Xem `docs/PHASE-7-REPORT.md`.
-- **Phase 8:** **đã nghiệm thu** giỏ persist, API quote không cache, drawer và `/cart`, giới hạn/tự giảm số lượng, cảnh báo ngừng bán, ghi chú và freeship theo server; 138 test, 9 E2E cart và 15 E2E hồi quy pass. Lint/typecheck/build pass, kiểm tra 375/768/1280px và giỏ/reload trên Supabase dev thật. Xem `docs/PHASE-8-REPORT.md`. Phase 9 đã được giao; chưa mở thanh toán trong commit Phase 8.
+- **Phase 8:** **đã nghiệm thu** giỏ persist, API quote không cache, drawer và `/cart`, giới hạn/tự giảm số lượng, cảnh báo ngừng bán, ghi chú và freeship theo server; 138 test, 9 E2E cart và 15 E2E hồi quy pass. Lint/typecheck/build pass, kiểm tra 375/768/1280px và giỏ/reload trên Supabase dev thật. Xem `docs/PHASE-8-REPORT.md`; commit `03294f9`.
+- **Phase 9:** **đã nghiệm thu trên dev/test** checkout khách, COD/chuyển khoản, chống đặt trùng, xác nhận đổi giá, xử lý hết kho, trang thành công riêng tư/VietQR và email sau commit; 150 test, 9 E2E checkout và 18 E2E hồi quy pass. Lint/typecheck/build pass; kiểm tra 375/768/1280px và form/quote trên Supabase dev thật. Email dev log có che dữ liệu; gửi email thật chờ cấu hình Resend, chuyển khoản trên dev chờ thông tin ngân hàng thật. Xem `docs/PHASE-9-REPORT.md`. Chưa triển khai Phase 10.
 - Tiếp tục chạy web local theo yêu cầu; chưa triển khai production hay các phần mở rộng Phase 14.
 
 ### Milestone bổ sung — bản duyệt giao diện trên GitHub Pages

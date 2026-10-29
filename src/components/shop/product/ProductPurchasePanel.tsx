@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
@@ -19,6 +20,7 @@ export function ProductPurchasePanel({ product, colorId, onColorChange, children
   const [selectionError, setSelectionError] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
   const hydrated = useCartStore((state) => state.hasHydrated);
+  const router = useRouter();
   const actions = useRef<HTMLDivElement>(null), sizes = useRef<HTMLFieldSetElement>(null);
   const reduced = useReducedMotion();
   const color = product.colorOptions.find((color) => color.id === colorId);
@@ -42,11 +44,14 @@ export function ProductPurchasePanel({ product, colorId, onColorChange, children
   }, []);
   function chooseSize(value: string) { setSize(value); setQuantity(1); setSelectionError(false); }
   function requestSelection() { setSelectionError(true); sizes.current?.scrollIntoView({ block: "center", behavior: reduced ? "instant" : "smooth" }); sizes.current?.querySelector<HTMLButtonElement>("button[aria-pressed]:not(:disabled)")?.focus({ preventScroll: true }); }
-  function addToCart() {
+  function addToCart(checkout = false) {
     if (!variant) { requestSelection(); return; }
     const error = useCartStore.getState().add(variant.id, quantity, variant.maxQuantity);
     setCartError(error);
-    if (!error) useUiStore.getState().setCartOpen(true);
+    if (!error) {
+      useUiStore.getState().setCartOpen(!checkout);
+      if (checkout) router.push("/checkout");
+    }
   }
   const image = product.images.find((image) => image.colorId === colorId) ?? product.image;
   return <div className="min-w-0 lg:sticky lg:top-24">
@@ -71,16 +76,15 @@ export function ProductPurchasePanel({ product, colorId, onColorChange, children
     </div></div>
     <div ref={actions} className="mt-6 space-y-3">
       {soldOut ? <button type="button" disabled className="shop-button w-full opacity-40">HẾT HÀNG</button> : <>
-        <button type="button" disabled={!hydrated} onClick={addToCart} className="shop-button w-full disabled:opacity-40">THÊM VÀO GIỎ</button>
-        <button type="button" disabled aria-describedby="purchase-availability" className="shop-button shop-button-primary w-full opacity-40">MUA NGAY</button>
-        <p id="purchase-availability" className="text-center text-xs leading-6 text-muted">Shop đang chuẩn bị tính năng thanh toán.</p>
+        <button type="button" disabled={!hydrated} onClick={() => addToCart()} className="shop-button w-full disabled:opacity-40">THÊM VÀO GIỎ</button>
+        <button type="button" disabled={!hydrated} onClick={() => addToCart(true)} className="shop-button shop-button-primary w-full disabled:opacity-40">MUA NGAY</button>
         {cartError && <p role="alert" className="text-xs text-sale">{cartError}</p>}
       </>}
     </div>
     {children}
     {showSticky && <div data-sticky-buy-bar className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t bg-white px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden">
       <div className="relative size-12 shrink-0 bg-image-bg"><ShopImage src={image?.url ?? null} alt="" sizes="48px" className="object-contain" /></div><div className="min-w-0 flex-1"><PriceTag price={product.price} compareAtPrice={product.compareAtPrice} /></div>
-      <button type="button" onClick={addToCart} disabled={soldOut || !hydrated} className="shop-button shop-button-primary shrink-0 px-3 text-[10px] disabled:opacity-40">{soldOut ? "HẾT HÀNG" : "THÊM VÀO GIỎ"}</button>
+      <button type="button" onClick={() => addToCart()} disabled={soldOut || !hydrated} className="shop-button shop-button-primary shrink-0 px-3 text-[10px] disabled:opacity-40">{soldOut ? "HẾT HÀNG" : "THÊM VÀO GIỎ"}</button>
     </div>}
   </div>;
 }
