@@ -7,6 +7,8 @@ import type { EmailContent } from "@/server/emails/layout";
 import { orderConfirmation } from "@/server/emails/order-confirmation";
 import { newOrder } from "@/server/emails/new-order";
 import { orderShipped } from "@/server/emails/order-shipped";
+import { newContact } from "@/server/emails/new-contact";
+import type { ContactMessageDTO } from "@/types/contact";
 
 type Mail = EmailContent & { to: string; key: string };
 async function sendMail(orderCode: string, content: Mail) {
@@ -24,6 +26,13 @@ export async function notifyOrderShipped(order: OrderAdminDetailDTO, shopName: s
   if (!order.customerEmail || !order.trackingCode) return;
   try { await sendMail(order.code, { ...orderShipped(order, shopName), to: order.customerEmail, key: `order-shipped/${order.id}` }); }
   catch { console.error("[notification] Shipping email failed", { orderCode: order.code }); }
+}
+export async function notifyNewContact(message: ContactMessageDTO, shopName: string) {
+  const env = getServerEnv();
+  if (!env.SHOP_NOTIFY_EMAIL && env.RESEND_API_KEY) return;
+  const adminUrl = new URL("/admin/messages", env.NEXT_PUBLIC_SITE_URL).toString();
+  try { await sendMail(message.id, { ...newContact(message, shopName, adminUrl), to: env.SHOP_NOTIFY_EMAIL ?? "", key: `new-contact/${message.id}` }); }
+  catch { console.error("[notification] Contact email failed", { messageId: message.id }); }
 }
 export async function notifyOrderCreated(order: OrderAdminDetailDTO, shopName: string, accessToken: string) {
   const env = getServerEnv();

@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–10 đã triển khai trên dev/test**, gồm Supabase dev, storefront/giỏ/checkout, quản trị sản phẩm/nội dung/đơn hàng và tổng quan. Project ở Tokyo, khác Singapore dự kiến. Resend đã có cấu hình; cần xác minh domain gửi riêng để gửi cho khách ngoài email đăng ký Resend. Chưa mở bán production. Bản GitHub Pages vẫn dùng để góp ý giao diện. Xem [báo cáo Phase 10](docs/PHASE-10-REPORT.md).
+Hiện tại: **Phase 0–11 đã triển khai trên dev/test**, gồm Supabase dev, storefront/giỏ/checkout/tra cứu/liên hệ, quản trị sản phẩm/nội dung/đơn hàng/tin nhắn và tổng quan. Project ở Tokyo, khác Singapore dự kiến. Nội dung chính sách là bản mẫu chờ chủ shop duyệt. Resend cần domain gửi riêng để gửi cho khách ngoài email đăng ký. Chưa mở bán production; GitHub Pages vẫn là bản duyệt riêng. Xem [báo cáo Phase 11](docs/PHASE-11-REPORT.md).
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
@@ -82,7 +82,7 @@ Danh mục `/collections/all` và các danh mục/bộ sưu tập hỗ trợ l�
 
 Chọn sản phẩm/màu/size rồi bấm “MUA NGAY”. Điền thông tin giao hàng, chọn một trong 34 tỉnh/thành, phường/xã và địa chỉ cụ thể; không có ô quận/huyện. COD dùng được ngay. Muốn hiện chuyển khoản, admin điền đủ ngân hàng, số tài khoản và chủ tài khoản trong Cài đặt → Thanh toán. Trang thành công tính tiền từ đơn đã lưu, QR mang đúng số tiền và mã đơn; giữ link riêng tư của đơn, không đăng công khai.
 
-Giá đổi sau khi mở checkout thì khách phải đồng ý tổng mới; hết kho sẽ có cảnh báo. Gửi lại cùng phiên đặt hàng không tạo đơn thứ hai. Thành công mới xóa giỏ và mã chống trùng. Giao diện quản lý đơn đã có; tra cứu/liên hệ/chính sách tiếp tục theo Phase 11.
+Giá đổi sau khi mở checkout thì khách phải đồng ý tổng mới; hết kho sẽ có cảnh báo. Gửi lại cùng phiên đặt hàng không tạo đơn thứ hai. Thành công mới xóa giỏ và mã chống trùng. Giao diện quản lý đơn, tra cứu, liên hệ và các trang chính sách đã có trên local.
 
 Chưa có `RESEND_API_KEY` thì server log xác nhận email dev với mã đơn/loại thông báo và che thông tin khách/token. Để gửi thật, xác minh domain trên [Resend](https://resend.com/docs/send-with-nextjs), điền `RESEND_API_KEY`, `EMAIL_FROM` và `SHOP_NOTIFY_EMAIL` vào `.env` riêng rồi khởi động lại local. Không gửi key qua chat hoặc đưa lên Git. Khách chỉ nhận email khi đã điền email lúc đặt đơn; email lỗi không làm mất đơn. Telegram chỉ gửi khi có đủ `TELEGRAM_BOT_TOKEN` và `TELEGRAM_CHAT_ID`. Local đã có cấu hình Resend và API chấp nhận yêu cầu gửi thử; sender `@resend.dev` chỉ dùng thử với email của tài khoản đăng ký, cần domain riêng để gửi cho khách khác. Chưa xác minh giao email vận chuyển đến hộp thư khách thật.
 
@@ -94,7 +94,15 @@ Chưa có `RESEND_API_KEY` thì server log xác nhận email dev với mã đơn
 4. Thành viên đổi mật khẩu trong menu tài khoản góc trên. Cần nhập mật khẩu cũ; đổi xong thu hồi các phiên khác.
 5. Trong danh sách tài khoản, quản trị viên có thể đổi vai trò, khóa/mở khóa hoặc đặt lại mật khẩu. Khóa/đổi vai trò/đặt lại mật khẩu sẽ thu hồi các phiên của tài khoản bị thay đổi. Không thể tự khóa/tự hạ quyền; luôn giữ ít nhất một admin hoạt động.
 
-Nhân viên không thấy và không truy cập được Tài khoản/Cài đặt; các action cũng kiểm tra quyền ở server. Đăng ký công khai bị tắt. Tổng quan, Đơn hàng, Danh mục, Sản phẩm, Bộ sưu tập, Banner và Cài đặt đã dùng được; Tin nhắn thuộc Phase 11. Doanh thu và xuất CSV chỉ dành cho admin.
+Nhân viên không thấy và không truy cập được Tài khoản/Cài đặt; các action cũng kiểm tra quyền ở server. Đăng ký công khai bị tắt. Tổng quan, Đơn hàng, Tin nhắn, Danh mục, Sản phẩm, Bộ sưu tập, Banner và Cài đặt đã dùng được. Doanh thu và xuất CSV chỉ dành cho admin.
+
+## Tra cứu, liên hệ và nội dung chính sách
+
+- [Kiểm tra đơn hàng](http://localhost:3000/kiem-tra-don-hang): nhập mã đơn và SĐT đặt hàng. Kết quả che một phần SĐT và không trả địa chỉ/email hay ghi chú nội bộ. Sai mã hoặc SĐT đều có cùng thông báo; quá 10 lượt/10 phút/IP sẽ tạm khóa tra cứu.
+- [Liên hệ](http://localhost:3000/lien-he): gửi tên/SĐT/nội dung, email tùy chọn. Tối đa 3 lượt/10 phút/IP. Tin được lưu trước khi gửi email cho shop; gửi email lỗi không làm mất tin.
+- [Tin nhắn admin](http://localhost:3000/admin/messages): nhân viên xem tab Mới/Đã xử lý, đánh dấu đã xử lý; hệ thống giữ tên và thời gian của người xử lý đầu tiên.
+- Các trang giới thiệu, đổi trả, bảo mật và điều khoản có nội dung mẫu. Chủ shop cần duyệt trước khi áp dụng chính thức. [Hướng dẫn chọn size](http://localhost:3000/huong-dan-chon-size) đọc toàn bộ bảng size đã tạo trong quản trị sản phẩm.
+- `npm run e2e:support` kiểm tra tra cứu, rate limit/honeypot, liên hệ → admin, chính sách, bảng size và 404 ở 375/768/1280px trên database `_test`. Email/Telegram thật bị tắt; chạy lần lượt với các bộ test khác.
 
 ## Quản lý đơn local
 

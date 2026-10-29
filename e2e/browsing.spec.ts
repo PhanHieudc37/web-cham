@@ -161,7 +161,7 @@ for (const width of [375, 768, 1280]) test(`listing, search and product at ${wid
 test("hidden/missing products and collections return actual HTTP 404", async ({ page }) => {
   for (const pathname of ["/products/ao-thun-25", "/products/ao-thun-26", "/products/ao-trong-nhom-an", "/products/khong-ton-tai", "/collections/khong-ton-tai", "/collections/nhom-an", "/duong-dan-khong-ton-tai"]) {
     const response = await page.goto(pathname); expect(response?.status(), pathname).toBe(404);
-    await expect(page.getByRole("heading", { name: "Không tìm thấy trang", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "KHÔNG TÌM THẤY TRANG", exact: true })).toBeVisible();
     await expect(page.locator('meta[name="robots"][content*="noindex"]')).toHaveCount(1);
   }
 });

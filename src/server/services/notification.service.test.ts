@@ -4,7 +4,8 @@ import type { OrderAdminDetailDTO } from "@/types/dto";
 import { defaultSettings } from "@/lib/validation/settings";
 const mocks = vi.hoisted(() => ({ env: vi.fn() }));
 vi.mock("@/server/env", () => ({ getServerEnv: mocks.env }));
-import { notifyOrderCreated, notifyOrderShipped } from "./notification.service";
+import { notifyNewContact, notifyOrderCreated, notifyOrderShipped } from "./notification.service";
+import { newContact } from "@/server/emails/new-contact";
 import { orderConfirmation } from "@/server/emails/order-confirmation";
 import { newOrder } from "@/server/emails/new-order";
 
@@ -13,6 +14,18 @@ const baseEnv = { NEXT_PUBLIC_SITE_URL: "https://example.test", RESEND_API_KEY: 
 describe("order notifications and email privacy", () => {
   beforeEach(() => { vi.restoreAllMocks(); mocks.env.mockReturnValue({ ...baseEnv }); vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 200 }))); vi.spyOn(console, "info").mockImplementation(() => undefined); vi.spyOn(console, "error").mockImplementation(() => undefined); });
   afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+  it("notifies only the shop about a contact with escaped text and a private admin link", async () => {
+    const message = { id: "contact-id", name: "PRIVATE_NAME<script>", phone: "0912345678", email: "private@example.test", message: "PRIVATE_MESSAGE<script>\nDòng hai", status: "new" as const, createdAt: new Date().toISOString(), handledAt: null, handledByName: null };
+    const template = newContact(message, "Cham.stu", "https://example.test/admin/messages"); expect(template.html).not.toContain("<script>"); expect(template.html).toContain("&lt;script&gt;"); expect(template.text).toContain("Dòng hai");
+    await notifyNewContact(message, "Cham.stu"); expect(fetch).toHaveBeenCalledTimes(1); const init = vi.mocked(fetch).mock.calls[0][1]; const body = JSON.parse(String(init?.body));
+    expect(body.to).toBe("shop@example.test"); expect(body.text).toContain("/admin/messages"); expect(new Headers(init?.headers).get("Idempotency-Key")).toBe("new-contact/contact-id");
+    vi.mocked(fetch).mockClear(); mocks.env.mockReturnValue({ ...baseEnv, RESEND_API_KEY: undefined, SHOP_NOTIFY_EMAIL: undefined }); await notifyNewContact(message, "Cham.stu"); expect(fetch).not.toHaveBeenCalled(); const logs = JSON.stringify(vi.mocked(console.info).mock.calls); expect(logs).not.toContain("PRIVATE"); expect(logs).not.toContain(message.phone); expect(logs).toContain(message.id);
+  });
+  it("contact delivery failures are private and do not reject the saved message", async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response("PRIVATE_PROVIDER_ERROR", { status: 422 }));
+    await expect(notifyNewContact({ id: "contact-id", name: "PRIVATE", phone: "PRIVATE", email: "private@example.test", message: "PRIVATE", status: "new", createdAt: new Date().toISOString(), handledAt: null, handledByName: null }, "Cham.stu")).resolves.toBeUndefined();
+    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("PRIVATE");
+  });
   it("sends escaped shipping tracking to the customer with a stable idempotency key", async () => {
     await notifyOrderShipped({ ...order, status: "shipping", carrier: "GHN<script>", trackingCode: "TRACK<10>" }, "Cham.stu");
     expect(fetch).toHaveBeenCalledTimes(1);

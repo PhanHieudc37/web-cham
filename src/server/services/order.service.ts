@@ -4,6 +4,7 @@ import { createHash, createHmac, randomBytes, randomInt, randomUUID, timingSafeE
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { canTransition, restoresStock } from "@/lib/domain/order-status";
+import { PUBLIC_FORM_LIMITS } from "@/lib/constants";
 import { maskPhone } from "@/lib/format";
 import { checkoutSchema, orderLookupSchema, type CheckoutInput } from "@/lib/validation/checkout";
 import { orderStatusInputSchema } from "@/lib/validation/order-admin";
@@ -153,7 +154,7 @@ export function createOrderService(db: Database, secret: string) {
     ]);
     return { code: order.code, createdAt: order.createdAt.toISOString(), status: order.status, paymentMethod: order.paymentMethod, paymentStatus: order.paymentStatus,
       customerName: order.customerName, customerPhone: masked ? maskPhone(order.customerPhone) : order.customerPhone, items, total: order.total, carrier: order.carrier,
-      trackingCode: order.trackingCode, cancelReason: order.cancelReason,
+      trackingCode: order.trackingCode, cancelReason: order.cancelReason, returnReason: events.findLast((event) => event.type === "status_changed" && event.toStatus === "returned")?.message ?? null,
       events: events.filter((event) => event.type !== "note").map((event) => ({ id: event.id, type: event.type, fromStatus: event.fromStatus, toStatus: event.toStatus,
         message: null, createdAt: event.createdAt.toISOString() })),
     };
@@ -164,11 +165,15 @@ export function createOrderService(db: Database, secret: string) {
       subtotal: order.subtotal, discountAmount: order.discountAmount, shippingFee: order.shippingFee, bank: order.paymentMethod === "bank_transfer" && bankTransferEnabled(config.bank) ? config.bank : null };
   }
   async function lookup(raw: z.output<typeof orderLookupSchema>, ip: string): Promise<OrderPublicDTO> {
-    await rateLimit(`lookup:${ip}`, 10, 600, db);
+    await rateLimit(`lookup:${ip}`, PUBLIC_FORM_LIMITS.lookup.requests, PUBLIC_FORM_LIMITS.lookup.seconds, db);
     const input = orderLookupSchema.parse(raw);
     const [order] = input.website ? [] : await db.select().from(orders).where(and(eq(orders.code, input.code), eq(orders.customerPhone, input.phone)));
-    if (!order) throw new AppError("NOT_FOUND", "Không tìm thấy đơn hàng với thông tin đã nhập.");
+    if (!order) throw new AppError("NOT_FOUND", "Không tìm thấy đơn hàng. Vui lòng kiểm tra lại mã đơn và số điện thoại.");
     return publicDTO(order, true);
+  }
+  async function lookupPublic(input: z.output<typeof orderLookupSchema>, ip: string): Promise<OrderPublicDTO | null> {
+    if (input.website) { await rateLimit(`lookup:${ip}`, PUBLIC_FORM_LIMITS.lookup.requests, PUBLIC_FORM_LIMITS.lookup.seconds, db); return null; }
+    return lookup(input, ip);
   }
   async function getSuccess(code: string, token: string) {
     if (token.length > 256) throw new AppError("NOT_FOUND");
@@ -200,7 +205,7 @@ export function createOrderService(db: Database, secret: string) {
     });
   }
   return { placeOrder, placeOrderWithOutcome, updateStatus, markPaid: (id: string, actorId: string) => setPayment(id, "paid", actorId),
-    markRefunded: (id: string, actorId: string) => setPayment(id, "refunded", actorId), lookup, getSuccess, getAdminDetail, updateShipping, addNote };
+    markRefunded: (id: string, actorId: string) => setPayment(id, "refunded", actorId), lookup, lookupPublic, getSuccess, getAdminDetail, updateShipping, addNote };
 }
 
 export function getOrderService() {

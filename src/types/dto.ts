@@ -46,7 +46,7 @@ export type OrderEventDTO = { id: string; type: string; fromStatus: OrderStatus 
 export type OrderPublicDTO = {
   code: string; createdAt: string; status: OrderStatus; paymentMethod: PaymentMethod; paymentStatus: PaymentStatus;
   customerName: string; customerPhone: string; items: OrderItemDTO[]; total: number; carrier: string | null; trackingCode: string | null;
-  cancelReason: string | null; events: OrderEventDTO[];
+  cancelReason: string | null; returnReason?: string | null; events: OrderEventDTO[];
 };
 export type OrderSuccessDTO = OrderPublicDTO & { customerEmail: string | null; province: string; ward: string; addressLine: string;
   subtotal: number; discountAmount: number; shippingFee: number; bank: Settings["bank"] | null };

@@ -3,6 +3,7 @@ export const MAX_QUANTITY_PER_LINE = 10;
 export const MAX_VND = 2_147_483_647;
 export const PAGE_SIZE = 12;
 export const ADMIN_PAGE_SIZE = 20;
+export const PUBLIC_FORM_LIMITS = { contact: { requests: 3, seconds: 600 }, lookup: { requests: 10, seconds: 600 } } as const;
 export const RESERVED_COLLECTION_SLUGS = ["all", "new-arrival", "best-seller", "sale"] as const;
 export const ORDER_STATUSES = ["pending", "confirmed", "shipping", "completed", "cancelled", "returned"] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];

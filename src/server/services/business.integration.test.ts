@@ -190,6 +190,21 @@ describe.skipIf(!testUrl)("business transactions on PostgreSQL", () => {
     expect(await service.getSuccess(result.orderCode, result.accessToken)).toMatchObject({ addressLine: "Địa chỉ kiểm thử", customerPhone: "0912345678" });
     expect((await service.getAdminDetail(result.order.id)).adminNote).toBe("Ghi chú nội bộ");
   });
+  it("gives identical errors for wrong code/phone and limits lookup to ten attempts per ten minutes", async () => {
+    const result = await place();
+    const attempts = [{ code: "CSUNKNOWN", phone: result.order.customerPhone, website: "" }, { code: result.orderCode, phone: "0987654321", website: "" }];
+    for (const credentials of attempts) await expect(service.lookupPublic(credentials, "198.51.100.111")).rejects.toMatchObject({ code: "NOT_FOUND", message: "Không tìm thấy đơn hàng. Vui lòng kiểm tra lại mã đơn và số điện thoại." });
+    for (let index = 2; index < 10; index++) await service.lookupPublic({ code: result.orderCode, phone: result.order.customerPhone, website: "" }, "198.51.100.111");
+    await expect(service.lookupPublic(attempts[0], "198.51.100.111")).rejects.toMatchObject({ code: "RATE_LIMITED" });
+    expect(await service.lookupPublic({ ...attempts[0], website: "bot" }, "198.51.100.112")).toBeNull();
+  });
+  it("publishes only the return reason, excluding internal notes and actor data", async () => {
+    const result = await place();
+    for (const toStatus of ["confirmed", "shipping", "returned"] as const) await service.updateStatus({ orderId: result.order.id, toStatus, reason: toStatus === "returned" ? "Khách gửi lại hàng" : "" }, actorId);
+    await service.addNote(result.order.id, "Nội bộ không hiển thị", actorId);
+    const found = await service.lookupPublic({ code: result.orderCode, phone: result.order.customerPhone, website: "" }, "198.51.100.113");
+    expect(found?.returnReason).toBe("Khách gửi lại hàng"); expect(JSON.stringify(found)).not.toContain("Nội bộ không hiển thị"); expect(found).not.toHaveProperty("customerEmail");
+  });
   it("keeps order snapshots after product edits and deletion", async () => {
     const result = await place();
     await database.db.delete(products).where(eq(products.id, fixture.productId));

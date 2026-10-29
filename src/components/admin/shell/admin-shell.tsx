@@ -19,7 +19,7 @@ const navigation = [
   { href: "/admin/categories", label: "Danh mục", icon: LayoutList, ready: true },
   { href: "/admin/collections", label: "Bộ sưu tập", icon: Tags, ready: true },
   { href: "/admin/banners", label: "Banner", icon: Images, ready: true },
-  { href: "/admin/messages", label: "Tin nhắn", icon: MessageSquare, ready: false },
+  { href: "/admin/messages", label: "Tin nhắn", icon: MessageSquare, ready: true },
   { href: "/admin/settings", label: "Cài đặt", icon: Settings, admin: true, ready: true },
   { href: "/admin/users", label: "Tài khoản", icon: Users, admin: true, ready: true },
 ];
