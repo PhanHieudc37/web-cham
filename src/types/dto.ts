@@ -50,5 +50,5 @@ export type OrderPublicDTO = {
 };
 export type OrderSuccessDTO = OrderPublicDTO & { customerEmail: string | null; province: string; ward: string; addressLine: string;
   subtotal: number; discountAmount: number; shippingFee: number; bank: Settings["bank"] | null };
-export type OrderAdminDetailDTO = OrderSuccessDTO & { id: string; adminNote: string | null; note: string | null; paidAt: string | null };
+export type OrderAdminDetailDTO = Omit<OrderSuccessDTO, "events"> & { id: string; adminNote: string | null; note: string | null; paidAt: string | null; events: (OrderEventDTO & { actorName?: string | null })[] };
 export type OrderAdminListItemDTO = Pick<OrderAdminDetailDTO, "id" | "code" | "createdAt" | "customerName" | "customerPhone" | "total" | "status" | "paymentMethod" | "paymentStatus"> & { itemCount: number };

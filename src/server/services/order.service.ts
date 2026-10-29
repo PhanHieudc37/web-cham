@@ -10,7 +10,7 @@ import { orderStatusInputSchema } from "@/lib/validation/order-admin";
 import { bankTransferEnabled } from "@/lib/validation/settings";
 import type { OrderAdminDetailDTO, OrderPublicDTO, OrderSuccessDTO } from "@/types/dto";
 import { getDatabase, type Database, type DatabaseReader } from "@/server/db/client";
-import { orderEvents, orderItems, orders, products, productVariants, stockMovements } from "@/server/db/schema";
+import { orderEvents, orderItems, orders, products, productVariants, stockMovements, user } from "@/server/db/schema";
 import { AppError } from "@/server/errors";
 import { rateLimit } from "@/server/rate-limit";
 import { buildCartQuote, loadCartRows } from "./cart.service";
@@ -122,11 +122,12 @@ export function createOrderService(db: Database, secret: string) {
       }
       const codPaid = input.toStatus === "completed" && order.paymentMethod === "cod" && order.paymentStatus === "unpaid";
       await tx.update(orders).set({ status: input.toStatus, updatedAt: now,
-        ...(input.toStatus === "confirmed" ? { confirmedAt: now } : {}), ...(input.toStatus === "shipping" ? { shippedAt: now } : {}),
+        ...(input.toStatus === "confirmed" ? { confirmedAt: now } : {}), ...(input.toStatus === "shipping" ? { shippedAt: now, carrier: input.carrier === undefined ? order.carrier : input.carrier || null, trackingCode: input.trackingCode === undefined ? order.trackingCode : input.trackingCode || null } : {}),
         ...(input.toStatus === "completed" ? { completedAt: now } : {}), ...(input.toStatus === "cancelled" ? { cancelledAt: now, cancelReason: input.reason } : {}),
         ...(input.toStatus === "returned" ? { returnedAt: now } : {}), ...(codPaid ? { paymentStatus: "paid" as const, paidAt: now } : {}),
       }).where(eq(orders.id, order.id));
       await tx.insert(orderEvents).values({ orderId: order.id, type: "status_changed", fromStatus: order.status, toStatus: input.toStatus, message: input.reason || null, actorId });
+      if (input.toStatus === "shipping") await tx.insert(orderEvents).values({ orderId: order.id, type: "shipping_updated", message: [input.carrier ?? order.carrier, input.trackingCode ?? order.trackingCode].filter(Boolean).join(" · ") || null, actorId });
       if (codPaid) await tx.insert(orderEvents).values({ orderId: order.id, type: "payment_updated", message: "Đã nhận tiền COD khi hoàn thành đơn", actorId });
       return { orderId: order.id };
     });
@@ -153,8 +154,8 @@ export function createOrderService(db: Database, secret: string) {
     return { code: order.code, createdAt: order.createdAt.toISOString(), status: order.status, paymentMethod: order.paymentMethod, paymentStatus: order.paymentStatus,
       customerName: order.customerName, customerPhone: masked ? maskPhone(order.customerPhone) : order.customerPhone, items, total: order.total, carrier: order.carrier,
       trackingCode: order.trackingCode, cancelReason: order.cancelReason,
-      events: events.filter((event) => !masked || event.type !== "note").map((event) => ({ id: event.id, type: event.type, fromStatus: event.fromStatus, toStatus: event.toStatus,
-        message: event.type === "note" ? event.message : null, createdAt: event.createdAt.toISOString() })),
+      events: events.filter((event) => event.type !== "note").map((event) => ({ id: event.id, type: event.type, fromStatus: event.fromStatus, toStatus: event.toStatus,
+        message: null, createdAt: event.createdAt.toISOString() })),
     };
   }
   async function successDTO(order: OrderRow): Promise<OrderSuccessDTO> {
@@ -178,7 +179,9 @@ export function createOrderService(db: Database, secret: string) {
   async function getAdminDetail(id: string): Promise<OrderAdminDetailDTO> {
     const [order] = await db.select().from(orders).where(eq(orders.id, id));
     if (!order) throw new AppError("NOT_FOUND");
-    return { ...await successDTO(order), id, adminNote: order.adminNote, note: order.note, paidAt: order.paidAt?.toISOString() ?? null };
+    const history = await db.select({ event: orderEvents, actorName: user.name }).from(orderEvents).leftJoin(user, eq(user.id, orderEvents.actorId)).where(eq(orderEvents.orderId, id)).orderBy(asc(orderEvents.createdAt), asc(orderEvents.id));
+    return { ...await successDTO(order), id, adminNote: order.adminNote, note: order.note, paidAt: order.paidAt?.toISOString() ?? null,
+      events: history.map(({ event, actorName }) => ({ id: event.id, type: event.type, fromStatus: event.fromStatus, toStatus: event.toStatus, message: event.message, createdAt: event.createdAt.toISOString(), actorName })) };
   }
   async function updateShipping(orderId: string, carrier: string, trackingCode: string, actorId: string) {
     return db.transaction(async (tx) => {

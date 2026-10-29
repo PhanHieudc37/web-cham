@@ -120,6 +120,14 @@ describe.skipIf(!testUrl)("business transactions on PostgreSQL", () => {
     await expect(service.updateStatus({ orderId: order.id, toStatus: "cancelled", reason: "" }, actorId)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
     expect(await stock()).toBe(4);
   });
+  it("keeps internal notes out of both the customer success receipt and public lookup", async () => {
+    const result = await place();
+    await service.addNote(result.order.id, "Ghi chú chỉ dành cho nhân viên", actorId);
+    const success = await service.getSuccess(result.orderCode, result.accessToken);
+    const lookup = await service.lookup({ code: result.orderCode, phone: result.order.customerPhone, website: "" }, "198.51.100.120");
+    for (const dto of [success, lookup]) { expect(dto.events.some((event) => event.type === "note")).toBe(false); expect(JSON.stringify(dto)).not.toContain("Ghi chú chỉ dành cho nhân viên"); }
+    expect((await service.getAdminDetail(result.order.id)).events).toEqual(expect.arrayContaining([expect.objectContaining({ type: "note", message: "Ghi chú chỉ dành cho nhân viên" })]));
+  });
   it("completes COD as paid and restores a returned order without automatic refund", async () => {
     const { order } = await place(2);
     for (const toStatus of ["confirmed", "shipping", "completed"] as const) await service.updateStatus({ orderId: order.id, toStatus, reason: "" }, actorId);

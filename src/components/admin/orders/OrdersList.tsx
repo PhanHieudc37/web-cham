@@ -1,0 +1,17 @@
+import Link from "next/link";
+import { ORDER_STATUSES, ORDER_STATUS_LABELS } from "@/lib/constants";
+import { orderQuery, type OrderFilters } from "@/lib/order-admin";
+import type { OrderListDTO } from "@/types/order-admin";
+import { OrdersTable } from "./OrdersTable";
+const input = "mt-1 h-11 w-full min-w-0 rounded-md border bg-white px-3 text-sm";
+export function OrdersList({ data, filters, admin }: { data: OrderListDTO; filters: OrderFilters; admin: boolean }) {
+  return <div className="space-y-6"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="mb-2 text-[10px] tracking-widest text-stone-400">VẬN HÀNH CỬA HÀNG</p><h1 className="text-2xl font-semibold">Đơn hàng</h1></div>{admin && <a href={`/api/admin/orders/export?${orderQuery(filters)}`} className="rounded-md border bg-white px-4 py-3 text-sm font-medium">Xuất CSV</a>}</div>
+    <nav aria-label="Trạng thái đơn hàng" className="flex flex-wrap gap-2">{(["", ...ORDER_STATUSES] as const).map((status) => <Link key={status} aria-current={filters.status === status ? "page" : undefined} href={`/admin/orders?${orderQuery(filters, { status, page: 1 })}`} className={`rounded-md border px-3 py-2.5 text-xs ${filters.status === status ? "border-stone-900 bg-stone-900 text-white" : "bg-white text-stone-600"}`}>{status ? ORDER_STATUS_LABELS[status] : "Tất cả"} <span className="ml-1 opacity-70">{data.counts[status || "all"]}</span></Link>)}</nav>
+    <form action="/admin/orders" className="grid gap-3 rounded-md border bg-white p-4 sm:grid-cols-2 lg:grid-cols-3"><input type="hidden" name="status" value={filters.status} />
+      <label className="min-w-0 text-xs font-medium sm:col-span-2 lg:col-span-1">Tìm đơn hàng<input name="q" defaultValue={filters.q} placeholder="Mã đơn, SĐT, tên khách" maxLength={100} className={input} /></label>
+      <label className="min-w-0 text-xs font-medium">Từ ngày<input type="date" name="from" defaultValue={filters.from} className={input} /></label><label className="min-w-0 text-xs font-medium">Đến ngày<input type="date" name="to" defaultValue={filters.to} min={filters.from || undefined} className={input} /></label>
+      <label className="min-w-0 text-xs font-medium">Phương thức<select name="paymentMethod" defaultValue={filters.paymentMethod} className={input}><option value="">Tất cả</option><option value="cod">COD</option><option value="bank_transfer">Chuyển khoản</option></select></label><label className="min-w-0 text-xs font-medium">Thanh toán<select name="paymentStatus" defaultValue={filters.paymentStatus} className={input}><option value="">Tất cả</option><option value="unpaid">Chưa thanh toán</option><option value="paid">Đã thanh toán</option><option value="refunded">Đã hoàn tiền</option></select></label>
+      <div className="flex items-end gap-4"><button className="h-11 rounded-md bg-stone-900 px-5 text-sm font-medium text-white">Áp dụng</button><Link href="/admin/orders" className="py-3 text-sm text-stone-500">Xóa bộ lọc</Link></div></form>
+    <OrdersTable items={data.items} /><nav aria-label="Phân trang đơn hàng" className="flex flex-wrap items-center justify-between gap-3 text-xs text-stone-500"><span>{data.total} đơn · Trang {data.page} / {data.totalPages}</span><div className="flex gap-4">{data.page > 1 && <Link className="py-3" href={`/admin/orders?${orderQuery(filters, { page: data.page - 1 })}`}>Trước</Link>}{data.page < data.totalPages && <Link className="py-3" href={`/admin/orders?${orderQuery(filters, { page: data.page + 1 })}`}>Sau</Link>}</div></nav>
+  </div>;
+}

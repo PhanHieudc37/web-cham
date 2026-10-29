@@ -27,12 +27,12 @@ export const orderItems = pgTable("order_items", {
   variantId: uuid().references(() => productVariants.id, { onDelete: "set null" }),
   productName: text().notNull(), productSlug: text().notNull(), colorName: text().notNull(), size: text().notNull(), sku: text().notNull(),
   imageUrl: text(), unitPrice: integer().notNull(), quantity: integer().notNull(), lineTotal: integer().notNull(),
-}, (table) => [check("order_items_quantity_positive", sql`${table.quantity} > 0`)]).enableRLS();
+}, (table) => [check("order_items_quantity_positive", sql`${table.quantity} > 0`), index("order_items_order_idx").on(table.orderId)]).enableRLS();
 
 export const orderEvents = pgTable("order_events", {
   id: primaryId(), orderId: uuid().notNull().references(() => orders.id, { onDelete: "cascade" }), type: orderEventType().notNull(),
   fromStatus: orderStatus(), toStatus: orderStatus(), message: text(), actorId: text(), createdAt: createdAt(),
-}).enableRLS();
+}, (table) => [index("order_events_order_created_idx").on(table.orderId, table.createdAt, table.id)]).enableRLS();
 
 export const stockMovements = pgTable("stock_movements", {
   id: primaryId(), variantId: uuid().notNull().references(() => productVariants.id, { onDelete: "cascade" }),

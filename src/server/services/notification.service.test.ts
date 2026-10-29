@@ -4,7 +4,7 @@ import type { OrderAdminDetailDTO } from "@/types/dto";
 import { defaultSettings } from "@/lib/validation/settings";
 const mocks = vi.hoisted(() => ({ env: vi.fn() }));
 vi.mock("@/server/env", () => ({ getServerEnv: mocks.env }));
-import { notifyOrderCreated } from "./notification.service";
+import { notifyOrderCreated, notifyOrderShipped } from "./notification.service";
 import { orderConfirmation } from "@/server/emails/order-confirmation";
 import { newOrder } from "@/server/emails/new-order";
 
@@ -13,6 +13,19 @@ const baseEnv = { NEXT_PUBLIC_SITE_URL: "https://example.test", RESEND_API_KEY: 
 describe("order notifications and email privacy", () => {
   beforeEach(() => { vi.restoreAllMocks(); mocks.env.mockReturnValue({ ...baseEnv }); vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 200 }))); vi.spyOn(console, "info").mockImplementation(() => undefined); vi.spyOn(console, "error").mockImplementation(() => undefined); });
   afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+  it("sends escaped shipping tracking to the customer with a stable idempotency key", async () => {
+    await notifyOrderShipped({ ...order, status: "shipping", carrier: "GHN<script>", trackingCode: "TRACK<10>" }, "Cham.stu");
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const init = vi.mocked(fetch).mock.calls[0][1]; expect(new Headers(init?.headers).get("Idempotency-Key")).toBe("order-shipped/order-id");
+    const body = JSON.parse(String(init?.body)); expect(body.to).toBe(order.customerEmail); expect(body.text).toContain("TRACK<10>"); expect(body.html).toContain("TRACK&lt;10&gt;"); expect(body.html).not.toContain("<script>");
+    expect(console.info).not.toHaveBeenCalled(); expect(console.error).not.toHaveBeenCalled();
+  });
+  it("skips shipping without a customer email or tracking, and keeps provider failures private", async () => {
+    await notifyOrderShipped(order, "Cham.stu"); await notifyOrderShipped({ ...order, customerEmail: null, trackingCode: "TRACK" }, "Cham.stu"); expect(fetch).not.toHaveBeenCalled();
+    vi.mocked(fetch).mockResolvedValue(new Response("PRIVATE_PROVIDER_RESPONSE", { status: 422 }));
+    await expect(notifyOrderShipped({ ...order, trackingCode: "TRACK" }, "Cham.stu")).resolves.toBeUndefined();
+    const logs = JSON.stringify(vi.mocked(console.error).mock.calls); expect(logs).toContain(order.code); expect(logs).not.toContain("PRIVATE"); expect(logs).not.toContain(order.customerEmail);
+  });
   it("escapes shop/product/customer HTML and includes server totals, bank instructions and the proper links", () => {
     const customer = orderConfirmation(order, "Cham <stu>", "https://example.test/checkout/success?code=CS&t=TOKEN");
     expect(customer.html).not.toContain("<script>"); expect(customer.html).toContain("&lt;script&gt;"); expect(customer.text).toContain("229.000₫"); expect(customer.text).toContain(order.code); expect(customer.text).toContain("Nội dung chuyển khoản");

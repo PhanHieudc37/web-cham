@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–9 đã triển khai**, gồm Supabase dev, quản trị sản phẩm/nội dung, storefront, giỏ và checkout khách với COD/chuyển khoản, tạo đơn/trừ kho và trang thành công riêng tư. Project chủ shop tạo ở Tokyo, khác Singapore dự kiến. Email thật chờ cấu hình Resend; quản lý đơn trong admin thuộc Phase 10. Chưa mở bán production. Bản xem thử riêng trên GitHub Pages vẫn dùng để góp ý giao diện. Xem [báo cáo Phase 9](docs/PHASE-9-REPORT.md) cho kết quả nghiệm thu.
+Hiện tại: **Phase 0–10 đã triển khai trên dev/test**, gồm Supabase dev, storefront/giỏ/checkout, quản trị sản phẩm/nội dung/đơn hàng và tổng quan. Project ở Tokyo, khác Singapore dự kiến. Resend đã có cấu hình; cần xác minh domain gửi riêng để gửi cho khách ngoài email đăng ký Resend. Chưa mở bán production. Bản GitHub Pages vẫn dùng để góp ý giao diện. Xem [báo cáo Phase 10](docs/PHASE-10-REPORT.md).
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
@@ -82,9 +82,9 @@ Danh mục `/collections/all` và các danh mục/bộ sưu tập hỗ trợ l�
 
 Chọn sản phẩm/màu/size rồi bấm “MUA NGAY”. Điền thông tin giao hàng, chọn một trong 34 tỉnh/thành, phường/xã và địa chỉ cụ thể; không có ô quận/huyện. COD dùng được ngay. Muốn hiện chuyển khoản, admin điền đủ ngân hàng, số tài khoản và chủ tài khoản trong Cài đặt → Thanh toán. Trang thành công tính tiền từ đơn đã lưu, QR mang đúng số tiền và mã đơn; giữ link riêng tư của đơn, không đăng công khai.
 
-Giá đổi sau khi mở checkout thì khách phải đồng ý tổng mới; hết kho sẽ có cảnh báo. Gửi lại cùng phiên đặt hàng không tạo đơn thứ hai. Thành công mới xóa giỏ và mã chống trùng. Các trang chính sách đầy đủ và giao diện quản lý đơn tiếp tục theo Phase 10–11.
+Giá đổi sau khi mở checkout thì khách phải đồng ý tổng mới; hết kho sẽ có cảnh báo. Gửi lại cùng phiên đặt hàng không tạo đơn thứ hai. Thành công mới xóa giỏ và mã chống trùng. Giao diện quản lý đơn đã có; tra cứu/liên hệ/chính sách tiếp tục theo Phase 11.
 
-Chưa có `RESEND_API_KEY` thì server log xác nhận email dev với mã đơn/loại thông báo và che thông tin khách/token. Để gửi thật, xác minh domain trên [Resend](https://resend.com/docs/send-with-nextjs), điền `RESEND_API_KEY`, `EMAIL_FROM` và `SHOP_NOTIFY_EMAIL` vào `.env` riêng rồi khởi động lại local. Không gửi key qua chat hoặc đưa lên Git. Khách chỉ nhận email khi đã điền email lúc đặt đơn; email lỗi không làm mất đơn. Telegram chỉ gửi khi có đủ `TELEGRAM_BOT_TOKEN` và `TELEGRAM_CHAT_ID`. Chưa xác minh gửi email thật trên tài khoản shop vì hiện các biến này chưa được cấu hình.
+Chưa có `RESEND_API_KEY` thì server log xác nhận email dev với mã đơn/loại thông báo và che thông tin khách/token. Để gửi thật, xác minh domain trên [Resend](https://resend.com/docs/send-with-nextjs), điền `RESEND_API_KEY`, `EMAIL_FROM` và `SHOP_NOTIFY_EMAIL` vào `.env` riêng rồi khởi động lại local. Không gửi key qua chat hoặc đưa lên Git. Khách chỉ nhận email khi đã điền email lúc đặt đơn; email lỗi không làm mất đơn. Telegram chỉ gửi khi có đủ `TELEGRAM_BOT_TOKEN` và `TELEGRAM_CHAT_ID`. Local đã có cấu hình Resend và API chấp nhận yêu cầu gửi thử; sender `@resend.dev` chỉ dùng thử với email của tài khoản đăng ký, cần domain riêng để gửi cho khách khác. Chưa xác minh giao email vận chuyển đến hộp thư khách thật.
 
 ## Đăng nhập và tài khoản quản trị
 
@@ -94,7 +94,15 @@ Chưa có `RESEND_API_KEY` thì server log xác nhận email dev với mã đơn
 4. Thành viên đổi mật khẩu trong menu tài khoản góc trên. Cần nhập mật khẩu cũ; đổi xong thu hồi các phiên khác.
 5. Trong danh sách tài khoản, quản trị viên có thể đổi vai trò, khóa/mở khóa hoặc đặt lại mật khẩu. Khóa/đổi vai trò/đặt lại mật khẩu sẽ thu hồi các phiên của tài khoản bị thay đổi. Không thể tự khóa/tự hạ quyền; luôn giữ ít nhất một admin hoạt động.
 
-Nhân viên không thấy và không truy cập được Tài khoản/Cài đặt; các action cũng kiểm tra quyền ở server. Đăng ký công khai bị tắt. Danh mục, Sản phẩm, Bộ sưu tập, Banner và Cài đặt đã dùng được; Đơn hàng và Tin nhắn còn ghi "Sắp có"; tổng quan hiện là trang chào, chưa có số liệu kinh doanh của Phase 10.
+Nhân viên không thấy và không truy cập được Tài khoản/Cài đặt; các action cũng kiểm tra quyền ở server. Đăng ký công khai bị tắt. Tổng quan, Đơn hàng, Danh mục, Sản phẩm, Bộ sưu tập, Banner và Cài đặt đã dùng được; Tin nhắn thuộc Phase 11. Doanh thu và xuất CSV chỉ dành cho admin.
+
+## Quản lý đơn local
+
+- Mở [tổng quan](http://localhost:3000/admin) hoặc [đơn hàng](http://localhost:3000/admin/orders). Tìm/lọc và phân trang giữ trên URL; nếu chưa có đơn thì danh sách trống.
+- Mở chi tiết để xác nhận, giao, hoàn thành, hủy/hoàn trả. Hủy phải có lý do; hủy/hoàn trả sẽ hoàn kho. COD hoàn thành tự ghi nhận tiền; chuyển khoản nhận tiền và hoàn tiền cần đối chiếu thực tế rồi xác nhận riêng.
+- Nhập hãng/mã vận đơn khi chuyển Đang giao để gửi email cho khách có địa chỉ email. Sửa vận chuyển, thêm ghi chú nội bộ và xem người thao tác trong lịch sử. Ghi chú nội bộ không được trả về cho khách.
+- Admin xuất CSV theo bộ lọc hiện tại. File có BOM, một dòng/sản phẩm; các cột tổng đơn lặp ở từng dòng sản phẩm. In phiếu A5 từ chi tiết; kiểm tra mục thu hộ trước khi giao.
+- `npm run e2e:orders` kiểm tra luồng này trên PostgreSQL `_test`, 375/768/1280px. Bộ test tắt email/Telegram thật, không ghi đơn vào Supabase dev. Chạy lần lượt với các bộ test khác.
 
 **Quên mật khẩu nhân viên:** admin vào Tài khoản, bấm biểu tượng chìa khóa của nhân viên, nhập mật khẩu tạm mới và gửi riêng cho họ. Mật khẩu cũ và phiên cũ không còn dùng được.
 

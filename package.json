@@ -20,6 +20,7 @@
     "e2e:browsing": "playwright test --config playwright.browsing.config.ts",
     "e2e:cart": "playwright test --config playwright.cart.config.ts",
     "e2e:checkout": "playwright test --config playwright.checkout.config.ts",
+    "e2e:orders": "playwright test --config playwright.orders.config.ts",
     "db:generate": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs migrate",
     "db:studio": "node --conditions=react-server node_modules/drizzle-kit/bin.cjs studio",

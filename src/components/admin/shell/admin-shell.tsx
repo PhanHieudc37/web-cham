@@ -14,7 +14,7 @@ import { ChangePassword } from "../change-password";
 
 const navigation = [
   { href: "/admin", label: "Tổng quan", icon: LayoutGrid, ready: true },
-  { href: "/admin/orders", label: "Đơn hàng", icon: ShoppingBag, ready: false },
+  { href: "/admin/orders", label: "Đơn hàng", icon: ShoppingBag, ready: true },
   { href: "/admin/products", label: "Sản phẩm", icon: Package, ready: true },
   { href: "/admin/categories", label: "Danh mục", icon: LayoutList, ready: true },
   { href: "/admin/collections", label: "Bộ sưu tập", icon: Tags, ready: true },
@@ -40,10 +40,10 @@ export function AdminShell({ person, pendingOrders, newMessages, children }: { p
   </div>;
   return <div className="admin-theme min-h-dvh bg-[#f7f7f6] text-stone-900">
     <a className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:p-3" href="#admin-content">Đến nội dung chính</a>
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r bg-white lg:block">{sidebar}</aside>
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r bg-white lg:block print:hidden">{sidebar}</aside>
     <Sheet open={menuOpen} onOpenChange={setMenuOpen}><SheetContent side="left" className="w-[280px] gap-0 p-0"><SheetHeader className="sr-only"><SheetTitle>Menu quản trị</SheetTitle><SheetDescription>Điều hướng các chức năng cửa hàng.</SheetDescription></SheetHeader>{sidebar}</SheetContent></Sheet>
-    <div className="min-w-0 lg:pl-60">
-      <header className="sticky top-0 z-20 flex h-[72px] items-center justify-between gap-2 border-b bg-white px-4 md:px-8">
+    <div className="min-w-0 lg:pl-60 print:pl-0">
+      <header className="sticky top-0 z-20 flex h-[72px] items-center justify-between gap-2 border-b bg-white px-4 md:px-8 print:hidden">
         <div className="flex min-w-0 items-center gap-3"><Button size="icon" variant="ghost" className="size-11 lg:hidden" aria-label="Mở menu quản trị" onClick={() => setMenuOpen(true)}><Menu size={21} /></Button><span className="truncate text-sm font-medium">{title}</span></div>
         <div className="flex shrink-0 items-center gap-2 md:gap-5"><Link href="/" target="_blank" className="flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-900"><span className="hidden sm:inline">Xem cửa hàng</span><ArrowUpRight size={17} /><span className="sr-only sm:hidden">Xem cửa hàng</span></Link><span className="h-7 w-px bg-stone-200" />
           <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="h-auto min-h-11 gap-2 px-1.5" aria-label="Menu tài khoản"><span className="flex size-8 items-center justify-center rounded-full bg-stone-100"><CircleUserRound size={19} strokeWidth={1.5} /></span><span className="hidden max-w-40 text-left md:block"><span className="block truncate text-xs font-medium">{person.name}</span><span className="block text-[10px] font-normal text-stone-500">{roleLabel(person.role)}</span></span><ChevronDown size={13} /></Button></DropdownMenuTrigger>
@@ -52,8 +52,8 @@ export function AdminShell({ person, pendingOrders, newMessages, children }: { p
             </DropdownMenuContent></DropdownMenu>
         </div>
       </header>
-      <main id="admin-content" className="mx-auto max-w-[1440px] px-4 py-7 md:px-8 md:py-9">{children}</main>
-      <footer className="flex flex-wrap justify-between gap-2 px-4 py-6 text-[10px] text-stone-400 md:px-8"><span>© {new Date().getFullYear()} Cham.stu</span><span className="flex items-center gap-1.5"><ChartNoAxesCombined size={12} />Không gian quản trị cửa hàng</span></footer>
+      <main id="admin-content" className="mx-auto max-w-[1440px] px-4 py-7 md:px-8 md:py-9 print:max-w-none print:p-0">{children}</main>
+      <footer className="flex flex-wrap justify-between gap-2 px-4 py-6 text-[10px] text-stone-400 md:px-8 print:hidden"><span>© {new Date().getFullYear()} Cham.stu</span><span className="flex items-center gap-1.5"><ChartNoAxesCombined size={12} />Không gian quản trị cửa hàng</span></footer>
     </div><ChangePassword open={passwordOpen} onOpenChange={setPasswordOpen} />
   </div>;
 }
