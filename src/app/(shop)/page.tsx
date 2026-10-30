@@ -3,11 +3,17 @@ import { BrandStory, CategoryTiles, PolicyStrip } from "@/components/shop/home/h
 import { ProductSection } from "@/components/shop/common/product-card";
 import { getHome } from "@/server/services/catalog.service";
 import { getPublicSettings } from "@/server/services/settings.service";
+import { getPageMetadata, getSiteUrl } from "@/server/services/seo.service";
+import { organizationJsonLd } from "@/lib/seo";
+import { JsonLd } from "@/components/shop/common/JsonLd";
+
+export async function generateMetadata() { return getPageMetadata({ path: "/" }); }
 
 export default async function HomePage() {
   const [home, settings] = await Promise.all([getHome(), getPublicSettings()]);
   const storyImage = home.collections.find(({ bannerUrl }) => bannerUrl)?.bannerUrl ?? home.banners[0]?.desktopImageUrl ?? home.categories.find(({ imageUrl }) => imageUrl)?.imageUrl ?? null;
   return <>
+    <h1 className="sr-only">{settings.shop.name} — Cửa hàng quần áo</h1><JsonLd data={organizationJsonLd(settings, getSiteUrl())} />
     <h1 className="sr-only">{settings.shop.name}</h1>
     <HeroSlider banners={home.banners} />
     <CategoryTiles home={home} />

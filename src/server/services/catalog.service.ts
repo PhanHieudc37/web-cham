@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { and, asc, count, desc, eq, exists, gt, gte, ilike, inArray, isNull, lt, lte, ne, or, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { PAGE_SIZE } from "@/lib/constants";
@@ -194,7 +195,8 @@ export function createCatalogService(reader: DatabaseReader) {
 
 export const getListing = cached(async (slug: string, filters: ListingFilters = emptyFilters()) => createCatalogService(getDatabase()).getListing(slug, filters), ["catalog-listing"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.collections]);
 export const searchProducts = cached(async (query: string, page: number = 1) => createCatalogService(getDatabase()).search(query, page), ["catalog-search"], [CACHE_TAGS.products, CACHE_TAGS.categories]);
-export const getProductDetail = cached(async (slug: string) => createCatalogService(getDatabase()).getProductDetail(slug), ["catalog-product"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.settings]);
+// Metadata and page rendering share one read within a render, including cold ISR.
+export const getProductDetail = cache(cached(async (slug: string) => createCatalogService(getDatabase()).getProductDetail(slug), ["catalog-product"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.settings]));
 export const getRelatedProducts = cached(async (slug: string) => createCatalogService(getDatabase()).getRelatedProducts(slug), ["catalog-related"], [CACHE_TAGS.products, CACHE_TAGS.categories]);
 export const getMenu = cached(async () => createCatalogService(getDatabase()).getMenu(), ["catalog-menu"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.collections]);
 export const getHome = cached(async () => createCatalogService(getDatabase()).getHome(), ["catalog-home"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.collections, CACHE_TAGS.banners]);

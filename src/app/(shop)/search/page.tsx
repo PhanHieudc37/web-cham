@@ -4,6 +4,8 @@ import { Pagination } from "@/components/shop/common/Pagination";
 import { ProductCard, ProductSection } from "@/components/shop/common/product-card";
 import { parseListingFilters } from "@/lib/validation/listing";
 import { getListing, searchProducts } from "@/server/services/catalog.service";
+import { getPageMetadata } from "@/server/services/seo.service";
+export async function generateMetadata() { return getPageMetadata({ title: "Tìm kiếm sản phẩm", path: "/search", noindex: true }); }
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;

@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–11 đã triển khai trên dev/test**, gồm Supabase dev, storefront/giỏ/checkout/tra cứu/liên hệ, quản trị sản phẩm/nội dung/đơn hàng/tin nhắn và tổng quan. Project ở Tokyo, khác Singapore dự kiến. Nội dung chính sách là bản mẫu chờ chủ shop duyệt. Resend cần domain gửi riêng để gửi cho khách ngoài email đăng ký. Chưa mở bán production; GitHub Pages vẫn là bản duyệt riêng. Xem [báo cáo Phase 11](docs/PHASE-11-REPORT.md).
+Hiện tại: **Phase 0–12 đã triển khai trên dev/test**, gồm Supabase dev, storefront/giỏ/checkout/tra cứu/liên hệ, quản trị, SEO và kiểm thử production local. Project ở Tokyo, khác Singapore dự kiến. Chủ shop đã duyệt nội dung giới thiệu/chính sách trong phiên làm Phase 12; các thời hạn vận hành chưa cung cấp vẫn cần xác nhận trước khi mở bán. Resend cần domain gửi riêng để gửi cho khách ngoài email đăng ký. Chưa mở bán production; GitHub Pages vẫn là bản duyệt riêng. Xem [báo cáo Phase 12](docs/PHASE-12-REPORT.md).
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
@@ -56,7 +56,9 @@ npm run e2e:storefront
 npm run e2e:browsing
 ```
 
-E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang chủ, font và tràn ngang tại 375/768/1280px. Lần đầu có thể cần `npx playwright install chromium`. Bốn luồng bán hàng E2E sẽ làm ở Phase 12.
+`npm run e2e` (hoặc `npm run e2e:production`) tự seed PostgreSQL `_test`, build production rồi chạy `next start` ở cổng 3100. Kiểm tra bốn luồng bán hàng, responsive 375/768/1280px, SEO, quyền và làm mới ISR sau khi admin sửa giá. Email/Telegram bị chặn tại HTTP bằng stub riêng cho tiến trình test; không gửi ra ngoài. Chỉ tạo ảnh fixture local, không upload Storage. Lần đầu có thể cần `npx playwright install chromium`.
+
+Chạy các bộ E2E và unit/integration lần lượt vì dùng chung database test. Dừng server local trước E2E production vì dùng chung thư mục `.next`. Kết thúc E2E, chạy lại `npm run build` bằng `.env` thật rồi `npm start`, hoặc `npm run dev`, để xem dữ liệu shop. Không dùng bản build của E2E để chạy cửa hàng.
 
 `npm run e2e:admin` kiểm tra đăng nhập, quyền truy cập, tài khoản, đổi mật khẩu và responsive trên PostgreSQL test riêng. Lệnh tự tạo lại tài khoản test, xóa bảng user/session/account liên quan và rate limit **trong database kiểm thử**. Không chạy đồng thời với `npm run test` vì dùng cùng fixture. Có kiểm tra chặn địa chỉ dev/prod trước khi seed. Không chạy server khác ở cổng 3100 khi kiểm tra.
 
@@ -68,7 +70,7 @@ E2E Phase 0 tự chạy dev server riêng ở cổng 3100, kiểm tra trang ch�
 
 ## Xem cửa hàng local
 
-Mở [localhost:3000](http://localhost:3000) sau `npm run dev`. Trang chủ lấy banner, danh mục, sản phẩm, collection và cài đặt từ Supabase dev. Sửa trong admin rồi tải lại cửa hàng để xem kết quả; không cần deploy. Nội dung trống tự ẩn, ảnh mẫu còn dùng placeholder. Menu/tìm kiếm hỗ trợ Esc và bấm overlay để đóng. Các liên kết đến trang của phase sau đã có đường dẫn nhưng nội dung chưa được triển khai.
+Mở [localhost:3000](http://localhost:3000) sau `npm run dev`. Trang chủ lấy banner, danh mục, sản phẩm, collection và cài đặt từ Supabase dev. Sửa trong admin rồi tải lại cửa hàng để xem kết quả; không cần deploy. Nội dung trống tự ẩn, ảnh mẫu còn dùng placeholder. Menu/tìm kiếm hỗ trợ Esc và bấm overlay để đóng.
 
 Danh mục `/collections/all` và các danh mục/bộ sưu tập hỗ trợ lọc, sắp xếp và phân trang trên URL; reload giữ lựa chọn. Trang `/search?q=ao+thun` tìm không dấu. Bấm sản phẩm để xem gallery, chọn màu/size và số lượng; size hết hàng/ngừng bán bị khóa, đổi màu đổi ảnh. Bảng size nằm trong dialog và accordion. Nút “THÊM VÀO GIỎ” mở drawer; biểu tượng giỏ trên header cũng mở drawer. Trang `/cart` cho sửa số lượng, xóa hàng và lưu ghi chú; reload vẫn giữ giỏ. Giá/phí ship lấy lại từ server, có cảnh báo khi hết hàng hoặc ngừng bán. “MUA NGAY” hoặc “THANH TOÁN” mở checkout; đơn đặt thử local được lưu ở Supabase dev.
 
@@ -101,7 +103,7 @@ Nhân viên không thấy và không truy cập được Tài khoản/Cài đặ
 - [Kiểm tra đơn hàng](http://localhost:3000/kiem-tra-don-hang): nhập mã đơn và SĐT đặt hàng. Kết quả che một phần SĐT và không trả địa chỉ/email hay ghi chú nội bộ. Sai mã hoặc SĐT đều có cùng thông báo; quá 10 lượt/10 phút/IP sẽ tạm khóa tra cứu.
 - [Liên hệ](http://localhost:3000/lien-he): gửi tên/SĐT/nội dung, email tùy chọn. Tối đa 3 lượt/10 phút/IP. Tin được lưu trước khi gửi email cho shop; gửi email lỗi không làm mất tin.
 - [Tin nhắn admin](http://localhost:3000/admin/messages): nhân viên xem tab Mới/Đã xử lý, đánh dấu đã xử lý; hệ thống giữ tên và thời gian của người xử lý đầu tiên.
-- Các trang giới thiệu, đổi trả, bảo mật và điều khoản có nội dung mẫu. Chủ shop cần duyệt trước khi áp dụng chính thức. [Hướng dẫn chọn size](http://localhost:3000/huong-dan-chon-size) đọc toàn bộ bảng size đã tạo trong quản trị sản phẩm.
+- Chủ shop đã duyệt nội dung giới thiệu, đổi trả, bảo mật và điều khoản; đã bỏ nhãn chờ duyệt. Thời hạn đổi trả/lưu dữ liệu cụ thể chưa được cung cấp, giữ nguyên lời giải thích hiện có và cần chốt trước khi mở bán. [Hướng dẫn chọn size](http://localhost:3000/huong-dan-chon-size) đọc toàn bộ bảng size đã tạo trong quản trị sản phẩm.
 - `npm run e2e:support` kiểm tra tra cứu, rate limit/honeypot, liên hệ → admin, chính sách, bảng size và 404 ở 375/768/1280px trên database `_test`. Email/Telegram thật bị tắt; chạy lần lượt với các bộ test khác.
 
 ## Quản lý đơn local
@@ -169,6 +171,6 @@ Script tạo `.env.test.local` với mật khẩu ngẫu nhiên, không ghi đè
 
 Dừng database khi không dùng: `docker compose --env-file .env.test.local -f compose.test.yml stop`. Dữ liệu kiểm thử được giữ trong volume riêng.
 
-Chỉ chạy local ở giai đoạn này. GitHub đã có repo công khai và remote `origin`; chưa tạo hosting. `vercel.json` chỉ lưu region dự kiến trong plan, không triển khai gì. Các file `.env*` trừ `.env.example` được Git bỏ qua.
+Web bán hàng đầy đủ chỉ chạy local ở giai đoạn này. GitHub đã có repo công khai và remote `origin`; GitHub Pages chỉ phục vụ bản duyệt giao diện độc lập. `vercel.json` chỉ lưu region dự kiến trong plan, không triển khai gì. Các file `.env*` trừ `.env.example` được Git bỏ qua.
 
 Đọc [báo cáo Phase 0](docs/PHASE-0-REPORT.md), [Phase 1](docs/PHASE-1-REPORT.md), [Phase 2](docs/PHASE-2-REPORT.md), [Phase 3](docs/PHASE-3-REPORT.md), [Phase 4](docs/PHASE-4-REPORT.md) và [Phase 5](docs/PHASE-5-REPORT.md) để xem trạng thái nghiệm thu.

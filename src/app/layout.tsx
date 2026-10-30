@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
+import { getPageMetadata } from "@/server/services/seo.service";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -10,9 +10,7 @@ const beVietnamPro = Be_Vietnam_Pro({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Cham.stu",
-};
+export async function generateMetadata() { return getPageMetadata({ path: "/" }); }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

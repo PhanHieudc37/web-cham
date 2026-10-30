@@ -8,8 +8,8 @@ export function CategoryTiles({ home }: { home: HomeDTO }) {
   if (home.sale.length) tiles.push({ name: "SALE", slug: "sale", image: home.sale[0].image?.url ?? null });
   if (!tiles.length) return null;
   return <section className="shop-container shop-section" aria-label="Danh mục sản phẩm"><div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4">
-    {tiles.map((tile) => <Link key={tile.slug} href={`/collections/${tile.slug}`} className="group relative aspect-[3/4] overflow-hidden bg-image-bg">
-      <ShopImage src={tile.image} alt={tile.name} sizes="(min-width:1024px) 25vw, 50vw" className="object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
+    {tiles.map((tile, index) => <Link key={tile.slug} href={`/collections/${tile.slug}`} className="group relative aspect-[3/4] overflow-hidden bg-image-bg">
+      <ShopImage src={tile.image} alt="" sizes="(min-width:1024px) 25vw, 50vw" priority={index < 2} className="object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
       <div className="absolute inset-0 bg-linear-to-t from-black/65 via-transparent to-transparent" />
       <span className="absolute inset-x-0 bottom-0 p-4 text-lg font-semibold tracking-wider text-white uppercase md:p-6 md:text-xl">{tile.name}</span>
     </Link>)}

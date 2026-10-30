@@ -2,11 +2,12 @@
 
 import { create } from "zustand";
 import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
-import { z } from "zod";
+import * as z from "zod/mini";
 import { MAX_CART_LINES, MAX_QUANTITY_PER_LINE } from "@/lib/constants";
-import { cartLineSchema, type CartLineInput } from "@/lib/validation/checkout";
+import type { CartLineInput } from "@/lib/validation/checkout";
 
-const savedCartSchema = z.object({ lines: z.array(cartLineSchema).max(MAX_CART_LINES).refine((lines) => new Set(lines.map((line) => line.variantId)).size === lines.length), note: z.string().max(500).catch(""), discountCode: z.literal("").catch("") });
+const cartLineSchema = z.object({ variantId: z.uuid(), quantity: z.int().check(z.minimum(1), z.maximum(MAX_QUANTITY_PER_LINE)) });
+const savedCartSchema = z.object({ lines: z.array(cartLineSchema).check(z.maxLength(MAX_CART_LINES), z.refine((lines) => new Set(lines.map((line) => line.variantId)).size === lines.length)), note: z.catch(z.string().check(z.maxLength(500)), ""), discountCode: z.catch(z.literal(""), "") });
 type SavedCart = z.output<typeof savedCartSchema>;
 type CartState = SavedCart & {
   hasHydrated: boolean;

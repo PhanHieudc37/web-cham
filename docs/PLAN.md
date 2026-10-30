@@ -4,7 +4,7 @@
 
 ---
 
-## Tiến độ thực tế — 29/10/2026
+## Tiến độ thực tế — 30/10/2026
 
 - **Phase 0:** đã nghiệm thu; commit `e346d1f`.
 - **GitHub:** code trong repo công khai [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`. Có thêm milestone bản duyệt giao diện tĩnh trên GitHub Pages theo yêu cầu riêng, xem bên dưới.
@@ -18,7 +18,8 @@
 - **Phase 8:** **đã nghiệm thu** giỏ persist, API quote không cache, drawer và `/cart`, giới hạn/tự giảm số lượng, cảnh báo ngừng bán, ghi chú và freeship theo server; 138 test, 9 E2E cart và 15 E2E hồi quy pass. Lint/typecheck/build pass, kiểm tra 375/768/1280px và giỏ/reload trên Supabase dev thật. Xem `docs/PHASE-8-REPORT.md`; commit `03294f9`.
 - **Phase 9:** **đã nghiệm thu trên dev/test** checkout khách, COD/chuyển khoản, chống đặt trùng, xác nhận đổi giá, xử lý hết kho, trang thành công riêng tư/VietQR và email sau commit; 150 test, 9 E2E checkout và 18 E2E hồi quy pass. Lint/typecheck/build pass; kiểm tra 375/768/1280px và form/quote trên Supabase dev thật. Xem `docs/PHASE-9-REPORT.md`. Sau nghiệm thu, chủ shop đã điền ngân hàng và Resend; API Resend chấp nhận yêu cầu gửi thử, sender `@resend.dev` vẫn cần domain riêng để gửi cho khách khác email đăng ký.
 - **Phase 10:** **đã triển khai trên dev/test** tổng quan/doanh thu theo quyền, danh sách/chi tiết đơn, trạng thái hợp lệ, hủy/hoàn trả và hoàn kho, thanh toán, vận chuyển/email sau commit, ghi chú/lịch sử, in A5 và CSV chỉ admin. 167 test, 7 E2E quản lý đơn pass; kiểm tra 375/768/1280px. Hai index mới đã migrate và xác minh trên Supabase dev, RLS vẫn bật. Xem `docs/PHASE-10-REPORT.md`; commit `ed92c01`.
-- **Phase 11:** **đã triển khai trên dev/test** tra cứu mã đơn + SĐT che, thông báo sai chung/rate limit, liên hệ/honeypot/email sau lưu, hộp thư staff/admin và ghi nhận người xử lý, trang giới thiệu/chính sách/bảng size/404. 183 test và 12 E2E Phase 11 pass; 375/768/1280px không tràn ngang. Nội dung chính sách là bản mẫu chờ chủ shop duyệt; kiểm thử không gửi email/tin nhắn vào dữ liệu shop thật. Xem `docs/PHASE-11-REPORT.md`. Chưa triển khai Phase 12.
+- **Phase 11:** **đã triển khai trên dev/test** tra cứu mã đơn + SĐT che, thông báo sai chung/rate limit, liên hệ/honeypot/email sau lưu, hộp thư staff/admin và ghi nhận người xử lý, trang giới thiệu/chính sách/bảng size/404. 183 test và 12 E2E Phase 11 pass; 375/768/1280px không tràn ngang. Kiểm thử không gửi email/tin nhắn vào dữ liệu shop thật. Nội dung mẫu được chủ shop duyệt khi giao Phase 12. Xem `docs/PHASE-11-REPORT.md`.
+- **Phase 12:** **đã triển khai trên dev/test** metadata/canonical/Open Graph, JSON-LD, sitemap/robots/noindex, giảm bundle và ISR sản phẩm, kiểm tra quyền/header/RLS và dependency. 187 unit/integration và 9 E2E trên build production pass, đủ bốn luồng bắt buộc, cold ISR đồng thời và 375/768/1280px. Lighthouse mobile CPU 2× hiệu chuẩn đạt trung vị 96/100/100 (trang chủ), 95/100/100 (sản phẩm); CPU 4× trên build cuối chưa đạt ổn định do điểm dao động. Xem đầy đủ số liệu/cấu hình trong `docs/PHASE-12-REPORT.md`. Chủ shop đã duyệt nội dung chính sách; chưa deploy hệ thống bán hàng hay làm Phase 13.
 - Tiếp tục chạy web local theo yêu cầu; chưa triển khai production hay các phần mở rộng Phase 14.
 
 ### Milestone bổ sung — bản duyệt giao diện trên GitHub Pages

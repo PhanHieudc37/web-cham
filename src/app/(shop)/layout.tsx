@@ -3,7 +3,7 @@ import { Header } from "@/components/shop/layout/header";
 import { Footer } from "@/components/shop/layout/footer";
 import { FloatingContact } from "@/components/shop/layout/floating-contact";
 import { CartHydrator } from "@/components/shop/cart/CartHydrator";
-import { CartDrawer } from "@/components/shop/cart/CartDrawer";
+import { CartDrawerLoader } from "@/components/shop/cart/CartDrawerLoader";
 import { getMenu } from "@/server/services/catalog.service";
 import { getPublicSettings } from "@/server/services/settings.service";
 
@@ -17,6 +17,6 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
     <main id="shop-main" tabIndex={-1}>{children}</main>
     <Footer settings={settings} />
     <FloatingContact settings={settings} />
-    <CartDrawer />
+    <CartDrawerLoader />
   </div>;
 }

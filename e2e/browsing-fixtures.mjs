@@ -6,12 +6,15 @@ const workspace = fileURLToPath(new URL("../", import.meta.url));
 const images = path.resolve(workspace, "public/images/phase7-tests");
 const route = path.resolve(workspace, "src/app/(shop)/phase7-error-probe");
 function assertOwned(directory) { if (!directory.startsWith(`${path.resolve(workspace)}${path.sep}`)) throw new Error("Fixture path outside workspace"); }
-export function createFixtures() {
-  assertOwned(images); assertOwned(route);
+export function createImages() {
+  assertOwned(images);
   mkdirSync(images, { recursive: true });
   for (const [name, color] of [["black", "#111111"], ["white", "#ffffff"], ["detail", "#b8ad9c"]]) {
     writeFileSync(path.join(images, `${name}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><rect width="800" height="800" fill="#f5f3f0"/><path d="M270 180L190 230L120 360L230 410L265 350V650H535V350L570 410L680 360L610 230L530 180Q400 250 270 180Z" fill="${color}" stroke="#999" stroke-width="3"/><path d="M340 200Q400 300 460 200" fill="none" stroke="#999" stroke-width="4"/></svg>`);
   }
+}
+export function createFixtures() {
+  createImages(); assertOwned(route);
   mkdirSync(route, { recursive: true });
   writeFileSync(path.join(route, "page.tsx"), `import { headers } from "next/headers";
 import { notFound } from "next/navigation";

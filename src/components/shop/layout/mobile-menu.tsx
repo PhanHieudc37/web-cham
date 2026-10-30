@@ -8,8 +8,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import type { MenuDTO, PublicSettingsDTO } from "@/types/dto";
 import { SocialLinks } from "./social-links";
 
-export function MobileMenu({ menu, settings }: { menu: MenuDTO; settings: PublicSettingsDTO }) {
-  const [open, setOpen] = useState(false);
+export function MobileMenu({ menu, settings, initiallyOpen = false }: { menu: MenuDTO; settings: PublicSettingsDTO; initiallyOpen?: boolean }) {
+  const [open, setOpen] = useState(initiallyOpen);
   const { shop, social } = settings;
   const support = Boolean(shop.phone || shop.email || shop.zaloPhone || social.messenger || social.facebook || social.instagram || social.tiktok || social.shopee);
   return <Sheet open={open} onOpenChange={setOpen}>

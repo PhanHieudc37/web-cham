@@ -8,6 +8,14 @@ import { listingQuery } from "@/lib/listing-url";
 import { parseListingFilters } from "@/lib/validation/listing";
 import { getListing } from "@/server/services/catalog.service";
 import { readCatalogPage } from "../../catalog-boundary";
+import { getPageMetadata, getSiteUrl } from "@/server/services/seo.service";
+import { breadcrumbJsonLd } from "@/lib/seo";
+import { JsonLd } from "@/components/shop/common/JsonLd";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const listing = await readCatalogPage(() => params.then(({ slug }) => getListing(slug)));
+  return getPageMetadata({ title: listing.title, description: listing.description || `Khám phá ${listing.title.toLowerCase()}, xem màu sắc, kích thước và giá sản phẩm tại cửa hàng.`, path: `/collections/${(await params).slug}` });
+}
 
 export default async function CollectionPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
@@ -17,6 +25,7 @@ export default async function CollectionPage({ params, searchParams }: { params:
   const defaultSort = slug === "new-arrival" ? "newest" : slug === "best-seller" ? "best" : slug === "sale" ? "sale" : "featured";
   const clearQuery = listingQuery({ sizes: [], colors: [], price: null, inStock: false, sort: filters.sort, page: 1 });
   return <div className="shop-container pb-5">
+    <JsonLd data={breadcrumbJsonLd(listing.breadcrumb, getSiteUrl())} />
     <Breadcrumb items={listing.breadcrumb} />
     {listing.bannerUrl && <div className="relative mb-9 aspect-[12/5] overflow-hidden bg-image-bg"><ShopImage src={listing.bannerUrl} alt={listing.title} sizes="100vw" className="object-cover" priority /></div>}
     <header className="pt-5 pb-10 text-center"><h1 className="shop-section-title wrap-anywhere">{listing.title}</h1><p className="mt-3 text-xs text-muted">{listing.total} sản phẩm</p>

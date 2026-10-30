@@ -10,8 +10,10 @@ export default function nextConfig(phase: string): NextConfig {
   }
   return {
     poweredByHeader: false,
+    // Limit prerender workers so concurrent pages do not exhaust the shared Postgres pool.
+    experimental: { cpus: 2, staticGenerationMaxConcurrency: 2 },
     // Checkout action arguments contain personal data; success URLs carry bearer tokens.
-    logging: { serverFunctions: false, incomingRequests: { ignore: [/\/checkout\/success(?:\?|$)/, /\/(?:api\/)?admin\/orders(?:[/?]|$)/] } },
+    logging: { serverFunctions: false, incomingRequests: false, browserToTerminal: false },
     turbopack: {
       rules: {
         "*.css": { loaders: ["@tailwindcss/turbopack"], as: "*.css" },
@@ -23,6 +25,7 @@ export default function nextConfig(phase: string): NextConfig {
         : [],
     },
     headers() {
+      const privateRoutes = ["/admin/:path*", "/checkout/:path*", "/cart", "/kiem-tra-don-hang", "/api/:path*"];
       return [{
         source: "/:path*",
         headers: [
@@ -31,7 +34,7 @@ export default function nextConfig(phase: string): NextConfig {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
         ],
-      }];
+      }, ...privateRoutes.map((source) => ({ source, headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }))];
     },
   };
 }

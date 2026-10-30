@@ -39,10 +39,10 @@ function Suggestions({ query, close }: { query: string; close: () => void }) {
   </>;
 }
 
-export function SearchOverlay() {
-  const [open, setOpen] = useState(false);
+export function SearchOverlay({ initiallyOpen = false }: { initiallyOpen?: boolean } = {}) {
+  const [open, setOpen] = useState(initiallyOpen);
   const [query, setQuery] = useState("");
-  const [top, setTop] = useState(64);
+  const [top, setTop] = useState(() => initiallyOpen && typeof document !== "undefined" ? document.getElementById("shop-header")?.getBoundingClientRect().bottom ?? 64 : 64);
   const input = useRef<HTMLInputElement>(null);
   const router = useRouter();
   function changeOpen(value: boolean) {
