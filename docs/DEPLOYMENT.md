@@ -1,5 +1,7 @@
 # Triển khai production — Cham.stu
 
+**Cập nhật 30/10/2026:** chủ shop yêu cầu chỉ dùng miễn phí. Làm theo [Netlify Free + Supabase Free](DEPLOYMENT-FREE.md) làm phương án mặc định. Các bước Vercel bên dưới được giữ để tham khảo, không phải yêu cầu đăng ký gói trả phí. Phần database, env, khôi phục admin và nghiệm thu đơn thật vẫn áp dụng.
+
 Hướng dẫn Phase 13, kiểm tra tài liệu nhà cung cấp ngày 30/10/2026. Hiện repo đã có mã nguồn; **chưa có bằng chứng đã tạo Supabase prod, deploy Vercel hoặc nghiệm thu đơn production**. Bản GitHub Pages chỉ là bản duyệt thiết kế, không nhận đơn.
 
 ## 1. Chuẩn bị tài khoản và tên miền

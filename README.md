@@ -6,7 +6,7 @@ Hiện tại: **Phase 0–12 đã triển khai trên dev/test**, gồm Supabase 
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
-**Phase 13 đang chuẩn bị triển khai:** đã có [hướng dẫn production từng bước](docs/DEPLOYMENT.md), lệnh migrate/seed/check tách khỏi dev và công cụ khôi phục admin. Chưa có project Vercel/Supabase prod được xác minh hoặc đơn thật hoàn thành; không coi đây là thông báo đã mở bán.
+**Phase 13 đang chuẩn bị triển khai:** theo yêu cầu chỉ dùng miễn phí, phương án hiện tại là [Netlify Free + Supabase Free](docs/DEPLOYMENT-FREE.md), dùng URL `netlify.app` chưa cần mua domain web. Đã có lệnh migrate/seed/check tách khỏi dev và công cụ khôi phục admin. Chưa có deployment/Supabase prod được xác minh hoặc đơn thật hoàn thành. Email gửi tới khách vẫn cần domain sở hữu đã Verified; chưa coi đây là thông báo đã mở bán.
 
 ## Dành cho chủ shop
 
@@ -41,7 +41,7 @@ Chạy seed lại hoặc sửa `ADMIN_SEED_PASSWORD` không đặt lại mật k
 ## Checklist trước khi mở bán
 
 - [ ] Supabase production riêng, migrate/seed **không `--sample`**, `npm run production:check` pass.
-- [ ] Vercel deploy Ready tại URL thật, HTTPS/domain, env production riêng; không dùng project dev hoặc PostgreSQL `_test`.
+- [ ] Netlify Free đã publish tại URL thật, HTTPS, env production riêng; không dùng project dev hoặc PostgreSQL `_test`. Giữ gói Free, không bật dịch vụ trả phí.
 - [ ] Resend domain Verified, khách và shop thực sự nhận được email; không dùng sender thử `@resend.dev` để bán hàng.
 - [ ] Logo/ảnh/giá/màu/size/tồn kho/bảng size thật; không mở bán dữ liệu `SAMPLE` hoặc ảnh placeholder.
 - [ ] Phí ship, freeship, thông tin ngân hàng/QR, liên hệ và nội dung chính sách khớp cách shop vận hành; hoàn tất các thông tin pháp lý chủ shop cần cung cấp.
@@ -216,6 +216,6 @@ Script tạo `.env.test.local` với mật khẩu ngẫu nhiên, không ghi đè
 
 Dừng database khi không dùng: `docker compose --env-file .env.test.local -f compose.test.yml stop`. Dữ liệu kiểm thử được giữ trong volume riêng.
 
-Web bán hàng đầy đủ chỉ chạy local ở giai đoạn này. GitHub đã có repo công khai và remote `origin`; GitHub Pages chỉ phục vụ bản duyệt giao diện độc lập. `vercel.json` chỉ lưu region dự kiến trong plan, không triển khai gì. Các file `.env*` trừ `.env.example` được Git bỏ qua.
+Web bán hàng đầy đủ chỉ chạy local ở giai đoạn này. GitHub đã có repo công khai và remote `origin`; GitHub Pages chỉ phục vụ bản duyệt giao diện độc lập. `netlify.toml` chuẩn bị cấu hình Netlify Free theo ngân sách chủ shop; `vercel.json` là cấu hình cũ, không điều khiển Netlify. Chưa có deployment production được xác minh. Các file `.env*` trừ `.env.example` được Git bỏ qua.
 
 Đọc [báo cáo Phase 0](docs/PHASE-0-REPORT.md), [Phase 1](docs/PHASE-1-REPORT.md), [Phase 2](docs/PHASE-2-REPORT.md), [Phase 3](docs/PHASE-3-REPORT.md), [Phase 4](docs/PHASE-4-REPORT.md) và [Phase 5](docs/PHASE-5-REPORT.md) để xem trạng thái nghiệm thu.

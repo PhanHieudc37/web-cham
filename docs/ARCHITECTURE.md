@@ -4,6 +4,8 @@
 
 Toàn bộ FE và BE nằm trong **một ứng dụng Next.js**.
 
+Cập nhật theo yêu cầu miễn phí ngày 30/10/2026: hosting mặc định chuyển từ Vercel sang **Netlify Free**, không đổi framework, database hoặc các tầng dưới. Adapter Next.js do Netlify quản lý; chưa nghiệm thu trên hosting. Region function Free không mặc định là `sin1`; đo độ trễ với database khi triển khai. Xem `DEPLOYMENT-FREE.md`.
+
 - **FE**:
   - Server Components render HTML ở server.
   - Client Components chỉ dùng cho phần cần tương tác.
@@ -21,7 +23,7 @@ FE gọi BE theo đúng 3 đường:
    - dịch vụ bên ngoài gọi vào (webhook, cron).
 
 ```
-                 ┌─────────────────── Next.js trên Vercel (region sin1) ───────────────────┐
+                 ┌─────────────────── Next.js trên Netlify Free ──────────────────────────┐
 Trình duyệt ───► │ Server Components (page/layout) ──► services ──► Drizzle ───────────────┼──► Postgres (Supabase)
                  │ Client Components ──► Server Actions ──► services                       │
                  │                   └─► fetch /api/cart/quote, /api/search/suggest       │
@@ -41,7 +43,8 @@ Dịch vụ ngoài ─► │ /api/webhooks/*, /api/cron/* ──► services   
 ├─ AGENTS.md
 ├─ docs/
 ├─ public/images/placeholder.svg
-├─ vercel.json                    # { "regions": ["sin1"] }
+├─ netlify.toml                   # Next.js SSR, build npm run build, publish .next
+├─ vercel.json                    # cấu hình Vercel cũ, không điều khiển Netlify
 ├─ drizzle.config.ts              # dùng DIRECT_URL, casing snake_case
 ├─ e2e/                           # Playwright
 └─ src/
@@ -456,7 +459,7 @@ DTO cho đơn hàng: `OrderSuccessDTO`, `OrderPublicDTO` (tra cứu, SĐT che b�
   - `square`: 1200×1200, `contain`, nền `#FFFFFF`, không cắt ảnh. Dùng cho ảnh sản phẩm (khung vuông kiểu Shopee).
   - `fit`: giữ tỉ lệ, cạnh dài tối đa 1920px. Dùng cho banner, logo, ảnh danh mục.
   - Xuất WebP chất lượng 0.85. Trình duyệt không xuất được WebP thì dùng JPEG 0.85.
-  - Mục đích: file luôn nhỏ hơn 1MB, không chạm giới hạn body 4.5MB của Vercel.
+  - Mục đích: file luôn nhỏ hơn 1MB để giảm băng thông/quota hosting và nằm dưới giới hạn upload server của ứng dụng.
 - **`/api/admin/upload`:**
   - Yêu cầu quyền staff.
   - Chỉ nhận MIME `image/webp|jpeg|png`, dung lượng ≤ 2MB.

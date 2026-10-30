@@ -22,7 +22,7 @@
 - **Phase 12:** **đã triển khai trên dev/test** metadata/canonical/Open Graph, JSON-LD, sitemap/robots/noindex, giảm bundle và ISR sản phẩm, kiểm tra quyền/header/RLS và dependency. 187 unit/integration và 9 E2E trên build production pass, đủ bốn luồng bắt buộc, cold ISR đồng thời và 375/768/1280px. Lighthouse mobile CPU 2× hiệu chuẩn đạt trung vị 96/100/100 (trang chủ), 95/100/100 (sản phẩm); CPU 4× trên build cuối chưa đạt ổn định do điểm dao động. Xem đầy đủ số liệu/cấu hình trong `docs/PHASE-12-REPORT.md`. Chủ shop đã duyệt nội dung chính sách; chưa deploy hệ thống bán hàng hay làm Phase 13.
 - Tiếp tục chạy web local theo yêu cầu; chưa triển khai production hay các phần mở rộng Phase 14.
 
-- **Phase 13:** **đang triển khai, chưa nghiệm thu production**. Đã chuẩn bị `docs/DEPLOYMENT.md`, hướng dẫn chủ shop trong README, lệnh production migrate/seed/check có chặn nhầm project dev và công cụ khôi phục mật khẩu admin offline. Tích hợp Vercel/Supabase chưa được kết nối, chưa có project/URL prod xác minh, chưa có domain/Resend Verified và chưa đặt đơn thật tới Hoàn thành. Các kiểm tra mã nguồn và giới hạn thực tế ghi trong `docs/PHASE-13-REPORT.md`; không đánh dấu phase xong chỉ vì build local pass.
+- **Phase 13:** **đang triển khai, chưa nghiệm thu production**. Theo yêu cầu chỉ dùng miễn phí ngày 30/10/2026, chuyển hosting mặc định sang Netlify Free + Supabase Free, hướng dẫn tại `docs/DEPLOYMENT-FREE.md`, cấu hình `netlify.toml`. Giữ lệnh migrate/seed/check chặn nhầm dev và khôi phục admin offline. Chưa có project/URL prod xác minh, domain Resend Verified hoặc đơn thật tới Hoàn thành. Chưa kiểm tra adapter trên hosting; xem `docs/PHASE-13-REPORT.md`. Không đăng ký dịch vụ trả phí hoặc mua domain; email khách vẫn cần domain sở hữu.
 
 ### Milestone bổ sung — bản duyệt giao diện trên GitHub Pages
 
@@ -96,7 +96,7 @@ Không đổi nếu chưa được đồng ý.
 | Email | **Resend** |
 | Test | `vitest` (unit + integration), `@playwright/test` (E2E) |
 | Script | `tsx`, `dotenv`, `sharp` (chỉ dùng trong script import ở Phase 14e) |
-| Hosting | **Vercel**, function region `sin1` (Singapore, gần database) |
+| Hosting | **Netlify Free** theo yêu cầu ngân sách 30/10/2026; adapter Next.js do nền tảng quản lý, không thêm dependency vào repo |
 | Font | Be Vietnam Pro qua `next/font/google` |
 
 Các gói mà shadcn tự cài kèm (radix-ui, class-variance-authority, clsx, tailwind-merge…) được phép dùng.
@@ -107,17 +107,17 @@ Các gói mà shadcn tự cài kèm (radix-ui, class-variance-authority, clsx, t
   - `cham-stu-dev`: dùng khi dev.
   - `cham-stu-prod`: web thật. **Không bao giờ** chạy seed dữ liệu mẫu hay chạy test trên prod.
 - Integration test và E2E dùng một Postgres riêng (xem `ARCHITECTURE.md` mục 15).
-- Vercel: mỗi nhánh có một bản preview; nhánh `main` là production.
+- Netlify: nhánh `main` là production; preview nếu bật phải dùng env/database dev riêng. Chọn gói Free, giữ hard limit, không mua credit hoặc nâng gói tự động.
 - Danh sách biến môi trường: xem `ARCHITECTURE.md` mục 14.
 
 Chi phí dự kiến (chủ shop kiểm tra lại bảng giá hiện tại):
 
 | Dịch vụ | Gói | Ghi chú |
 |---|---|---|
-| Vercel | Pro (~20 USD/tháng) | Gói Hobby miễn phí chỉ dành cho **mục đích phi thương mại**. Web bán hàng cần gói Pro |
-| Supabase | Free khi thử nghiệm, Pro (~25 USD/tháng) khi chạy thật | Gói Pro có backup hằng ngày và không bị tạm dừng |
-| Resend | Free | Đủ cho shop nhỏ |
-| Tên miền | .vn hoặc .com | |
+| Netlify | Free | Cho phép dự án thương mại; có quota/credit và có thể pause khi hết hạn mức. Không cam kết dùng vô hạn |
+| Supabase | Free | Có quota/project limit và có thể pause khi ít hoạt động; không tự nâng lên Pro |
+| Resend | Free trong quota | Email tới khách cần domain sở hữu đã Verified; không coi sender thử nghiệm là email production |
+| Tên miền web | Subdomain netlify.app miễn phí | Chưa mua .vn/.com; domain gửi email là điều kiện riêng còn chờ nếu chưa có |
 | SePay (Phase 14b) | Theo gói | Chỉ cần khi muốn tự xác nhận chuyển khoản |
 
 ## 5. Bộ tài liệu
@@ -311,7 +311,7 @@ Phase sau chỉ được làm khi đã được giao.
 - Viết hướng dẫn từng bước:
   - tạo Supabase prod, bucket `media`;
   - chạy migrate, chạy seed **không** có `--sample`;
-  - tạo project Vercel, đặt biến môi trường;
+  - tạo project Netlify Free, đặt biến môi trường (thay Vercel theo yêu cầu miễn phí);
   - gắn tên miền, xác minh domain gửi mail trên Resend.
 - `README.md` tiếng Việt cho chủ shop, gồm:
   - đăng nhập admin;
@@ -347,7 +347,7 @@ Mỗi mục là một phase riêng, làm theo thứ tự khi được yêu cầu
 
 ## 7. Chủ shop cần chuẩn bị
 
-- [ ] Tài khoản Supabase, Vercel, Resend, GitHub (Vercel deploy từ GitHub)
+- [ ] Tài khoản Supabase Free, Netlify Free, Resend, GitHub (Netlify deploy từ GitHub)
 - [ ] Tên miền
 - [ ] Logo (SVG hoặc PNG nền trong suốt) và favicon
 - [ ] Ảnh gốc của sản phẩm (ảnh vuông như trên Shopee, càng nét càng tốt), ảnh banner bản desktop và mobile
