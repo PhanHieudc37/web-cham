@@ -22,6 +22,8 @@
 - **Phase 12:** **đã triển khai trên dev/test** metadata/canonical/Open Graph, JSON-LD, sitemap/robots/noindex, giảm bundle và ISR sản phẩm, kiểm tra quyền/header/RLS và dependency. 187 unit/integration và 9 E2E trên build production pass, đủ bốn luồng bắt buộc, cold ISR đồng thời và 375/768/1280px. Lighthouse mobile CPU 2× hiệu chuẩn đạt trung vị 96/100/100 (trang chủ), 95/100/100 (sản phẩm); CPU 4× trên build cuối chưa đạt ổn định do điểm dao động. Xem đầy đủ số liệu/cấu hình trong `docs/PHASE-12-REPORT.md`. Chủ shop đã duyệt nội dung chính sách; chưa deploy hệ thống bán hàng hay làm Phase 13.
 - Tiếp tục chạy web local theo yêu cầu; chưa triển khai production hay các phần mở rộng Phase 14.
 
+- **Phase 13:** **đang triển khai, chưa nghiệm thu production**. Đã chuẩn bị `docs/DEPLOYMENT.md`, hướng dẫn chủ shop trong README, lệnh production migrate/seed/check có chặn nhầm project dev và công cụ khôi phục mật khẩu admin offline. Tích hợp Vercel/Supabase chưa được kết nối, chưa có project/URL prod xác minh, chưa có domain/Resend Verified và chưa đặt đơn thật tới Hoàn thành. Các kiểm tra mã nguồn và giới hạn thực tế ghi trong `docs/PHASE-13-REPORT.md`; không đánh dấu phase xong chỉ vì build local pass.
+
 ### Milestone bổ sung — bản duyệt giao diện trên GitHub Pages
 
 Theo yêu cầu ngày 27/10/2026: tạo bản tương tác riêng cho bạn bè xem và góp ý trước khi triển khai hệ thống thật. Đây là phạm vi bổ sung được giao, không thay việc nghiệm thu các phase 1–13.

@@ -6,6 +6,51 @@ Hiện tại: **Phase 0–12 đã triển khai trên dev/test**, gồm Supabase 
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
+**Phase 13 đang chuẩn bị triển khai:** đã có [hướng dẫn production từng bước](docs/DEPLOYMENT.md), lệnh migrate/seed/check tách khỏi dev và công cụ khôi phục admin. Chưa có project Vercel/Supabase prod được xác minh hoặc đơn thật hoàn thành; không coi đây là thông báo đã mở bán.
+
+## Dành cho chủ shop
+
+- **Đăng nhập:** URL production `/admin/login` sau khi đã triển khai. Hiện xem local tại [localhost:3000/admin/login](http://localhost:3000/admin/login). Dùng email admin và mật khẩu hiện tại đã lưu riêng; `ADMIN_SEED_PASSWORD` chỉ là mật khẩu khởi tạo, đổi trong admin rồi thì dùng mật khẩu mới.
+- **Thêm sản phẩm:** Danh mục → tạo nhóm; Sản phẩm → Thêm sản phẩm → nhập mã/tên/giá, ảnh, màu/size và tồn kho; cập nhật bảng size thật → chọn Đang bán → Lưu. Kiểm tra lại trên cửa hàng. Không sửa giá/tồn của đơn đã chốt để thay giá bán mới; đơn giữ snapshot khi đặt.
+- **Đổi banner:** Banner → Thêm/Sửa → ảnh desktop/mobile, link, chữ nút, alt, lịch hiển thị theo giờ Việt Nam → Lưu. Kiểm tra trên điện thoại và máy tính.
+- **Sửa thông tin:** Cài đặt → Shop/Liên hệ, Vận chuyển, Thanh toán, Chính sách, Pháp lý/SEO; mỗi nhóm lưu riêng. Chỉ điền thông tin thật, kiểm tra số tài khoản và QR xem trước. Giá trị trống tự ẩn khi phù hợp.
+- Hướng dẫn thao tác chi tiết nằm ở các mục sản phẩm, banner, cài đặt và đơn hàng bên dưới. Hướng dẫn tạo hosting/domain/database ở [DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+## Quy trình vận hành hằng ngày
+
+1. Mở Tổng quan và Đơn hàng, xem đơn Mới/chưa xử lý; mở Tin nhắn, trả lời yêu cầu và đánh dấu đã xử lý sau khi thực sự giải quyết.
+2. Đối chiếu sản phẩm, màu/size, địa chỉ và tổng tiền; liên hệ xác nhận khi cần. Tồn kho đã bị trừ khi đặt đơn thành công, không trừ lần nữa bằng tay.
+3. Chuyển khoản: kiểm tra tiền thật vào tài khoản rồi mới bấm Đã nhận tiền. QR không tự xác nhận đã nhận tiền; chưa có webhook SePay của Phase 14b.
+4. Xác nhận đơn → đóng gói → giao đơn vị vận chuyển → chuyển Đang giao, nhập hãng/mã vận đơn thật. Khách có email sẽ nhận thông báo khi cấu hình mail hợp lệ.
+5. Hoàn thành khi giao dịch thực sự hoàn tất; COD lúc đó tự ghi nhận thanh toán. Hủy/hoàn trả phải ghi lý do và kiểm tra tiền hoàn; hệ thống hoàn kho theo quy trình, tránh cộng kho thêm lần nữa.
+6. Cuối ngày đối chiếu đơn/tiền/tồn, email lỗi và đơn chưa thanh toán; xuất CSV chỉ khi cần, cất riêng dữ liệu khách. Đơn chưa thanh toán chưa tự hủy vì cron thuộc Phase 14c.
+
+## Quên mật khẩu admin
+
+Nếu vẫn đăng nhập được, dùng menu tài khoản → Đổi mật khẩu. Nếu quên, nhờ admin khác vào Tài khoản → Đặt lại mật khẩu; thao tác thu hồi các phiên cũ. Không có chức năng gửi email “quên mật khẩu” công khai.
+
+Nếu không còn ai đăng nhập được, người giữ quyền database production có thể khôi phục **một admin hiện có đang hoạt động**:
+
+1. Chuẩn bị `.env.deploy.local` đúng project production theo [hướng dẫn triển khai](docs/DEPLOYMENT.md#5-file-riêng-cho-migrateseedcheck). Không đổi `.env` dev.
+2. Trong file riêng đó điền `ADMIN_RECOVERY_EMAIL` của admin và `ADMIN_RECOVERY_PASSWORD` mới dài 12–128 ký tự. Không dùng dòng lệnh có mật khẩu hoặc gửi mật khẩu qua chat.
+3. Chạy `npm run admin:recover`. Lệnh đổi hash mật khẩu bằng Better Auth trong transaction và thu hồi mọi session của admin đó; không tạo tài khoản, nâng staff thành admin hoặc mở khóa tài khoản bị khóa.
+4. Đăng nhập tại URL production và xóa giá trị `ADMIN_RECOVERY_PASSWORD` khỏi file sau khi xong. Cập nhật trình quản lý mật khẩu riêng.
+
+Chạy seed lại hoặc sửa `ADMIN_SEED_PASSWORD` không đặt lại mật khẩu tài khoản đã tồn tại. Nếu tài khoản bị khóa/không còn admin hợp lệ, dừng và kiểm tra với người quản trị database, không tự sửa vai trò hay xóa dữ liệu auth.
+
+## Checklist trước khi mở bán
+
+- [ ] Supabase production riêng, migrate/seed **không `--sample`**, `npm run production:check` pass.
+- [ ] Vercel deploy Ready tại URL thật, HTTPS/domain, env production riêng; không dùng project dev hoặc PostgreSQL `_test`.
+- [ ] Resend domain Verified, khách và shop thực sự nhận được email; không dùng sender thử `@resend.dev` để bán hàng.
+- [ ] Logo/ảnh/giá/màu/size/tồn kho/bảng size thật; không mở bán dữ liệu `SAMPLE` hoặc ảnh placeholder.
+- [ ] Phí ship, freeship, thông tin ngân hàng/QR, liên hệ và nội dung chính sách khớp cách shop vận hành; hoàn tất các thông tin pháp lý chủ shop cần cung cấp.
+- [ ] Admin/nhân viên đúng quyền, mật khẩu riêng mạnh; xác nhận cách backup database/ảnh và khôi phục tài khoản.
+- [ ] Kiểm tra điện thoại/tablet/desktop, giỏ, noindex khu vực riêng tư, canonical/sitemap đúng domain; đo lại Lighthouse trên hosting thật.
+- [ ] Đặt và xử lý **một đơn thật trên production tới Hoàn thành**, đối chiếu tồn kho, tiền, tra cứu và email theo [quy trình nghiệm thu](docs/DEPLOYMENT.md#8-nghiệm-thu-đơn-thật--bắt-buộc-trước-khi-đánh-dấu-phase-13-xong).
+
+Chỉ đánh dấu Phase 13 nghiệm thu khi mục đơn thật hoàn tất; build local hoặc tài liệu sẵn sàng chưa thay thế tiêu chí này.
+
 ## Bản xem thử cho bạn bè góp ý
 
 Có bản duyệt giao diện riêng tại `preview/`, không cần database hoặc `.env`. Trang chủ Next.js gốc vẫn theo tiến độ phase; bản duyệt không thay thế các chức năng bán hàng đang phát triển.
