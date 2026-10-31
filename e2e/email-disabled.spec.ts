@@ -10,6 +10,47 @@ test.beforeEach(() => {
   execFileSync(process.execPath, ["--conditions=react-server", "--import=tsx", "e2e/checkout-fixture.ts", "reset"], { stdio: "pipe" });
 });
 
+test("login reports a lost server connection and lets the administrator retry", async ({ page }) => {
+  await page.goto("/admin/login");
+  await page.getByLabel("Email", { exact: true }).fill("admin@example.test");
+  await page.getByLabel("Mật khẩu", { exact: true }).fill("E2e-private-password-12345");
+  await page.route("**/admin/login", async (route) => {
+    if (route.request().method() === "POST") await route.abort("failed");
+    else await route.continue();
+  });
+  await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Chưa kết nối được máy chủ" })).toHaveText("Chưa kết nối được máy chủ. Vui lòng kiểm tra mạng và thử đăng nhập lại.");
+  await expect(page.getByRole("button", { name: "Đăng nhập", exact: true })).toBeEnabled();
+  await page.unroute("**/admin/login");
+  await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.getByRole("note")).toContainText("Email tự động đang tắt");
+});
+
+test("login stays visibly busy during a slow response and opens a fresh authenticated document", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 900 });
+  await page.goto("/admin/login?next=%2Fadmin%2Forders");
+  await page.getByLabel("Email", { exact: true }).fill("admin@example.test");
+  await page.getByLabel("Mật khẩu", { exact: true }).fill("E2e-private-password-12345");
+  let releaseResponse: () => void = () => undefined;
+  const gate = new Promise<void>((resolve) => { releaseResponse = resolve; });
+  await page.route("**/admin/login?next=*", async (route) => {
+    if (route.request().method() === "POST") await gate;
+    await route.continue();
+  });
+  const destination = page.waitForRequest((request) => request.isNavigationRequest() && new URL(request.url()).pathname === "/admin/orders");
+  try {
+    await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Đang đăng nhập…", exact: true })).toBeDisabled();
+    await expect(page.getByRole("status")).toContainText("Đang kết nối trang quản trị");
+    await noOverflow(page);
+    await page.screenshot({ path: "test-results/login-response-pending-375.png", fullPage: true });
+  } finally { releaseResponse(); }
+  await destination;
+  await expect(page).toHaveURL(/\/admin\/orders$/);
+  await expect(page.getByRole("note")).toContainText("Email tự động đang tắt");
+});
+
 for (const width of [375, 768, 1280]) test(`email-disabled checkout and admin remain usable at ${width}px`, async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));

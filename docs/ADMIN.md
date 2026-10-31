@@ -255,6 +255,7 @@ Chia thành các khối (card). Trên desktop có 2 cột: nội dung chính bê
 
 **`/admin/login`**
 - Form email + mật khẩu, nút "Đăng nhập".
+- Trong lúc xác thực hiển thị "Đang đăng nhập…"; xác thực xong giữ nút disabled với "Đang mở trang quản trị…" và tải lại tài liệu theo đường dẫn admin an toàn bằng cookie mới. Mất kết nối hiện thông báo để thử lại, không để lỗi Promise thoát khỏi form. Các trang quản trị có trạng thái đang tải rõ ràng.
 - Sai thông tin thì báo chung "Email hoặc mật khẩu không đúng".
 - Đăng nhập thành công thì chuyển tới `/admin`, hoặc về trang trước đó (lấy từ `?next=`, chỉ chấp nhận đường dẫn bắt đầu bằng `/admin`).
 - Đã đăng nhập mà vào lại `/admin/login` thì chuyển thẳng tới `/admin`.
