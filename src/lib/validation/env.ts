@@ -43,6 +43,7 @@ export const serverEnvSchema = localEnvSchema.safeExtend({
   TEST_DATABASE_URL: optionalPostgresUrl,
   SUPABASE_URL: webUrl,
   SUPABASE_SERVICE_ROLE_KEY: requiredText,
+  EMAIL_DELIVERY: z.preprocess((value) => value === "" ? undefined : value, z.enum(["resend", "disabled"]).default("resend")),
   RESEND_API_KEY: optionalText,
   EMAIL_FROM: optionalText,
   SHOP_NOTIFY_EMAIL: z.preprocess(
@@ -57,7 +58,7 @@ export const serverEnvSchema = localEnvSchema.safeExtend({
   ),
   ADMIN_SEED_PASSWORD: optionalText,
 }).check((context) => {
-  if (context.value.NODE_ENV !== "production") return;
+  if (context.value.NODE_ENV !== "production" || context.value.EMAIL_DELIVERY === "disabled") return;
   for (const key of ["RESEND_API_KEY", "EMAIL_FROM", "SHOP_NOTIFY_EMAIL"] as const) {
     if (!context.value[key]) {
       context.issues.push({ code: "custom", input: undefined, path: [key], message: "Bắt buộc khi chạy production" });

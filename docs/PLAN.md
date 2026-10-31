@@ -308,6 +308,8 @@ Phase sau chỉ được làm khi đã được giao.
 
 ### Phase 13 — Deploy production và tài liệu vận hành
 
+Cập nhật được chủ shop duyệt ngày 31/10/2026: triển khai miễn phí bằng URL `netlify.app`, dùng `EMAIL_DELIVERY=disabled` khi chưa có domain gửi thư. Đơn hàng và tin nhắn vẫn lưu trong admin; giao diện nói rõ email đang tắt. Chỉ chế độ `resend` mới bắt buộc cấu hình mail thật. Bản online không email có thể dùng để xem/góp ý; tiêu chí email và đơn thật của toàn bộ plan chưa được coi là đã nghiệm thu.
+
 - Viết hướng dẫn từng bước:
   - tạo Supabase prod, bucket `media`;
   - chạy migrate, chạy seed **không** có `--sample`;

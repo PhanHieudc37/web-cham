@@ -13,6 +13,7 @@ import type { ContactMessageDTO } from "@/types/contact";
 type Mail = EmailContent & { to: string; key: string };
 async function sendMail(orderCode: string, content: Mail) {
   const env = getServerEnv();
+  if (env.EMAIL_DELIVERY === "disabled") return;
   if (!env.RESEND_API_KEY) {
     console.info("[email:dev]", { orderCode, template: content.key.split("/")[0], subject: content.subject, personalData: "[đã ẩn]" });
     return;

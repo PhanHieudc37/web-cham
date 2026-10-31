@@ -296,6 +296,8 @@ Giỏ dùng dữ liệu từ `useCartQuote()` (`ARCHITECTURE.md` mục 10).
 
 ## 8. Thanh toán `/checkout`
 
+- Khi chủ shop cấu hình `EMAIL_DELIVERY=disabled`, form báo rõ website chưa gửi email tự động và hướng dẫn lưu mã đơn để tra cứu bằng SĐT. Ô email đổi thành email liên hệ không bắt buộc, không hứa gửi xác nhận. Trang thành công cũng hiển thị hướng dẫn này.
+
 - Giỏ trống thì chuyển về `/cart`.
 - **Layout `(checkout)`:** header rút gọn, chỉ gồm logo và link "‹ Quay lại giỏ hàng". Không hiện menu, không hiện nút liên hệ nổi.
 - **Desktop:** 2 cột. Form bên trái, `OrderSummary` bên phải (dính khi cuộn).

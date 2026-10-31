@@ -68,4 +68,17 @@ describe("order notifications and email privacy", () => {
     await expect(notifyOrderCreated(order, "Cham.stu", "PRIVATE_TOKEN")).resolves.toBeUndefined(); expect(console.error).toHaveBeenCalledTimes(2);
     const log = JSON.stringify(vi.mocked(console.error).mock.calls); expect(log).not.toContain("PRIVATE"); expect(log).toContain(order.code);
   });
+  it("disables every email even when provider credentials exist, without logging delivery or personal data", async () => {
+    mocks.env.mockReturnValue({ ...baseEnv, EMAIL_DELIVERY: "disabled" });
+    await notifyOrderCreated(order, "Cham.stu", "PRIVATE_TOKEN");
+    await notifyOrderShipped({ ...order, trackingCode: "TRACK" }, "Cham.stu");
+    await notifyNewContact({ id: "contact-id", name: "PRIVATE", phone: "PRIVATE", email: "private@example.test", message: "PRIVATE", status: "new", createdAt: new Date().toISOString(), handledAt: null, handledByName: null }, "Cham.stu");
+    expect(fetch).not.toHaveBeenCalled(); expect(console.info).not.toHaveBeenCalled(); expect(console.error).not.toHaveBeenCalled();
+  });
+  it("keeps optional Telegram notifications working while email is disabled", async () => {
+    mocks.env.mockReturnValue({ ...baseEnv, EMAIL_DELIVERY: "disabled", TELEGRAM_BOT_TOKEN: "bot-secret", TELEGRAM_CHAT_ID: "chat-id" });
+    await notifyOrderCreated(order, "Cham.stu", "PRIVATE_TOKEN");
+    expect(fetch).toHaveBeenCalledTimes(1); expect(String(vi.mocked(fetch).mock.calls[0][0])).toContain("api.telegram.org");
+    expect(String(vi.mocked(fetch).mock.calls[0][1]?.body)).not.toContain(order.customerEmail);
+  });
 });

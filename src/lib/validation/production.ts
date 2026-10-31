@@ -16,7 +16,7 @@ const productionSchema = serverEnvSchema.safeExtend({ NODE_ENV: z.literal("produ
     if (!["require", "verify-full"].includes(connection.searchParams.get("sslmode") ?? "")) issue(key, "Cần sslmode=require hoặc verify-full");
   }
   const sender = input.EMAIL_FROM?.match(/<([^<>]+)>\s*$/)?.[1] ?? input.EMAIL_FROM ?? "";
-  if (!z.email().safeParse(sender).success || /@(resend\.dev|.*\.test|example\.[a-z]+)$/i.test(sender)) issue("EMAIL_FROM", "Cần địa chỉ gửi tại domain thật đã xác minh trên Resend");
+  if (input.EMAIL_DELIVERY === "resend" && (!z.email().safeParse(sender).success || /@(resend\.dev|.*\.test|example\.[a-z]+)$/i.test(sender))) issue("EMAIL_FROM", "Cần địa chỉ gửi tại domain thật đã xác minh trên Resend");
 });
 
 export function parseProductionEnvironment(input: Record<string, string | undefined>, development: Record<string, string | undefined> = {}) {

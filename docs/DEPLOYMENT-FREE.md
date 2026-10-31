@@ -1,5 +1,7 @@
 # Triển khai miễn phí — Netlify + Supabase
 
+**Cập nhật được chủ shop duyệt 31/10/2026:** khi chưa có domain gửi thư, đặt `EMAIL_DELIVERY=disabled` trong `.env.deploy.local` và Netlify Production. Khi đó có thể migrate, seed không sample, kiểm tra database và deploy mà không cần `RESEND_API_KEY`/`EMAIL_FROM`/`SHOP_NOTIFY_EMAIL`. Giao diện thông báo chưa gửi email; chủ shop theo dõi đơn/tin nhắn trong admin, khách lưu mã để tra cứu. Không điền sender/key giả. Những yêu cầu Resend Verified bên dưới áp dụng khi chuyển `EMAIL_DELIVERY=resend` (mặc định), và phần nghiệm thu mail/đơn thật vẫn chờ.
+
 Theo yêu cầu chủ shop ngày 30/10/2026: chỉ dùng gói miễn phí, không mua domain hoặc đăng ký dịch vụ trả phí. Phương án này thay Vercel làm lựa chọn mặc định của Phase 13; giữ nguyên Next.js, Better Auth, PostgreSQL và Storage hiện tại. **Chưa có deployment online được xác minh.**
 
 ## Chi phí và giới hạn
@@ -15,7 +17,7 @@ Theo yêu cầu chủ shop ngày 30/10/2026: chỉ dùng gói miễn phí, khôn
 
 [Supabase Free](https://supabase.com/pricing) có hạn mức và giới hạn hai project active; dự án ít hoạt động có thể bị pause sau khoảng một tuần. Không tạo project trong organization trả phí để rồi tưởng vẫn là Free. Nếu tài khoản hết quota, dừng lại xử lý tài khoản/quota; không xóa dev hoặc chuyển test vào production.
 
-**Giới hạn email:** URL `netlify.app` dùng cho web không phải domain do shop quản lý để xác minh Resend. Nếu chưa có domain gửi email, có thể tiếp tục xem/góp ý giao diện bằng local hoặc bản GitHub Pages; email khách và nghiệm thu production vẫn còn chờ. Không dùng sender thử nghiệm để coi như đã gửi được tới mọi khách, không bỏ validation email production để làm xanh kiểm tra. [Yêu cầu domain Resend](https://resend.com/docs/dashboard/domains/introduction).
+**Giới hạn email:** URL `netlify.app` dùng cho web không phải domain do shop quản lý để xác minh Resend. Nếu chưa có domain gửi email, dùng chế độ tắt email được chủ shop duyệt: `EMAIL_DELIVERY=disabled`, deploy Netlify để xem/góp ý và quản lý đơn trong admin. Email khách và nghiệm thu mail vẫn còn chờ. Khi dùng `resend`, không dùng sender thử nghiệm thay cho domain Verified. [Yêu cầu domain Resend](https://resend.com/docs/dashboard/domains/introduction).
 
 ## 1. Tạo tài khoản và import repo
 
@@ -44,7 +46,7 @@ npm run production:seed
 npm run production:check
 ```
 
-Các lệnh này giữ nguyên guard đã có: khác project dev, pooler/TLS đúng project, không dùng sender Resend thử nghiệm. Nếu chưa có domain gửi email, bước chuẩn bị production chưa đầy đủ; không điền giá trị giả để vượt guard. Các lệnh có thể được chuẩn bị sẵn nhưng không chạy thành công thay cho tài khoản/domain còn thiếu.
+Các lệnh luôn kiểm tra khác project dev và pooler/TLS đúng project. Với `EMAIL_DELIVERY=resend`, cần domain Verified và cấu hình email thật. Với `EMAIL_DELIVERY=disabled`, không yêu cầu email, không gửi thư; các điều kiện database vẫn được giữ nguyên.
 
 ## 3. Env trên Netlify
 
@@ -52,6 +54,7 @@ Project configuration → Environment variables: nhập **giá trị production 
 
 ```text
 NEXT_PUBLIC_SITE_URL
+EMAIL_DELIVERY
 BETTER_AUTH_URL
 BETTER_AUTH_SECRET
 DATABASE_URL
@@ -64,7 +67,7 @@ SHOP_NOTIFY_EMAIL
 ```
 
 - Hai URL dùng cùng hostname HTTPS chính thức, không có path/query, không để localhost.
-- `SUPABASE_STORAGE_BUCKET=media`; các key còn lại lấy từ project/account tương ứng.
+- `SUPABASE_STORAGE_BUCKET=media`; `EMAIL_DELIVERY=disabled` cho bản hiện tại. Để trống Resend/sender khi tắt email; các key còn lại lấy từ project/account tương ứng.
 - Không đưa `DIRECT_URL`, `TEST_DATABASE_URL`, mật khẩu seed hoặc `ADMIN_RECOVERY_*` lên hosting.
 - Hai biến Telegram chỉ thêm nếu thực sự dùng. Không chia sẻ kết nối production sang Deploy Preview; nếu bật Next.js preview, cần env/dev database riêng.
 - Sau khi đổi env hoặc hostname, deploy lại rồi đăng nhập lại. Public URL được đóng vào bundle khi build, không chỉ đổi bằng một alias bên ngoài.
@@ -82,4 +85,4 @@ SHOP_NOTIFY_EMAIL
 
 ## Trạng thái hiện tại
 
-Đã chuẩn bị config và hướng dẫn; chưa đăng nhập/tạo project Netlify, chưa xác minh adapter trên hosting, Supabase prod hoặc email khách. Công cụ tích hợp hiện không có Netlify để tự thao tác tài khoản; chủ shop cần đăng nhập dashboard và import repo. Phase 13 vẫn chưa nghiệm thu.
+Ngày 31/10/2026: đã xác minh project Netlify `astonishing-fox-bde038` liên kết đúng repo và tạo Supabase `cham-stu-prod` tại Singapore trong organization Free. Hai pooler PostgreSQL kết nối được; bucket `media` public đã xác minh, kết nối thật lưu trong `.env.deploy.local`. Đã migrate/seed không sample và `production:check` pass với 20 bảng RLS, 1 admin, 0 sample, bucket hợp lệ. Sau khi chủ shop đồng ý cách lưu credential dạng biến thường All scopes, Netlify đã có đủ 8/10 biến runtime, chỉ context Production cho các credential mới; đã bổ sung `EMAIL_DELIVERY=disabled` để hai biến Resend có thể trống theo yêu cầu chủ shop. Chưa kích hoạt deploy hoặc xác minh adapter trên hosting. Chủ shop chưa có domain gửi email; Phase 13 vẫn chưa nghiệm thu. Xem cập nhật chi tiết trong [báo cáo Phase 13](PHASE-13-REPORT.md).

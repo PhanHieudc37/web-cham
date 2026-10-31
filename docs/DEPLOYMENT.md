@@ -36,6 +36,8 @@ Tham khảo [môi trường triển khai Vercel](https://vercel.com/docs/deploym
 
 ## 4. Xác minh domain email Resend
 
+Ngoại lệ theo yêu cầu chủ shop ngày 31/10/2026: bản Netlify miễn phí chưa gửi email dùng `EMAIL_DELIVERY=disabled`; các bước migrate/seed/check vẫn kiểm tra cách ly database và TLS nhưng không yêu cầu cấu hình Resend. Khi bật lại `resend`, cần hoàn tất domain và key thật ở mục này. Xem [hướng dẫn miễn phí](DEPLOYMENT-FREE.md).
+
 1. Resend → Domains → Add Domain, nhập domain/subdomain do chủ shop quản lý.
 2. Vào nơi quản lý DNS, thêm **đúng** các bản ghi Resend trả về. Không tự đoán DKIM/SPF hoặc thay bản ghi mail đang có.
 3. Bấm Verify, đợi trạng thái Verified; có thể dùng subdomain riêng cho thư giao dịch.
@@ -64,7 +66,7 @@ Trong `C:\web_su`, sao chép `.env.example` thành **`.env.deploy.local`** rồi
 | `TEST_DATABASE_URL` | Để trống, không dùng test DB ở production |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Chỉ điền nếu thực sự bật Telegram |
 
-Không đưa file này lên Git, không gửi qua chat. Các lệnh production mới chỉ đọc file này, ép `NODE_ENV=production`, từ chối project dev, pooler sai project/cổng, URL local, thiếu TLS và sender thử nghiệm. Chúng không lấy biến còn thiếu từ `.env` dev. Đừng sửa tay username/host cho vừa qua kiểm tra; lấy lại đúng URI từ Connect.
+Không đưa file này lên Git, không gửi qua chat. Các lệnh production mới chỉ đọc file này, ép `NODE_ENV=production`, từ chối project dev, pooler sai project/cổng, URL local, thiếu TLS và sender thử nghiệm. Khi `EMAIL_DELIVERY=disabled`, chỉ bỏ yêu cầu mail; vẫn kiểm tra mọi điều kiện database. Chúng không lấy biến còn thiếu từ `.env` dev. Đừng sửa tay username/host cho vừa qua kiểm tra; lấy lại đúng URI từ Connect.
 
 Chạy **lần lượt**, sau khi xác nhận đây là database production mới:
 

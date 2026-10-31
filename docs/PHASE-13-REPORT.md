@@ -2,6 +2,21 @@
 
 Ngày: 30/10/2026. **Trạng thái: đã chuẩn bị mã nguồn/tài liệu; chưa nghiệm thu production.**
 
+## Chế độ miễn phí không email được duyệt ngày 31/10/2026
+
+Chủ shop đã đồng ý triển khai Netlify với `EMAIL_DELIVERY=disabled` khi chưa có domain. Thêm lựa chọn rõ ràng vào validation production, bỏ qua gửi email khi tắt, hiển thị thông báo ở checkout/trang thành công/admin; mặc định vẫn là `resend` và yêu cầu đầy đủ cấu hình thật. Không thay database/schema, không dùng sender/key giả. Việc này thay thế điều kiện phải chờ email trước migrate/deploy trong báo cáo cũ bên dưới; nghiệm thu mail và đơn thật vẫn chưa hoàn tất.
+
+## Cập nhật thực tế ngày 31/10/2026
+
+- Đã xác minh token Netlify và Supabase trong các file local được Git ignore. Netlify đã có project `astonishing-fox-bde038`, liên kết đúng repository `PhanHieudc37/web-cham`; chưa có deployment thành công được xác minh.
+- Đã xác minh organization Supabase `cham.stu` đang ở gói Free và tạo project riêng `cham-stu-prod` tại Singapore. Giữ nguyên project dev Tokyo.
+- Đã điền kết nối production thật vào `.env.deploy.local`; `SELECT 1` thành công qua transaction pooler 6543 và session pooler 5432. Đã migrate và seed không sample thành công; `production:check` pass với 20 bảng RLS, 0 policy public, 1 admin hoạt động, 0 sản phẩm mẫu và bucket public.
+- Đã tạo và xác minh bucket `media` public, giới hạn 2 MB, cho phép WebP/JPEG/PNG. Server key đã được lấy đầy đủ bằng Management API và kiểm tra qua Storage.
+- Đã sinh mật khẩu admin production riêng và lưu local; tài khoản đã được seed. Không đưa mật khẩu hoặc token quản lý lên hosting/Git.
+- Netlify đã xác minh hai URL, bucket, auth secret Production và email nhận thông báo shop. Sau khi chủ shop xác nhận riêng cách lưu `DATABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY` dạng biến thường All scopes, đã tải ba biến Supabase lên đúng project Netlify và xác minh giá trị khớp file local, chỉ context Production. Đã bổ sung `EMAIL_DELIVERY=disabled`, xác minh trên Netlify và local; hai biến Resend có thể trống trong chế độ này.
+- Trước khi chủ shop duyệt chế độ tắt email, `production:check` đã dừng ở validation do thiếu cấu hình Resend; sau thay đổi được duyệt, kiểm tra production đã pass. Key Resend hiện có trong cấu hình dev trả HTTP 401 khi đọc danh sách domain. Chủ shop xác nhận chưa có domain riêng, nên email khách production chưa sẵn sàng.
+- Chưa kích hoạt deploy, chưa gửi email, chưa tạo đơn production. Đã thay mã ứng dụng trong phạm vi chế độ tắt email được duyệt. Lint/typecheck/build pass; 198/198 unit/integration pass, 3/3 E2E email-disabled pass ở 375/768/1280px và đã xem ảnh chụp; bộ E2E production mặc định 9/9 pass. Quét 439 file được theo dõi và 62 file client với 19 giá trị riêng tư: 0 match. Các ghi chú “chưa có project/quyền truy cập” trong phần báo cáo ban đầu bên dưới phản ánh thời điểm 30/10 và được thay thế bởi cập nhật này.
+
 ## Cập nhật ngân sách — chỉ dùng miễn phí
 
 Theo yêu cầu tiếp theo của chủ shop ngày 30/10/2026, hosting mặc định chuyển sang **Netlify Free + Supabase Free**, URL web `netlify.app`, chưa mua domain. Thêm `netlify.toml` (build Next.js, publish `.next`, Node 22, cài cả devDependencies lúc build), ignore `.netlify/` và [hướng dẫn miễn phí](DEPLOYMENT-FREE.md). Không thêm package hoặc đổi Next.js/auth/DB.

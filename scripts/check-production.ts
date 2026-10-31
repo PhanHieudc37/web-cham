@@ -17,8 +17,8 @@ try {
   const storage = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
   const { data, error } = await storage.storage.getBucket("media");
   if (error || !data?.public) throw new Error("Bucket media chưa tồn tại, chưa public hoặc key không có quyền.");
-  console.log(JSON.stringify({ status: "pass", tables: expected.length, rls: true, publicPolicies: 0, activeAdmins: counts.admins, sampleProducts: 0, publicMediaBucket: true }));
-  console.log("Cần kiểm tra domain Resend đã Verified và nghiệm thu đơn thật trên website; lệnh này không gửi email hoặc tạo đơn.");
+  console.log(JSON.stringify({ status: "pass", tables: expected.length, rls: true, publicPolicies: 0, activeAdmins: counts.admins, sampleProducts: 0, publicMediaBucket: true, emailDelivery: env.EMAIL_DELIVERY }));
+  console.log(env.EMAIL_DELIVERY === "disabled" ? "Email tự động đang tắt theo cấu hình. Theo dõi đơn và tin nhắn trong admin; chưa nghiệm thu email hoặc đơn thật." : "Cần kiểm tra domain Resend đã Verified và nghiệm thu đơn thật trên website; lệnh này không gửi email hoặc tạo đơn.");
 } catch (error) {
   console.error(error instanceof Error && !('query' in error) && !('code' in error) ? error.message : "Kiểm tra production thất bại; kiểm tra kết nối/schema, không in chi tiết nhạy cảm.");
   process.exitCode = 1;

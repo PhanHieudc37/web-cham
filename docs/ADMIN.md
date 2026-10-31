@@ -6,6 +6,8 @@ Người dùng chính là chủ shop và nhân viên. Họ sẽ thao tác **nhi�
 
 ## 1. Quy ước chung
 
+- Khi `EMAIL_DELIVERY=disabled`, đầu khu vực quản trị hiện thông báo email tự động đang tắt. Chủ shop kiểm tra Đơn hàng/Tin nhắn trực tiếp và liên hệ khách qua điện thoại/Zalo; thao tác giao hàng không hứa đã gửi email.
+
 - **Giao diện:** shadcn/ui theme neutral, góc bo nhỏ (radius 6px). Chữ hiển thị bằng tiếng Việt. Mọi trang có `noindex`.
 - **Bố cục:**
   - **Desktop:**

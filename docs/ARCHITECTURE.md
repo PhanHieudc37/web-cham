@@ -486,6 +486,7 @@ DTO cho đơn hàng: `OrderSuccessDTO`, `OrderPublicDTO` (tra cứu, SĐT che b�
 
 - Gửi bên trong `after()` (`next/server`) để không làm chậm phản hồi cho khách. Gửi lỗi thì log kèm mã đơn, **không** làm hỏng đơn.
 - Ở dev chưa có `RESEND_API_KEY` thì in nội dung email ra console.
+- Cập nhật theo yêu cầu miễn phí ngày 31/10/2026: `EMAIL_DELIVERY=disabled` tắt toàn bộ email kể cả khi còn key trong env, không gọi Resend và không log như đã gửi. Đơn hàng/tin nhắn vẫn lưu và quản lý trong admin, khách tra cứu bằng mã đơn + SĐT; Telegram riêng vẫn hoạt động nếu được cấu hình. Checkout, trang thành công và admin thông báo email đang tắt. Mặc định `resend`; production ở chế độ này vẫn bắt buộc đủ cấu hình mail thật. Chế độ tắt email không nghiệm thu khả năng giao email trong plan.
 - Có `TELEGRAM_BOT_TOKEN` và `TELEGRAM_CHAT_ID` thì gửi thêm tin Telegram cho shop, gồm: mã đơn, tổng tiền, phương thức thanh toán, link `/admin/orders/{id}`.
 
 ---
@@ -543,9 +544,10 @@ Toàn bộ được validate trong `src/server/env.ts`. Ở production thiếu b
 | `SUPABASE_STORAGE_BUCKET` | ✓ | `media` |
 | `BETTER_AUTH_SECRET` | ✓ | Chuỗi ngẫu nhiên ≥ 32 ký tự |
 | `BETTER_AUTH_URL` | ✓ | Bằng `NEXT_PUBLIC_SITE_URL` |
-| `RESEND_API_KEY` | prod | Ở dev có thể bỏ trống (email sẽ in ra console) |
-| `EMAIL_FROM` | prod | Ví dụ `Cham.stu <donhang@chamstu.vn>` (domain đã xác minh trên Resend) |
-| `SHOP_NOTIFY_EMAIL` | prod | Email nhận thông báo đơn mới |
+| `EMAIL_DELIVERY` | – | `resend` (mặc định) hoặc `disabled` khi chủ shop chọn tắt email; giá trị khác bị từ chối |
+| `RESEND_API_KEY` | prod + resend | Ở dev có thể bỏ trống (chỉ log tóm tắt đã ẩn dữ liệu cá nhân) |
+| `EMAIL_FROM` | prod + resend | Địa chỉ gửi tại domain đã xác minh trên Resend |
+| `SHOP_NOTIFY_EMAIL` | prod + resend | Email nhận thông báo đơn mới |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | – | Báo đơn mới qua Telegram |
 | `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD` | seed | Tài khoản admin đầu tiên |
 | `SEPAY_WEBHOOK_API_KEY` | 14b | |

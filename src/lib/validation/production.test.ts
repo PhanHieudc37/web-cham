@@ -12,6 +12,13 @@ describe("production isolation", () => {
   it("accepts a dedicated HTTPS production project and does not require seed secrets", () => {
     expect(parseProductionEnvironment(valid, { SUPABASE_URL: "https://devproject.supabase.co" })).toMatchObject({ NODE_ENV: "production", TEST_DATABASE_URL: "" });
   });
+  it("allows explicit email-disabled hosting without weakening database isolation", () => {
+    const disabled = { ...valid, EMAIL_DELIVERY: "disabled", RESEND_API_KEY: "", EMAIL_FROM: "", SHOP_NOTIFY_EMAIL: "" };
+    expect(parseProductionEnvironment(disabled).EMAIL_DELIVERY).toBe("disabled");
+    expect(() => parseProductionEnvironment({ ...disabled, EMAIL_DELIVERY: "resend" })).toThrow("EMAIL_FROM");
+    expect(() => parseProductionEnvironment(disabled, { SUPABASE_URL: valid.SUPABASE_URL })).toThrow("project Supabase riêng");
+    expect(() => parseProductionEnvironment({ ...disabled, DATABASE_URL: valid.DATABASE_URL.replace("?sslmode=require", "") })).toThrow("sslmode");
+  });
   it("rejects local auth/site URLs and mismatched auth origins", () => {
     for (const overrides of [{ NEXT_PUBLIC_SITE_URL: "http://localhost:3000", BETTER_AUTH_URL: "http://localhost:3000" }, { BETTER_AUTH_URL: "https://different.example.com" }]) expect(() => parseProductionEnvironment({ ...valid, ...overrides })).toThrow();
   });

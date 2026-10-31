@@ -57,6 +57,10 @@ describe("environment validation", () => {
       EMAIL_FROM: "Test <test@example.com>", SHOP_NOTIFY_EMAIL: "shop@example.com",
     }).NODE_ENV).toBe("production");
   });
+  it("requires an explicit email opt-out and rejects unknown delivery modes", () => {
+    expect(parseEnvironment(serverEnvSchema, { ...serviceValues, NODE_ENV: "production", EMAIL_DELIVERY: "disabled" }).EMAIL_DELIVERY).toBe("disabled");
+    for (const mode of [undefined, "", "off", "false"]) expect(() => parseEnvironment(serverEnvSchema, { ...serviceValues, NODE_ENV: "production", EMAIL_DELIVERY: mode })).toThrow();
+  });
   it("reads validated server configuration from process.env", () => {
     for (const [key, value] of Object.entries(serviceValues)) vi.stubEnv(key, value);
     vi.stubEnv("NODE_ENV", "development");

@@ -6,9 +6,15 @@ Hiện tại: **Phase 0–12 đã triển khai trên dev/test**, gồm Supabase 
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
-**Phase 13 đang chuẩn bị triển khai:** theo yêu cầu chỉ dùng miễn phí, phương án hiện tại là [Netlify Free + Supabase Free](docs/DEPLOYMENT-FREE.md), dùng URL `netlify.app` chưa cần mua domain web. Đã có lệnh migrate/seed/check tách khỏi dev và công cụ khôi phục admin. Chưa có deployment/Supabase prod được xác minh hoặc đơn thật hoàn thành. Email gửi tới khách vẫn cần domain sở hữu đã Verified; chưa coi đây là thông báo đã mở bán.
+**Phase 13 đang chuẩn bị triển khai:** theo yêu cầu chỉ dùng miễn phí, phương án hiện tại là [Netlify Free + Supabase Free](docs/DEPLOYMENT-FREE.md), dùng URL `netlify.app` chưa cần mua domain web. Đã có lệnh migrate/seed/check tách khỏi dev và công cụ khôi phục admin. Supabase production Singapore đã tạo, migrate/seed và kiểm tra thành công; Netlify đang chờ triển khai bản email-disabled đã được chủ shop duyệt. Chưa có đơn thật hoàn thành. Email gửi tới khách vẫn cần domain sở hữu đã Verified; chưa coi đây là thông báo đã mở bán.
 
 ## Dành cho chủ shop
+
+### Dùng bản miễn phí khi chưa có tên miền gửi thư
+
+Đặt `EMAIL_DELIVERY=disabled` trong `.env.deploy.local` và Netlify Production để chủ động tắt email tự động. Không cần điền key Resend hoặc sender giả. Website vẫn lưu đơn và lời nhắn, xử lý trong admin; chủ shop cần kiểm tra các mục này hằng ngày và liên hệ khách qua điện thoại/Zalo. Khách được hướng dẫn lưu mã đơn để tra cứu bằng SĐT. Các thông báo checkout/admin phản ánh đúng trạng thái tắt email.
+
+Khi có domain Verified và key Resend hợp lệ, điền `RESEND_API_KEY`, `EMAIL_FROM`, `SHOP_NOTIFY_EMAIL`, đổi `EMAIL_DELIVERY=resend`, chạy kiểm tra và deploy lại. Mặc định là `resend`, nên thiếu hoặc gõ sai biến tắt email sẽ không âm thầm bỏ qua cấu hình production. Việc tắt email không thay đổi quy tắc đăng nhập, kho, giá, thanh toán hoặc cách ly database dev/test/prod.
 
 - **Đăng nhập:** URL production `/admin/login` sau khi đã triển khai. Hiện xem local tại [localhost:3000/admin/login](http://localhost:3000/admin/login). Dùng email admin và mật khẩu hiện tại đã lưu riêng; `ADMIN_SEED_PASSWORD` chỉ là mật khẩu khởi tạo, đổi trong admin rồi thì dùng mật khẩu mới.
 - **Thêm sản phẩm:** Danh mục → tạo nhóm; Sản phẩm → Thêm sản phẩm → nhập mã/tên/giá, ảnh, màu/size và tồn kho; cập nhật bảng size thật → chọn Đang bán → Lưu. Kiểm tra lại trên cửa hàng. Không sửa giá/tồn của đơn đã chốt để thay giá bán mới; đơn giữ snapshot khi đặt.
