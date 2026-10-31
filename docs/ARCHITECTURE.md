@@ -521,6 +521,7 @@ DTO cho đơn hàng: `OrderSuccessDTO`, `OrderPublicDTO` (tra cứu, SĐT che b�
    - `X-Frame-Options: DENY`
    - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
 9. **`noindex`** cho `/admin/*`, `/checkout*`, `/kiem-tra-don-hang`.
+   - `proxy.ts` cũng gắn trực tiếp noindex, security headers và `Cache-Control: private, no-store` trên response admin, gồm cả redirect về login. Kiểm tra hosting Netlify thực tế cho thấy redirect ở proxy có thể kết thúc trước khi header từ `next.config` được áp dụng.
 10. **Log:** chỉ ghi mã đơn / id. **Không** ghi tên, SĐT, địa chỉ, email của khách.
 11. **Webhook:**
     - Xác thực bằng API key.

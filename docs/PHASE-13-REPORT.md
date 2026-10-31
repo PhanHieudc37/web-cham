@@ -4,6 +4,8 @@ Ngày: 30/10/2026. **Trạng thái: đã chuẩn bị mã nguồn/tài liệu; c
 
 ## Chế độ miễn phí không email được duyệt ngày 31/10/2026
 
+Bản `2bbd502` đã build/publish thành công trên Netlify. Đã mở công khai project (mặc định Netlify mới yêu cầu team login), xác minh trang chủ/danh mục/sitemap/robots HTTP 200 và đăng nhập admin production thành công. Kiểm tra hosting phát hiện redirect admin thiếu header từ `next.config`; bổ sung trực tiếp header trong proxy cùng regression test, đang kiểm tra bản cập nhật. Chưa tạo đơn/tin nhắn/sản phẩm production để thử: các số lượng đều bằng 0. Bản hiện tại phục vụ xem/góp ý; chủ shop cần thêm sản phẩm và ảnh thật trong admin.
+
 Chủ shop đã đồng ý triển khai Netlify với `EMAIL_DELIVERY=disabled` khi chưa có domain. Thêm lựa chọn rõ ràng vào validation production, bỏ qua gửi email khi tắt, hiển thị thông báo ở checkout/trang thành công/admin; mặc định vẫn là `resend` và yêu cầu đầy đủ cấu hình thật. Không thay database/schema, không dùng sender/key giả. Việc này thay thế điều kiện phải chờ email trước migrate/deploy trong báo cáo cũ bên dưới; nghiệm thu mail và đơn thật vẫn chưa hoàn tất.
 
 ## Cập nhật thực tế ngày 31/10/2026
