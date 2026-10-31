@@ -2,11 +2,11 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–12 đã triển khai trên dev/test**, gồm Supabase dev, storefront/giỏ/checkout/tra cứu/liên hệ, quản trị, SEO và kiểm thử production local. Project ở Tokyo, khác Singapore dự kiến. Chủ shop đã duyệt nội dung giới thiệu/chính sách trong phiên làm Phase 12; các thời hạn vận hành chưa cung cấp vẫn cần xác nhận trước khi mở bán. Resend cần domain gửi riêng để gửi cho khách ngoài email đăng ký. Chưa mở bán production; GitHub Pages vẫn là bản duyệt riêng. Xem [báo cáo Phase 12](docs/PHASE-12-REPORT.md).
+Hiện tại: **Phase 0–12 đã triển khai trên dev/test**, gồm Supabase dev, storefront/giỏ/checkout/tra cứu/liên hệ, quản trị, SEO và kiểm thử production local. Dev ở Tokyo; production riêng đã tạo tại Singapore. Chủ shop đã duyệt nội dung giới thiệu/chính sách trong phiên làm Phase 12; các thời hạn vận hành chưa cung cấp vẫn cần xác nhận trước khi mở bán. Resend cần domain gửi riêng để gửi cho khách ngoài email đăng ký. Chưa mở bán production; GitHub Pages vẫn là bản duyệt riêng. Xem [báo cáo Phase 12](docs/PHASE-12-REPORT.md).
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
-**Phase 13 đang chuẩn bị triển khai:** theo yêu cầu chỉ dùng miễn phí, phương án hiện tại là [Netlify Free + Supabase Free](docs/DEPLOYMENT-FREE.md), dùng URL `netlify.app` chưa cần mua domain web. Đã có lệnh migrate/seed/check tách khỏi dev và công cụ khôi phục admin. Supabase production Singapore đã tạo, migrate/seed và kiểm tra thành công; Netlify đang chờ triển khai bản email-disabled đã được chủ shop duyệt. Chưa có đơn thật hoàn thành. Email gửi tới khách vẫn cần domain sở hữu đã Verified; chưa coi đây là thông báo đã mở bán.
+**Phase 13 đang chuẩn bị triển khai:** theo yêu cầu chỉ dùng miễn phí, phương án hiện tại là [Netlify Free + Supabase Free](docs/DEPLOYMENT-FREE.md), dùng URL `netlify.app` chưa cần mua domain web. Đã có lệnh migrate/seed/check tách khỏi dev và công cụ khôi phục admin. Supabase production Singapore đã tạo, migrate/seed và kiểm tra thành công; Netlify đã publish bản email-disabled tại [website công khai](https://astonishing-fox-bde038.netlify.app); đăng nhập tại [/admin/login](https://astonishing-fox-bde038.netlify.app/admin/login). Tài khoản production dùng `ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD` trong `.env.deploy.local` riêng, không dùng mật khẩu dev. Chưa có đơn thật hoàn thành. Email gửi tới khách vẫn cần domain sở hữu đã Verified; chưa coi đây là thông báo đã mở bán.
 
 ## Dành cho chủ shop
 
@@ -222,6 +222,6 @@ Script tạo `.env.test.local` với mật khẩu ngẫu nhiên, không ghi đè
 
 Dừng database khi không dùng: `docker compose --env-file .env.test.local -f compose.test.yml stop`. Dữ liệu kiểm thử được giữ trong volume riêng.
 
-Web bán hàng đầy đủ chỉ chạy local ở giai đoạn này. GitHub đã có repo công khai và remote `origin`; GitHub Pages chỉ phục vụ bản duyệt giao diện độc lập. `netlify.toml` chuẩn bị cấu hình Netlify Free theo ngân sách chủ shop; `vercel.json` là cấu hình cũ, không điều khiển Netlify. Chưa có deployment production được xác minh. Các file `.env*` trừ `.env.example` được Git bỏ qua.
+Đã có bản web online không email trên Netlify Free và Supabase production riêng; sản phẩm production còn trống, cần nhập dữ liệu thật qua admin. GitHub đã có repo công khai và remote `origin`; GitHub Pages chỉ phục vụ bản duyệt giao diện độc lập. `netlify.toml` chuẩn bị cấu hình Netlify Free theo ngân sách chủ shop; `vercel.json` là cấu hình cũ, không điều khiển Netlify. Đã xác minh bản Netlify Ready và truy cập công khai; chưa nghiệm thu email hoặc đơn thật tới Hoàn thành. Các file `.env*` trừ `.env.example` được Git bỏ qua.
 
 Đọc [báo cáo Phase 0](docs/PHASE-0-REPORT.md), [Phase 1](docs/PHASE-1-REPORT.md), [Phase 2](docs/PHASE-2-REPORT.md), [Phase 3](docs/PHASE-3-REPORT.md), [Phase 4](docs/PHASE-4-REPORT.md) và [Phase 5](docs/PHASE-5-REPORT.md) để xem trạng thái nghiệm thu.

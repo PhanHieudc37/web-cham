@@ -2,7 +2,7 @@
 
 **Cập nhật 30/10/2026:** chủ shop yêu cầu chỉ dùng miễn phí. Làm theo [Netlify Free + Supabase Free](DEPLOYMENT-FREE.md) làm phương án mặc định. Các bước Vercel bên dưới được giữ để tham khảo, không phải yêu cầu đăng ký gói trả phí. Phần database, env, khôi phục admin và nghiệm thu đơn thật vẫn áp dụng.
 
-Hướng dẫn Phase 13, kiểm tra tài liệu nhà cung cấp ngày 30/10/2026. Hiện repo đã có mã nguồn; **chưa có bằng chứng đã tạo Supabase prod, deploy Vercel hoặc nghiệm thu đơn production**. Bản GitHub Pages chỉ là bản duyệt thiết kế, không nhận đơn.
+Hướng dẫn Phase 13, kiểm tra tài liệu nhà cung cấp ngày 30/10/2026. Theo cập nhật ngày 31/10/2026, Supabase prod đã tạo và bản Netlify không email đã publish; Vercel không được sử dụng. **Chưa nghiệm thu email hoặc đơn thật production**. Bản GitHub Pages chỉ là bản duyệt thiết kế, không nhận đơn.
 
 ## 1. Chuẩn bị tài khoản và tên miền
 
@@ -120,7 +120,7 @@ Không chạy Vitest/Playwright hoặc các script `e2e/` trên database product
 | Hạng mục | Trạng thái hiện tại |
 |---|---|
 | Supabase dev / bucket media | Có, dùng cho local; không phải bằng chứng production |
-| Supabase prod Singapore | Chưa tạo/xác minh trong phiên này |
+| Supabase prod Singapore | Đã tạo, migrate/seed không sample và production:check pass |
 | Vercel project, env và URL Ready | Chưa có kết nối tài khoản / chưa triển khai |
-| Domain web / Resend Verified | Chủ shop chưa cung cấp |
+| Domain web / Resend Verified | Dùng URL netlify.app; email disabled, chưa có domain gửi thư |
 | Đơn thật → Hoàn thành | Chưa thực hiện, Phase 13 chưa nghiệm thu |

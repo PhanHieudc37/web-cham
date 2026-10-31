@@ -1,23 +1,32 @@
 # Phase 13 — Chuẩn bị triển khai và tài liệu vận hành
 
-Ngày: 30/10/2026. **Trạng thái: đã chuẩn bị mã nguồn/tài liệu; chưa nghiệm thu production.**
+Ngày: 30/10/2026. **Trạng thái: đã có bản online miễn phí không email; chưa nghiệm thu email và đơn thật tới Hoàn thành.**
 
 ## Chế độ miễn phí không email được duyệt ngày 31/10/2026
 
-Bản `2bbd502` đã build/publish thành công trên Netlify. Đã mở công khai project (mặc định Netlify mới yêu cầu team login), xác minh trang chủ/danh mục/sitemap/robots HTTP 200 và đăng nhập admin production thành công. Kiểm tra hosting phát hiện redirect admin thiếu header từ `next.config`; bổ sung trực tiếp header trong proxy cùng regression test, đang kiểm tra bản cập nhật. Chưa tạo đơn/tin nhắn/sản phẩm production để thử: các số lượng đều bằng 0. Bản hiện tại phục vụ xem/góp ý; chủ shop cần thêm sản phẩm và ảnh thật trong admin.
+Bản `2bbd502` đã build/publish thành công trên Netlify. Đã mở công khai project (mặc định Netlify mới yêu cầu team login), xác minh trang chủ/danh mục/sitemap/robots HTTP 200 và đăng nhập admin production thành công. Kiểm tra hosting phát hiện redirect admin thiếu header từ `next.config`; bổ sung trực tiếp header trong proxy cùng 2 regression test. Bản cập nhật `14c840c` pass lint/typecheck/build và 200/200 test (34 file), đã Ready và xác minh trên hosting thật: 30 lượt trang ở 375/768/1280px đều HTTP 200, không tràn ngang, không lỗi trình duyệt; đăng nhập admin production, anonymous guard, banner tắt email, sitemap đúng origin và private headers đều pass. Redirect admin 307 giữ noindex/nosniff/DENY/private-no-store. Chưa tạo đơn/tin nhắn/sản phẩm production để thử: các số lượng đều bằng 0. Bản hiện tại phục vụ xem/góp ý; chủ shop cần thêm sản phẩm và ảnh thật trong admin.
 
-Chủ shop đã đồng ý triển khai Netlify với `EMAIL_DELIVERY=disabled` khi chưa có domain. Thêm lựa chọn rõ ràng vào validation production, bỏ qua gửi email khi tắt, hiển thị thông báo ở checkout/trang thành công/admin; mặc định vẫn là `resend` và yêu cầu đầy đủ cấu hình thật. Không thay database/schema, không dùng sender/key giả. Việc này thay thế điều kiện phải chờ email trước migrate/deploy trong báo cáo cũ bên dưới; nghiệm thu mail và đơn thật vẫn chưa hoàn tất.
+Chủ shop đã đồng ý triển khai Netlify với `EMAIL_DELIVERY=disabled` khi chưa có domain. Thêm lựa chọn rõ ràng vào validation production, bỏ qua gửi email khi tắt, hiển thị thông báo ở checkout/trang thành công/admin; mặc định vẫn là `resend` và yêu cầu đầy đủ cấu hình thật. Không đổi định nghĩa schema hoặc sửa migration cũ; không dùng sender/key giả. Việc này thay thế điều kiện phải chờ email trước migrate/deploy trong báo cáo cũ bên dưới; nghiệm thu mail và đơn thật vẫn chưa hoàn tất.
 
 ## Cập nhật thực tế ngày 31/10/2026
 
-- Đã xác minh token Netlify và Supabase trong các file local được Git ignore. Netlify đã có project `astonishing-fox-bde038`, liên kết đúng repository `PhanHieudc37/web-cham`; chưa có deployment thành công được xác minh.
+- Đã xác minh token Netlify và Supabase trong các file local được Git ignore. Netlify đã có project `astonishing-fox-bde038`, liên kết đúng repository `PhanHieudc37/web-cham`; đã có deployment Ready và URL công khai https://astonishing-fox-bde038.netlify.app, đăng nhập admin production thành công.
 - Đã xác minh organization Supabase `cham.stu` đang ở gói Free và tạo project riêng `cham-stu-prod` tại Singapore. Giữ nguyên project dev Tokyo.
 - Đã điền kết nối production thật vào `.env.deploy.local`; `SELECT 1` thành công qua transaction pooler 6543 và session pooler 5432. Đã migrate và seed không sample thành công; `production:check` pass với 20 bảng RLS, 0 policy public, 1 admin hoạt động, 0 sản phẩm mẫu và bucket public.
 - Đã tạo và xác minh bucket `media` public, giới hạn 2 MB, cho phép WebP/JPEG/PNG. Server key đã được lấy đầy đủ bằng Management API và kiểm tra qua Storage.
 - Đã sinh mật khẩu admin production riêng và lưu local; tài khoản đã được seed. Không đưa mật khẩu hoặc token quản lý lên hosting/Git.
 - Netlify đã xác minh hai URL, bucket, auth secret Production và email nhận thông báo shop. Sau khi chủ shop xác nhận riêng cách lưu `DATABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY` dạng biến thường All scopes, đã tải ba biến Supabase lên đúng project Netlify và xác minh giá trị khớp file local, chỉ context Production. Đã bổ sung `EMAIL_DELIVERY=disabled`, xác minh trên Netlify và local; hai biến Resend có thể trống trong chế độ này.
 - Trước khi chủ shop duyệt chế độ tắt email, `production:check` đã dừng ở validation do thiếu cấu hình Resend; sau thay đổi được duyệt, kiểm tra production đã pass. Key Resend hiện có trong cấu hình dev trả HTTP 401 khi đọc danh sách domain. Chủ shop xác nhận chưa có domain riêng, nên email khách production chưa sẵn sàng.
-- Chưa kích hoạt deploy, chưa gửi email, chưa tạo đơn production. Đã thay mã ứng dụng trong phạm vi chế độ tắt email được duyệt. Lint/typecheck/build pass; 198/198 unit/integration pass, 3/3 E2E email-disabled pass ở 375/768/1280px và đã xem ảnh chụp; bộ E2E production mặc định 9/9 pass. Quét 439 file được theo dõi và 62 file client với 19 giá trị riêng tư: 0 match. Các ghi chú “chưa có project/quyền truy cập” trong phần báo cáo ban đầu bên dưới phản ánh thời điểm 30/10 và được thay thế bởi cập nhật này.
+- Đã deploy qua GitHub lên Netlify; chưa gửi email hoặc tạo đơn production. Đã thay mã ứng dụng trong phạm vi chế độ tắt email được duyệt. Lint/typecheck/build pass; 198/198 unit/integration pass, 3/3 E2E email-disabled pass ở 375/768/1280px và đã xem ảnh chụp; bộ E2E production mặc định 9/9 pass. Quét 439 file được theo dõi và 62 file client với 19 giá trị riêng tư: 0 match. Các ghi chú “chưa có project/quyền truy cập” trong phần báo cáo ban đầu bên dưới phản ánh thời điểm 30/10 và được thay thế bởi cập nhật này.
+
+## Giới hạn bàn giao bản online
+
+- Website: https://astonishing-fox-bde038.netlify.app; quản trị: https://astonishing-fox-bde038.netlify.app/admin/login.
+- Commit ứng dụng đang chạy: `14c840c`; deployment `6ae56977bc8771e1945df927` Ready. Các cập nhật báo cáo sau đó không cần build lại ứng dụng.
+- Tài khoản/mật khẩu production nằm trong `.env.deploy.local`, biến `ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD`; không đưa vào chat hoặc Git.
+- Không thêm sản phẩm giả để lấp trang trống. Chủ shop cần nhập danh mục, sản phẩm/ảnh, tồn kho, banner, liên hệ và ngân hàng thật trong admin production; dev vẫn tách riêng.
+- Chưa kiểm tra đặt đơn thật, giao hàng thực tế, gửi email khách hoặc Lighthouse lại trên hosting có sản phẩm thật. Không đánh dấu toàn bộ Phase 13 hoàn tất.
+- Chi phí: giữ Netlify Free và Supabase Free; không mua domain/add-on, quota Free vẫn áp dụng.
 
 ## Cập nhật ngân sách — chỉ dùng miễn phí
 
