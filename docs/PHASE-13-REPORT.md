@@ -2,6 +2,14 @@
 
 Ngày: 30/10/2026. **Trạng thái: đã có bản online miễn phí không email; chưa nghiệm thu email và đơn thật tới Hoàn thành.**
 
+## Đo và tối ưu phản hồi ngày 01/11/2026
+
+Trước thay đổi: HTTP lượt đầu trang chủ 1,35 giây, danh mục 4,06 giây, login 5,65 giây; lượt ngay sau lần lượt 0,30/0,93/0,59 giây. Đây là số đo một thời điểm từ môi trường kiểm tra, không phải SLA hoặc số đo trên máy chủ shop. Kết hợp cache headers, chênh lệch phù hợp với chi phí khởi động/cache; chưa tách độc lập mọi thành phần. Netlify Functions đang ở `cmh` (Ohio), Supabase ở Singapore; đổi region Functions yêu cầu Pro/Enterprise theo tài liệu nhà cung cấp, không nâng gói trong yêu cầu miễn phí.
+
+Đo admin sau đăng nhập: tổng quan 3,4–6,6 giây, sản phẩm 2,7–2,9 giây, đơn hàng 2,4 giây. Phát hiện 18 request prefetch tự động tới 8 trang admin khi chưa bấm điều hướng. Bản tối ưu tắt prefetch ở menu/tổng quan/bảng đơn, gộp bộ đếm menu thành một SQL, đọc cấu hình/doanh thu song song, bật native joins session/user trong Better Auth đúng bản đang cài, bỏ khởi tạo auth khi hoàn toàn không có cookie. Vẫn giữ kiểm tra quyền/banned trực tiếp DB, không thêm cache admin. Metadata danh mục dùng truy vấn tiêu đề riêng thay vì gọi cả danh sách sản phẩm; danh mục rỗng bỏ query lấy card không cần thiết. Không đổi schema, gói dịch vụ, mật khẩu hoặc region database.
+
+Kiểm tra mới: anonymous guard không gọi auth/DB; session không cache dùng đúng một SELECT join; metadata automatic không query database, metadata category không query products/facets/cards; E2E kiểm tra không phát sinh admin prefetch tự động. Lint/typecheck/build pass; 203/203 unit/integration, 9/9 E2E mặc định và 5/5 E2E email-disabled pass ở 375/768/1280px, bao gồm không phát sinh prefetch admin. Số đo sau triển khai cập nhật khi chạy xong.
+
 ## Đổi hostname ngày 01/11/2026
 
 Theo lựa chọn của chủ shop, đã đổi cùng project Netlify từ `astonishing-fox-bde038` thành `chamstu`, URL web https://chamstu.netlify.app và admin https://chamstu.netlify.app/admin/login. Đã xác minh vẫn gói Free, project công khai; đồng bộ `NEXT_PUBLIC_SITE_URL` và `BETTER_AUTH_URL` trong Netlify Production và `.env.deploy.local`, cập nhật metadata local của Netlify. Không thay tài khoản, mật khẩu, database hay email mode. Link trong báo cáo này đã cập nhật theo miền hiện tại. Commit `3cc7ba9`, deployment `6ae745e6fb98477a5d7ad966` đã Ready. `production:check` pass. HTTPS trang chủ/danh mục/robots/sitemap HTTP 200; canonical, sitemap và robots dùng hostname mới, không còn hostname cũ trong các response đã kiểm tra. Anonymous admin redirect đúng miền mới và giữ noindex. Đăng nhập thực tế pass ở 375/768/1280px vào tổng quan/đơn hàng/sản phẩm trong khoảng 5,5–6,2 giây, không lỗi trình duyệt hoặc cuộn ngang. Không thay mã ứng dụng nên không chạy lại các bộ test source đã pass trước đó; cập nhật cuối chỉ là env/provider/tài liệu.

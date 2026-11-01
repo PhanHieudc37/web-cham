@@ -4,6 +4,8 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { count, eq, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { drizzle } from "drizzle-orm/postgres-js";
+import * as schema from "@/server/db/schema";
 import { checkoutSchema, type CheckoutInput } from "@/lib/validation/checkout";
 import { parseListingFilters } from "@/lib/validation/listing";
 import { defaultSettings } from "@/lib/validation/settings";
@@ -71,6 +73,16 @@ describe.skipIf(!testUrl)("business transactions on PostgreSQL", () => {
     expect((await database.db.select().from(orderEvents))[0]).toMatchObject({ type: "created", toStatus: "pending" });
     expect(result.order.accessTokenHash).not.toBe(result.accessToken);
     expect(result.accessToken).toHaveLength(43);
+  });
+  it("reads collection metadata without loading product cards, counts or facets", async () => {
+    const queries: string[] = [];
+    const tracked = drizzle(database.connection, { schema, casing: "snake_case", logger: { logQuery(query) { queries.push(query); } } });
+    const metadata = createCatalogService(tracked);
+    expect(await metadata.getListingMetadata("all")).toEqual({ title: "TẤT CẢ SẢN PHẨM", description: null });
+    expect(queries).toHaveLength(0);
+    const [category] = await database.db.select().from(categories).where(eq(categories.id, fixture.categoryId));
+    expect((await metadata.getListingMetadata(category.slug)).title).toBe(category.name);
+    expect(queries.every((query) => !/\b(products|product_variants|product_colors|product_images)\b/.test(query))).toBe(true);
   });
   it("allows exactly one concurrent buyer of the last item", async () => {
     await database.db.update(productVariants).set({ stock: 1 });

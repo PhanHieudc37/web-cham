@@ -6,6 +6,8 @@ Người dùng chính là chủ shop và nhân viên. Họ sẽ thao tác **nhi�
 
 ## 1. Quy ước chung
 
+- Không tự prefetch các link menu admin, ô tổng quan hoặc link chi tiết đơn: chỉ đọc dữ liệu khi người dùng điều hướng, tránh hàng loạt request đồng thời tới database ở xa. Bộ đếm menu gộp trong một SQL; doanh thu và cấu hình tổng quan đọc song song, không cache dữ liệu quản trị qua request.
+
 - Khi `EMAIL_DELIVERY=disabled`, đầu khu vực quản trị hiện thông báo email tự động đang tắt. Chủ shop kiểm tra Đơn hàng/Tin nhắn trực tiếp và liên hệ khách qua điện thoại/Zalo; thao tác giao hàng không hứa đã gửi email.
 
 - **Giao diện:** shadcn/ui theme neutral, góc bo nhỏ (radius 6px). Chữ hiển thị bằng tiếng Việt. Mọi trang có `noindex`.

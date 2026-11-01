@@ -2,8 +2,8 @@ import "server-only";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ getSession: vi.fn(), findUser: vi.fn() }));
-vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
+const mocks = vi.hoisted(() => ({ getSession: vi.fn(), findUser: vi.fn(), requestHeaders: vi.fn() }));
+vi.mock("next/headers", () => ({ headers: mocks.requestHeaders }));
 vi.mock("next/navigation", () => ({ redirect: (path: string) => { throw new Error(`REDIRECT:${path}`); } }));
 vi.mock("./auth", () => ({ getAuth: () => ({ api: { getSession: mocks.getSession } }) }));
 vi.mock("@/server/db/client", () => ({ getDatabase: () => ({ select: () => ({ from: () => ({ where: mocks.findUser }) }) }) }));
@@ -14,7 +14,12 @@ import { defaultSettings } from "@/lib/validation/settings";
 import { deleteCollectionAction, deleteBannerAction, reorderContentAction, findCollectionProductsAction } from "@/server/actions/admin/content";
 
 describe("authoritative guards and direct action calls", () => {
-  beforeEach(() => { vi.clearAllMocks(); mocks.getSession.mockResolvedValue({ user: { id: "staff-id", role: "admin" } }); mocks.findUser.mockResolvedValue([{ id: "staff-id", name: "Nhân viên", email: "staff@example.test", role: "staff", banned: false }]); });
+  beforeEach(() => { vi.clearAllMocks(); mocks.requestHeaders.mockResolvedValue(new Headers({ cookie: "better-auth.session_token=test-session" })); mocks.getSession.mockResolvedValue({ user: { id: "staff-id", role: "admin" } }); mocks.findUser.mockResolvedValue([{ id: "staff-id", name: "Nhân viên", email: "staff@example.test", role: "staff", banned: false }]); });
+  it("skips session and database reads entirely for visitors without a session cookie", async () => {
+    mocks.requestHeaders.mockResolvedValue(new Headers());
+    expect(await getSessionUser()).toBeNull();
+    expect(mocks.getSession).not.toHaveBeenCalled(); expect(mocks.findUser).not.toHaveBeenCalled();
+  });
   it("uses the database role even when session data claims admin", async () => {
     expect(await getSessionUser()).toMatchObject({ role: "staff" });
     await expect(requireRole("admin")).rejects.toMatchObject({ code: "FORBIDDEN" });

@@ -4,6 +4,8 @@ import { beforeAll, beforeEach, afterAll, describe, expect, it } from "vitest";
 import { count, eq, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { verifyPassword } from "better-auth/crypto";
+import { drizzle } from "drizzle-orm/postgres-js";
+import * as schema from "@/server/db/schema";
 import { createDatabase } from "@/server/db/client";
 import { account, session, user } from "@/server/db/schema";
 import { createUserService } from "@/server/services/user.service";
@@ -49,6 +51,17 @@ describe.skipIf(!testUrl)("Better Auth accounts and sessions", () => {
     const response = await auth.handler(new Request(`${config.baseURL}/api/auth/sign-up/email`, { method: "POST", headers: { "content-type": "application/json", origin: config.baseURL }, body: JSON.stringify({ name: "Người lạ", email: "stranger@example.test", password }) }));
     expect(response.status).toBe(400);
     expect((await database.db.select({ total: count() }).from(user))[0].total).toBe(2);
+  });
+  it("reads an uncached session and its user in one native joined SELECT", async () => {
+    const headers = await signIn();
+    const queries: string[] = [];
+    const tracked = drizzle(database.connection, { schema, casing: "snake_case", logger: { logQuery(query) { queries.push(query); } } });
+    const joinedAuth = createAuth(tracked, config);
+    await joinedAuth.$context;
+    queries.length = 0;
+    const current = await joinedAuth.api.getSession({ headers, query: { disableCookieCache: true } });
+    expect(current?.user).toMatchObject({ id: staffId, role: "staff" });
+    expect(queries.filter((query) => /^select\b/i.test(query))).toHaveLength(1);
   });
   it("creates accounts through Better Auth with hashed passwords and rejects duplicate email", async () => {
     const result = await service.create({ name: "Thành viên mới", email: "new@example.test", password, role: "staff" }, adminId);

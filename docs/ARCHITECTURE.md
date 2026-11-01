@@ -382,6 +382,7 @@ DTO cho đơn hàng: `OrderSuccessDTO`, `OrderPublicDTO` (tra cứu, SĐT che b�
 ## 8. Cache
 
 - Mọi hàm đọc của `catalog.service` và `settings.service` được bọc bằng `cached(fn, keyParts, tags)` trong `src/server/cache.ts`.
+- Metadata danh mục dùng `getListingMetadata`, chỉ đọc tiêu đề/mô tả và phạm vi hiển thị, không gọi toàn bộ query sản phẩm/facet/card. Cache dùng các tag products/categories/collections như danh mục để thay đổi admin vẫn cập nhật ngay.
 - Cache key có namespace băm từ host/database/user pooler, không gồm mật khẩu. Dữ liệu cache lưu trên đĩa của database kiểm thử và Supabase dev không dùng chung khi đổi môi trường trong cùng workspace.
 - Mỗi thao tác ghi gọi `invalidate(...tags)`.
 - File `cache.ts` dùng cơ chế cache của **đúng bản Next.js đang cài** (`unstable_cache` hoặc `"use cache"` + `cacheTag`, đọc docs của bản đó). Nhờ gói gọn ở một chỗ, sau này đổi cơ chế cache chỉ phải sửa một file.
@@ -402,6 +403,7 @@ DTO cho đơn hàng: `OrderSuccessDTO`, `OrderPublicDTO` (tra cứu, SĐT che b�
 
 - **Cấu hình Better Auth** (`src/server/auth/auth.ts`):
   - Drizzle adapter (provider `pg`).
+  - Bật `advanced.database.joins` của Better Auth 1.7.14 với relations Drizzle đã có, đọc session/user bằng một SELECT. Vẫn tắt cookie cache và kiểm tra role/banned lại từ DB trong guard. Khi hoàn toàn không có session cookie, trả anonymous trước khi khởi tạo auth; cookie hiện diện vẫn phải xác minh đầy đủ.
   - `emailAndPassword` bật, mật khẩu tối thiểu 8 ký tự.
   - **Tắt đăng ký công khai** cho tới Phase 14d.
   - Plugin `admin` (role, khóa tài khoản), plugin `nextCookies` (để Server Action set được cookie).

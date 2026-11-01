@@ -73,9 +73,8 @@ export function createUserService(db: Database, authConfig: AuthConfiguration) {
 export const getUserService = () => createUserService(getDatabase(), getAuthConfiguration());
 export async function getAdminShellData(person: SessionUserDTO) {
   const db = getDatabase();
-  const [[pending], [messages]] = await Promise.all([
-    db.select({ total: count() }).from(orders).where(eq(orders.status, "pending")),
-    db.select({ total: count() }).from(contactMessages).where(eq(contactMessages.status, "new")),
-  ]);
-  return { person, pendingOrders: pending.total, newMessages: messages.total };
+  const [counts] = await db.execute<{ pendingOrders: number; newMessages: number }>(sql`SELECT
+    (SELECT count(*)::integer FROM ${orders} WHERE ${orders.status} = 'pending') AS "pendingOrders",
+    (SELECT count(*)::integer FROM ${contactMessages} WHERE ${contactMessages.status} = 'new') AS "newMessages"`);
+  return { person, pendingOrders: counts.pendingOrders, newMessages: counts.newMessages };
 }

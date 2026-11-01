@@ -13,6 +13,8 @@ export type AuthConfiguration = { baseURL: string; secret: string };
 export function createAuth(db: DatabaseReader, config: AuthConfiguration, cookiePlugin = false) {
   return betterAuth({
     ...authOptions, ...config, database: drizzleAdapter(db, { provider: "pg", schema, transaction: true }),
+    // Better Auth 1.7 supports native Drizzle joins; relations already exist.
+    advanced: { database: { joins: true } },
     plugins: [...authOptions.plugins, ...(cookiePlugin ? [nextCookies()] : [])],
     session: { expiresIn: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 24, cookieCache: { enabled: false } },
     rateLimit: { enabled: true, window: 60, max: 60, customRules: { "/sign-in/email": { window: 60, max: 10 } } },

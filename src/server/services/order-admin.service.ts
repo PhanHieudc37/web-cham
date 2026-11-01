@@ -7,7 +7,7 @@ import { formatDateTime } from "@/lib/format";
 import type { DashboardDTO, OrderListDTO } from "@/types/order-admin";
 import { getDatabase, type Database } from "@/server/db/client";
 import { orderItems, orders, productColors, products, productVariants } from "@/server/db/schema";
-import { readSettings } from "./settings.service";
+import { getSetting } from "./settings.service";
 
 const itemCount = sql<number>`coalesce((select sum(oi.quantity) from order_items oi where oi.order_id = "orders"."id"), 0)::integer`;
 const selection = { id: orders.id, code: orders.code, createdAt: orders.createdAt, customerName: orders.customerName, customerPhone: orders.customerPhone, total: orders.total, status: orders.status, paymentMethod: orders.paymentMethod, paymentStatus: orders.paymentStatus, itemCount };
@@ -35,8 +35,12 @@ export function createOrderAdminService(db: Database) {
   }
   async function dashboard(role: "admin" | "staff", now = new Date()): Promise<DashboardDTO> {
     const today = vietnamDay(now), tomorrow = dayStart(shiftDay(today, 1));
-    const config = await readSettings(db);
-    const lowWhere = and(eq(products.status, "active"), eq(productVariants.isActive, true), lte(productVariants.stock, config.orders.lowStockThreshold));
+    const [config, rows] = await Promise.all([
+      getSetting("orders", db),
+      role === "admin" ? db.select({ date: sql<string>`to_char(${orders.createdAt} at time zone 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD')`, total: sql<number>`coalesce(sum(${orders.total}),0)::bigint`.mapWith(Number) }).from(orders)
+        .where(and(inArray(orders.status, ["confirmed", "shipping", "completed"]), gte(orders.createdAt, dayStart(shiftDay(today, -29))), lt(orders.createdAt, tomorrow))).groupBy(sql`to_char(${orders.createdAt} at time zone 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD')`) : Promise.resolve([]),
+    ]);
+    const lowWhere = and(eq(products.status, "active"), eq(productVariants.isActive, true), lte(productVariants.stock, config.lowStockThreshold));
     const [metrics, latest, lowStock, lowCount] = await Promise.all([
       db.select({ todayOrders: sql<number>`count(*) filter (where ${orders.createdAt} >= ${dayStart(today).toISOString()}::timestamptz and ${orders.createdAt} < ${tomorrow.toISOString()}::timestamptz)::integer`, pending: sql<number>`count(*) filter (where ${orders.status} = 'pending')::integer`, unpaidTransfer: sql<number>`count(*) filter (where ${orders.paymentMethod} = 'bank_transfer' and ${orders.paymentStatus} = 'unpaid')::integer` }).from(orders),
       db.select(selection).from(orders).orderBy(desc(orders.createdAt), desc(orders.id)).limit(10),
@@ -46,12 +50,10 @@ export function createOrderAdminService(db: Database) {
     ]);
     let revenue: DashboardDTO["revenue"] = null;
     if (role === "admin") {
-      const rows = await db.select({ date: sql<string>`to_char(${orders.createdAt} at time zone 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD')`, total: sql<number>`coalesce(sum(${orders.total}),0)::bigint`.mapWith(Number) }).from(orders)
-        .where(and(inArray(orders.status, ["confirmed", "shipping", "completed"]), gte(orders.createdAt, dayStart(shiftDay(today, -29))), lt(orders.createdAt, tomorrow))).groupBy(sql`to_char(${orders.createdAt} at time zone 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD')`);
       const sumSince = (date: string) => rows.filter((row) => row.date >= date).reduce((sum, row) => sum + row.total, 0);
       revenue = { today: sumSince(today), week: sumSince(shiftDay(today, -6)), month: sumSince(shiftDay(today, -29)), days: Array.from({ length: 14 }, (_, index) => { const date = shiftDay(today, index - 13); return { date, total: rows.find((row) => row.date === date)?.total ?? 0 }; }) };
     }
-    return { ...metrics[0], revenue, latest: latest.map((row) => ({ ...row, createdAt: row.createdAt.toISOString() })), lowStock, lowStockTotal: lowCount[0].count, threshold: config.orders.lowStockThreshold };
+    return { ...metrics[0], revenue, latest: latest.map((row) => ({ ...row, createdAt: row.createdAt.toISOString() })), lowStock, lowStockTotal: lowCount[0].count, threshold: config.lowStockThreshold };
   }
   async function* exportCsv(filters: OrderFilters) {
     yield "\uFEFF" + csvRow(["Mã đơn", "Ngày đặt", "Khách hàng", "SĐT", "Email", "Địa chỉ", "Trạng thái", "Phương thức", "Thanh toán", "Sản phẩm", "Màu", "Size", "SKU", "Đơn giá", "Số lượng", "Thành tiền", "Tạm tính đơn", "Giảm giá đơn", "Phí ship đơn", "Tổng đơn", "Hãng vận chuyển", "Mã vận đơn"]);

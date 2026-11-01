@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { getSessionCookie } from "better-auth/cookies";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
@@ -11,7 +12,11 @@ import { AppError } from "@/server/errors";
 import { getAuth } from "./auth";
 
 export const getSessionUser = cache(async (): Promise<SessionUserDTO | null> => {
-  const session = await getAuth().api.getSession({ headers: await headers(), query: { disableCookieCache: true } });
+  const requestHeaders = await headers();
+  // Anonymous login visits need no auth/database initialization. A cookie is
+  // only a hint here; Better Auth still validates it and the role is re-read.
+  if (!getSessionCookie(requestHeaders)) return null;
+  const session = await getAuth().api.getSession({ headers: requestHeaders, query: { disableCookieCache: true } });
   if (!session) return null;
   const [person] = await getDatabase().select({ id: user.id, name: user.name, email: user.email, role: user.role, banned: user.banned }).from(user).where(eq(user.id, session.user.id));
   if (!person || person.banned || !hasRole(person.role, "staff")) return null;

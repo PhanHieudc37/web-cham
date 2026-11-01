@@ -11,6 +11,8 @@ test.beforeEach(() => {
 });
 
 test("login reports a lost server connection and lets the administrator retry", async ({ page }) => {
+  const prefetches: string[] = [];
+  page.on("request", (request) => { if (new URL(request.url()).pathname.startsWith("/admin") && request.headers()["next-router-prefetch"] === "1") prefetches.push(new URL(request.url()).pathname); });
   await page.goto("/admin/login");
   await page.getByLabel("Email", { exact: true }).fill("admin@example.test");
   await page.getByLabel("Mật khẩu", { exact: true }).fill("E2e-private-password-12345");
@@ -25,6 +27,9 @@ test("login reports a lost server connection and lets the administrator retry", 
   await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole("note")).toContainText("Email tự động đang tắt");
+  await page.locator("main h1").waitFor();
+  await page.waitForTimeout(1500);
+  expect(prefetches).toEqual([]);
 });
 
 test("login stays visibly busy during a slow response and opens a fresh authenticated document", async ({ page }) => {

@@ -120,7 +120,7 @@ export function createCatalogService(reader: DatabaseReader) {
     const conditions = and(...scope.conditions, ...filtering(effectiveFilters));
     const totals = await reader.select({ total: count() }).from(products).innerJoin(categories, eq(products.categoryId, categories.id)).leftJoin(parent, eq(categories.parentId, parent.id)).where(conditions);
     const total = totals[0].total, totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE)), page = Math.min(filters.page, totalPages);
-    const rows = await base().where(conditions).orderBy(...sorting(filters.sort ?? scope.defaultSort, scope.manualId)).limit(PAGE_SIZE).offset((page - 1) * PAGE_SIZE);
+    const rows = total ? await base().where(conditions).orderBy(...sorting(filters.sort ?? scope.defaultSort, scope.manualId)).limit(PAGE_SIZE).offset((page - 1) * PAGE_SIZE) : [];
     return { title: scope.title, description: scope.description, bannerUrl: scope.bannerUrl, breadcrumb: scope.breadcrumb, subcategories: scope.subcategories,
       facets: availableFacets, products: await cards(rows), total, page, totalPages };
   }
@@ -190,10 +190,15 @@ export function createCatalogService(reader: DatabaseReader) {
     return { banners: activeBanners, categories: menu.categories.slice(0, 3), bestSeller: bestSeller.products.slice(0, 8), newArrival: newArrival.products.slice(0, 8), sale: sale.products.slice(0, 4),
       collections: await Promise.all(homeCollections.map(async (collection) => ({ ...collection, products: (await getListing(collection.slug)).products.slice(0, 8) }))) };
   }
-  return { getListing, search, getProductDetail, getRelatedProducts, getMenu, getHome };
+  async function getListingMetadata(slug: string) {
+    const scope = await context(slug);
+    return { title: scope.title, description: scope.description };
+  }
+  return { getListing, getListingMetadata, search, getProductDetail, getRelatedProducts, getMenu, getHome };
 }
 
 export const getListing = cached(async (slug: string, filters: ListingFilters = emptyFilters()) => createCatalogService(getDatabase()).getListing(slug, filters), ["catalog-listing"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.collections]);
+export const getListingMetadata = cached(async (slug: string) => createCatalogService(getDatabase()).getListingMetadata(slug), ["catalog-listing-metadata"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.collections]);
 export const searchProducts = cached(async (query: string, page: number = 1) => createCatalogService(getDatabase()).search(query, page), ["catalog-search"], [CACHE_TAGS.products, CACHE_TAGS.categories]);
 // Metadata and page rendering share one read within a render, including cold ISR.
 export const getProductDetail = cache(cached(async (slug: string) => createCatalogService(getDatabase()).getProductDetail(slug), ["catalog-product"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.settings]));

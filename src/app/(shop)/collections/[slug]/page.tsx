@@ -6,14 +6,14 @@ import { ShopImage } from "@/components/shop/common/shop-image";
 import { ListingControls } from "@/components/shop/collection/ListingControls";
 import { listingQuery } from "@/lib/listing-url";
 import { parseListingFilters } from "@/lib/validation/listing";
-import { getListing } from "@/server/services/catalog.service";
+import { getListing, getListingMetadata } from "@/server/services/catalog.service";
 import { readCatalogPage } from "../../catalog-boundary";
 import { getPageMetadata, getSiteUrl } from "@/server/services/seo.service";
 import { breadcrumbJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/shop/common/JsonLd";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const listing = await readCatalogPage(() => params.then(({ slug }) => getListing(slug)));
+  const listing = await readCatalogPage(() => params.then(({ slug }) => getListingMetadata(slug)));
   return getPageMetadata({ title: listing.title, description: listing.description || `Khám phá ${listing.title.toLowerCase()}, xem màu sắc, kích thước và giá sản phẩm tại cửa hàng.`, path: `/collections/${(await params).slug}` });
 }
 
