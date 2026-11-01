@@ -14,7 +14,7 @@ Hướng dẫn Phase 13, kiểm tra tài liệu nhà cung cấp ngày 30/10/2026
 ## 2. Tạo Supabase production riêng
 
 1. Dashboard Supabase → New project; đặt tên phân biệt, ví dụ `cham-stu-prod`. Đây là tên đề xuất, không phải project đã được tạo.
-2. Chọn **Singapore** theo kiến trúc, phù hợp Vercel `sin1`. Project dev đang ở Tokyo; giữ nguyên dev, không đổi hoặc xóa project đó.
+2. Hướng dẫn Singapore/Vercel `sin1` là cấu hình cũ. **Production hiện vẫn ở Singapore**, nhưng Phase 15A dự kiến chọn **East US (Ohio), `us-east-2`** để cùng region Netlify Free đã xác minh. Chưa được tạo/pause project hoặc đổi env trước xác nhận chủ shop; xem [phương án chuyển](PHASE-15A-REPORT.md). Project dev ở Tokyo; không đổi dữ liệu/config hoặc xóa project đó. Nếu cần pause tạm để nhường quota, phải được chủ shop duyệt riêng và resume sau chuyển.
 3. Sinh mật khẩu database mạnh, lưu trong trình quản lý mật khẩu. Đợi project sẵn sàng.
 4. Connect → lấy **Transaction pooler, cổng 6543** cho `DATABASE_URL`, **Session pooler, cổng 5432** cho `DIRECT_URL`. Cả hai phải thuộc project prod. Thay chỗ mật khẩu bằng mật khẩu thật, percent-encode ký tự đặc biệt; thêm `?sslmode=require` nếu URI chưa có query. Không sao chép URI chỉ còn `[YOUR-PASSWORD]`.
 5. Settings/API Keys → lấy Secret key server (`sb_secret_...` hoặc legacy service_role), URL project. Không dùng anon/publishable key cho app này.

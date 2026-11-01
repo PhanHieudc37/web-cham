@@ -1,0 +1,47 @@
+# Phase 15A — Chuẩn bị đưa database về Ohio
+
+Ngày 01/11/2026. **Chưa nghiệm thu 15A; chưa chuyển project hoặc biến môi trường Netlify.**
+
+## Kiểm kê và điều kiện chuyển
+
+- Phase 15.0: commit `724c44a`, công cụ đo và Baseline tại [PERFORMANCE-REPORT.md](PERFORMANCE-REPORT.md). Mốc ngân sách chủ shop xác nhận: còn **221/300 credit**; Phase 15 chưa deploy production, đã dùng **0/4 lượt**.
+- Netlify API xác minh Functions `us-east-2` (Ohio), gói Free. Supabase Management API liệt kê `East US (Ohio)` / `us-east-2` trong các region có thể chọn cho organization hiện tại. Đích dự kiến: `cham-stu-prod-us`, Free, cùng region server; chưa tạo.
+- Cả dev Tokyo và production Singapore đều `ACTIVE_HEALTHY`, đang dùng đủ 2 project Free. [Giới hạn Free](https://supabase.com/docs/guides/platform/billing-faq): paused project không tính vào hai suất active.
+- Inventory đọc lại lúc 21:58 +07:00 bằng transaction READ ONLY:
+
+| Mục | Số lượng |
+|---|---:|
+| products | 0 |
+| orders | 0 |
+| contact_messages | 0 |
+| user ngoài admin | 0 |
+| admin | 1 |
+| object bucket media | 0 |
+| nhóm settings khác mặc định | 0/10 |
+
+Không in giá trị settings, mật khẩu, token, tên khách, mã đơn hoặc đường dẫn ảnh. Có phiên auth/rate-limit vận hành; không phải sản phẩm/đơn thật cần chép. Theo nhánh production rỗng của kế hoạch, dự kiến migrate + seed không sample, tạo mật khẩu admin mới lưu riêng local; không chép bảng auth hoặc dữ liệu kinh doanh. Trước khi thực hiện phải kiểm kê lại; nếu phát sinh dữ liệu mới thì dừng để xin duyệt sao chép.
+
+Chạy lại inventory: `node --conditions=react-server --import=tsx scripts/inspect-production.ts`. Script chỉ đọc `.env.deploy.local`, kiểm tra tách dev/prod và bật transaction READ ONLY; đầu ra chỉ có số đếm và tên nhóm settings.
+
+## Phần code chuẩn bị
+
+- `GET /api/health` public, `Cache-Control: no-store`, Node runtime. Query hợp lệ duy nhất là `?db=1`; không query DB khi không có cờ đó. Khi có cờ, service chỉ chạy `select 1`, trả thời gian thực thi/pooler đi-về `dbMs`; lần đầu có thể gồm mở kết nối. Không ghi rate limit.
+- `commit` lấy SHA công khai `COMMIT_REF` lúc build qua `next.config.ts` và nhúng thành `APP_COMMIT_REF`, không cần thêm biến Netlify. Build local thiếu SHA hợp lệ trả `unknown`. Không nhúng biến môi trường khác.
+- Lỗi DB trả HTTP 503, `ok:false`, `dbMs:null`; query không hợp lệ trả 400, không trả exception hoặc thông tin kết nối. Có test cho nhánh không DB, một query DB, validate query và không lộ lỗi DB.
+- Chưa thêm `copy-production.ts`: inventory hiện rỗng; nhánh sao chép chỉ cần khi có dữ liệu thật và chủ shop duyệt. Không có project ref cũ bị ghim trong `scripts/production.ts`; guard suy ra ref từ các URL và kiểm tra cùng project/TLS.
+
+**Kiểm tra phần chuẩn bị:** lint/typecheck/build pass, **210/210 unit/integration pass (36 file)**. Đã chạy build production trên localhost để kiểm tra health: `/api/health` HTTP 200, `dbMs:null`; `?db=1` HTTP 200, số đo DB hữu hạn; `?db=0` HTTP 400. Cả ba giữ no-store/noindex và chỉ có `ok`, `commit`, `dbMs`. Build dùng một SHA giả lập riêng cho kiểm thử, sau đó khởi động với SHA runtime khác; health vẫn trả SHA lúc build, xác minh đã nhúng đúng. Probe local dùng dev Tokyo, không dùng số đó để nghiệm thu Ohio. `production:check` hiện tại trên Singapore pass: 20 bảng RLS, 0 public policy, 1 admin hoạt động, 0 sample và media public; email vẫn tắt. Không đổi UI/schema; không cần đo lại ba độ rộng cho endpoint vận hành.
+
+## Điểm khác và phương án cần duyệt
+
+1. Kế hoạch yêu cầu tạo project Ohio trước rồi mới pause Singapore và giữ dev Tokyo. Với hai project active đã đầy, không thể làm đúng thứ tự đó ở Free. Đề xuất **tạm pause dev Tokyo trước**, tạo/migrate/seed Ohio trong khi Singapore vẫn phục vụ web; sau chuyển và kiểm tra thành công mới pause Singapore, rồi resume Tokyo. Không xóa project, không đổi dữ liệu/config dev. Local dựa Supabase dev sẽ tạm không dùng được trong thời gian pause.
+2. Đổi ba credential runtime Netlify chỉ context **Production**: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`; cập nhật thêm biến có ref cũ nếu kiểm kê env phát hiện. Giữ kiểu lưu All scopes hiện có trên Free theo xác nhận trước của chủ shop, không mở cho Preview. `.env.deploy.local` đổi cả `DIRECT_URL`; mật khẩu admin mới chỉ lưu local, không đưa lên Netlify/Git.
+3. Chỉ push/deploy application một lần (#1) sau khi database mới và `production:check` sẵn sàng. Chỉ pause Singapore sau khi route health/login/admin/ảnh và kiểm tra production đạt; nếu lỗi thì giữ Singapore active để phục hồi. Nếu cần rollback deployment, mọi biến DB/Storage phải trở lại cùng project, không trộn hai ref.
+4. Hợp đồng health `{ ok, commit, dbMs }` là ngoại lệ vận hành được PERFORMANCE-PLAN.md quy định cụ thể, khác ActionResult `{ok,data}` chung của ARCHITECTURE.md. Các endpoint nghiệp vụ không đổi format.
+5. Chính sách bảo mật hiện chỉ nói Supabase và xử lý ngoài Việt Nam, không ghim Singapore; chưa cần đổi nội dung khi chuẩn bị region.
+
+## Chưa làm / cần chủ shop
+
+- Chờ xác nhận riêng việc pause/resume dev tạm thời, tạo Ohio, pause Singapore sau chuyển và đổi env Netlify Production. Chưa có thao tác quản lý project hoặc đổi env nào trong Phase 15.
+- Chưa có số đo `/api/health?db=1` production hoặc mốc sau 15A; không coi mục tiêu DB <10 ms/admin <1 s đã đạt. Cần migrate/seed/check, deploy #1, đo lại cùng Wi-Fi rồi ghi kết quả thật.
+- Không làm Phase 15B/15C/15D, không nâng gói hoặc mua add-on, không thay cookie cache/guard admin.

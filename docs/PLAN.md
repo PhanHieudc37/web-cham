@@ -6,6 +6,8 @@
 
 ## Tiến độ thực tế — 30/10/2026
 
+- **Phase 15 (giao thêm 01/11/2026):** theo [PERFORMANCE-PLAN.md](PERFORMANCE-PLAN.md), chỉ nhận 15.0 và 15A. **15.0:** có công cụ đo, Baseline Wi-Fi và kiểm tra pass; commit `724c44a`, không deploy. **15A:** đang chuẩn bị Ohio (`us-east-2`) để cùng region Netlify; production vẫn ở Singapore, chưa đổi env/project. Chờ duyệt thứ tự xử lý giới hạn 2 project Free; xem [báo cáo 15A](PHASE-15A-REPORT.md) và [số đo](PERFORMANCE-REPORT.md). Chưa làm 15B/15C/15D.
+
 - **Phase 0:** đã nghiệm thu; commit `e346d1f`.
 - **GitHub:** code trong repo công khai [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`. Có thêm milestone bản duyệt giao diện tĩnh trên GitHub Pages theo yêu cầu riêng, xem bên dưới.
 - **Phase 1:** **đã nghiệm thu trên Supabase `cham-stu-dev`**: đủ 20 bảng/RLS, migration và seed hai lượt không nhân đôi, Studio đọc được dữ liệu, admin và bucket public `media` đã tạo. Lint/typecheck/20 test/build pass. Project do chủ shop tạo ở Tokyo, khác Singapore dự kiến; xem `docs/PHASE-1-REPORT.md`.

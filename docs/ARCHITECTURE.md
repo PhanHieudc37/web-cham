@@ -244,6 +244,8 @@ router.push(`/checkout/success?code=${res.data.orderCode}&t=${res.data.accessTok
 
 Route Handler trả JSON cùng format với `ActionResult`. HTTP status lấy theo bảng mã lỗi ở mục 6.1.
 
+Ngoại lệ vận hành được giao trong Phase 15A: `GET /api/health` dùng hợp đồng `{ ok, commit, dbMs }`, public/no-store; `?db=1` mới chạy `select 1` qua service. `commit` là SHA công khai nhúng lúc build từ Netlify `COMMIT_REF`, không phải secret hoặc biến runtime được chép toàn bộ. Không rate-limit ghi DB cho probe; lỗi chỉ trả HTTP 400/503 và ba trường trên. Các endpoint nghiệp vụ vẫn giữ ActionResult. Route mới hiện mới kiểm tra local, chờ deploy 15A.
+
 ---
 
 ## 6. Hợp đồng dữ liệu

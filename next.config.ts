@@ -10,6 +10,8 @@ export default function nextConfig(phase: string): NextConfig {
   }
   return {
     poweredByHeader: false,
+    // Netlify COMMIT_REF is available at build time; only expose this public SHA.
+    env: { APP_COMMIT_REF: /^[a-f0-9]{40}$/i.test(process.env.COMMIT_REF ?? "") ? process.env.COMMIT_REF : "unknown" },
     // Limit prerender workers so concurrent pages do not exhaust the shared Postgres pool.
     experimental: { cpus: 2, staticGenerationMaxConcurrency: 2 },
     // Checkout action arguments contain personal data; success URLs carry bearer tokens.
