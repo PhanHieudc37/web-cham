@@ -14,7 +14,7 @@ async function noIndex(page: Page) {
 async function login(page: Page, role = "admin") {
   await page.goto("/admin/login"); await page.getByLabel("Email", { exact: true }).fill(`${role}@example.test`); await page.getByLabel("Mật khẩu", { exact: true }).fill("E2e-private-password-12345"); await page.getByRole("button", { name: "Đăng nhập", exact: true }).click(); await expect(page).toHaveURL(/\/admin$/);
 }
-async function purchase(page: Page, bank = false) {
+async function purchase(page: Page, bank = false, count = 1) {
   await page.goto("/"); await page.getByRole("link", { name: "XEM TẤT CẢ BEST SELLER", exact: true }).click(); await expect(page).toHaveURL(/\/collections\/best-seller$/);
   await page.getByTestId("product-card").filter({ hasText: "Áo thun hai màu" }).click(); await expect(page).toHaveURL(/\/products\/ao-thun-hai-mau$/);
   await page.locator('[data-cart-ready="true"]').first().waitFor(); await page.getByRole("button", { name: "Màu Đen", exact: true }).click(); await page.getByRole("button", { name: "M", exact: true }).click();
@@ -24,7 +24,7 @@ async function purchase(page: Page, bank = false) {
   await page.getByLabel("Tỉnh / Thành phố *", { exact: true }).selectOption("Hà Nội"); await page.getByLabel("Phường / Xã *", { exact: true }).fill("Phường kiểm thử"); await page.getByLabel("Địa chỉ cụ thể *", { exact: true }).fill("Địa chỉ dùng riêng cho kiểm thử"); await page.getByRole("checkbox").check();
   if (bank) await page.getByLabel("Chuyển khoản ngân hàng", { exact: true }).check();
   await noOverflow(page); await page.getByRole("button", { name: "ĐẶT HÀNG", exact: true }).click(); await expect(page).toHaveURL(/\/checkout\/success\?code=.*&t=/); await expect(page.getByTestId("receipt-total")).toHaveText("229.000₫");
-  await noIndex(page); expect(fixture()).toMatchObject({ count: 1, total: 229000, quantity: 1, stock: 1, movements: 1 });
+  await noIndex(page); expect(fixture()).toMatchObject({ count, total: 229000 * count, quantity: count, stock: 2 - count, movements: count });
   return page.getByTestId("order-code").innerText();
 }
 async function transition(page: Page, label: string) { await page.getByRole("button", { name: label, exact: true }).click(); await page.getByRole("dialog").getByRole("button", { name: "Xác nhận", exact: true }).click(); await expect(page.getByRole("dialog")).toBeHidden(); }
@@ -115,4 +115,20 @@ test("concurrent first visits finish cold product ISR generation", async ({ requ
     expect(html).toContain("Áo thun 11");
     expect(["MISS", "HIT"]).toContain(response.headers()["x-nextjs-cache"]);
   }
+});
+
+test("ordinary purchases retain ISR while the final item updates sold-out catalog labels", async ({ page, request }) => {
+  for (const path of ["/", "/products/ao-thun-hai-mau", "/collections/best-seller"]) {
+    await request.get(path);
+    await expect.poll(async () => (await request.get(path)).headers()["x-nextjs-cache"]).toBe("HIT");
+  }
+  await purchase(page);
+  for (const path of ["/", "/products/ao-thun-hai-mau"]) expect((await request.get(path)).headers()["x-nextjs-cache"]).toBe("HIT");
+  await page.goto("/products/ao-thun-hai-mau");
+  await page.locator('[data-availability-ready="true"]').waitFor();
+  await page.getByRole("button", { name: "Màu Đen", exact: true }).click(); await page.getByRole("button", { name: "M", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Chỉ còn 1" })).toBeVisible();
+  fixture("last-item"); await purchase(page, false, 2);
+  await page.goto("/collections/best-seller");
+  await expect(page.getByTestId("product-card").filter({ hasText: "Áo thun hai màu" })).toContainText("HẾT HÀNG");
 });

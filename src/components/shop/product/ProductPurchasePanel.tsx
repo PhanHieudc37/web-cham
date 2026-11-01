@@ -11,11 +11,12 @@ import { ShopImage } from "../common/shop-image";
 import { useCartStore } from "@/store/cart";
 import { useUiStore } from "@/store/ui";
 
-export function ProductPurchasePanel({ product, colorId, onColorChange, children, sizeChart }: {
+export function ProductPurchasePanel({ product, colorId, onColorChange, children, sizeChart, availabilityReady, availabilityError, retryAvailability }: {
   product: ProductDetailDTO; colorId: string; onColorChange: (id: string) => void; children: React.ReactNode; sizeChart: React.ReactNode;
+  availabilityReady: boolean; availabilityError: boolean; retryAvailability: () => void;
 }) {
   const [size, setSize] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [requestedQuantity, setQuantity] = useState(1);
   const [showSticky, setShowSticky] = useState(false);
   const [selectionError, setSelectionError] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
@@ -26,6 +27,7 @@ export function ProductPurchasePanel({ product, colorId, onColorChange, children
   const color = product.colorOptions.find((color) => color.id === colorId);
   const variant = product.variants.find((variant) => variant.colorId === colorId && variant.size === size && variant.available);
   const maxQuantity = variant?.maxQuantity ?? 1;
+  const quantity = Math.max(1, Math.min(requestedQuantity, maxQuantity));
   const soldOut = !product.variants.some((variant) => variant.available);
   useEffect(() => {
     const target = actions.current;
@@ -45,6 +47,7 @@ export function ProductPurchasePanel({ product, colorId, onColorChange, children
   function chooseSize(value: string) { setSize(value); setQuantity(1); setSelectionError(false); }
   function requestSelection() { setSelectionError(true); sizes.current?.scrollIntoView({ block: "center", behavior: reduced ? "instant" : "smooth" }); sizes.current?.querySelector<HTMLButtonElement>("button[aria-pressed]:not(:disabled)")?.focus({ preventScroll: true }); }
   function addToCart(checkout = false) {
+    if (!availabilityReady) return;
     if (!variant) { requestSelection(); return; }
     const error = useCartStore.getState().add(variant.id, quantity, variant.maxQuantity);
     setCartError(error);
@@ -65,24 +68,25 @@ export function ProductPurchasePanel({ product, colorId, onColorChange, children
       <SizeChartDialogLoader>{sizeChart}</SizeChartDialogLoader>
       <div className="flex flex-wrap gap-2">{product.sizes.map((option) => { const available = product.variants.some((variant) => variant.colorId === colorId && variant.size === option && variant.available); return <button type="button" key={option} disabled={!available} aria-pressed={size === option} title={available ? option : `${option} — Hết hàng`} onClick={() => chooseSize(option)} className={`relative flex min-h-11 min-w-11 items-center justify-center border px-3 text-xs disabled:cursor-not-allowed disabled:text-muted disabled:opacity-40 ${size === option ? "border-fg bg-fg text-white" : ""} ${available ? "" : "sold-out-size"}`}>{option}</button>; })}</div>
     </fieldset>
-    <p role="status" className={`mt-5 text-xs ${variant ? "text-success" : soldOut ? "text-muted" : "text-fg"}`}>{soldOut ? "Hết hàng" : variant ? variant.lowStockCount !== null ? `Chỉ còn ${variant.lowStockCount} sản phẩm` : "Còn hàng" : "Chọn kích thước để xem tình trạng còn hàng."}</p>
+    <p role="status" className={`mt-5 min-h-5 text-xs ${variant ? "text-success" : soldOut ? "text-muted" : "text-fg"}`}>{!availabilityReady ? availabilityError ? "Chưa kiểm tra được tồn kho." : "Đang kiểm tra tồn kho…" : soldOut ? "Hết hàng" : variant ? variant.lowStockCount !== null ? `Chỉ còn ${variant.lowStockCount} sản phẩm` : "Còn hàng" : "Chọn kích thước để xem tình trạng còn hàng."}</p>
+    {availabilityError && <button type="button" onClick={retryAvailability} className="mt-2 text-xs underline">Thử kiểm tra lại</button>}
     {selectionError && !variant && <p role="alert" className="mt-3 text-xs text-sale">Vui lòng chọn màu sắc và kích thước</p>}
     <div className="mt-6 flex items-center gap-4"><label htmlFor="product-quantity" className="text-xs">Số lượng</label><div className="inline-flex h-11 border">
-      <button type="button" aria-label="Giảm số lượng" className="shop-icon-button disabled:opacity-30" disabled={!variant || quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))}><Minus size={14} /></button>
+      <button type="button" aria-label="Giảm số lượng" className="shop-icon-button disabled:opacity-30" disabled={!variant || quantity <= 1} onClick={() => setQuantity(Math.max(1, quantity - 1))}><Minus size={14} /></button>
       <input id="product-quantity" type="number" min={1} max={maxQuantity} value={quantity} disabled={!variant} onChange={(event) => { const value = Number(event.target.value); setQuantity(Number.isFinite(value) ? Math.max(1, Math.min(maxQuantity, Math.floor(value))) : 1); }} className="w-11 min-w-0 bg-transparent text-center text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
-      <button type="button" aria-label="Tăng số lượng" className="shop-icon-button disabled:opacity-30" disabled={!variant || quantity >= maxQuantity} onClick={() => setQuantity((value) => Math.min(maxQuantity, value + 1))}><Plus size={14} /></button>
+      <button type="button" aria-label="Tăng số lượng" className="shop-icon-button disabled:opacity-30" disabled={!variant || quantity >= maxQuantity} onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))}><Plus size={14} /></button>
     </div></div>
-    <div ref={actions} className="mt-6 space-y-3">
+    <div ref={actions} className="mt-6 min-h-[108px] space-y-3" data-availability-ready={availabilityReady}>
       {soldOut ? <button type="button" disabled className="shop-button w-full opacity-40">HẾT HÀNG</button> : <>
-        <button type="button" disabled={!hydrated} onClick={() => addToCart()} className="shop-button w-full disabled:opacity-40">THÊM VÀO GIỎ</button>
-        <button type="button" disabled={!hydrated} onClick={() => addToCart(true)} className="shop-button shop-button-primary w-full disabled:opacity-40">MUA NGAY</button>
+        <button type="button" disabled={!hydrated || !availabilityReady} onClick={() => addToCart()} className="shop-button w-full disabled:opacity-40">THÊM VÀO GIỎ</button>
+        <button type="button" disabled={!hydrated || !availabilityReady} onClick={() => addToCart(true)} className="shop-button shop-button-primary w-full disabled:opacity-40">MUA NGAY</button>
         {cartError && <p role="alert" className="text-xs text-sale">{cartError}</p>}
       </>}
     </div>
     {children}
     {showSticky && <div data-sticky-buy-bar className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t bg-white px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden">
       <div className="relative size-12 shrink-0 bg-image-bg"><ShopImage src={image?.url ?? null} alt="" sizes="48px" className="object-contain" /></div><div className="min-w-0 flex-1"><PriceTag price={product.price} compareAtPrice={product.compareAtPrice} /></div>
-      <button type="button" onClick={() => addToCart()} disabled={soldOut || !hydrated} className="shop-button shop-button-primary shrink-0 px-3 text-[10px] disabled:opacity-40">{soldOut ? "HẾT HÀNG" : "THÊM VÀO GIỎ"}</button>
+      <button type="button" onClick={() => addToCart()} disabled={soldOut || !hydrated || !availabilityReady} className="shop-button shop-button-primary shrink-0 px-3 text-[10px] disabled:opacity-40">{soldOut ? "HẾT HÀNG" : "THÊM VÀO GIỎ"}</button>
     </div>}
   </div>;
 }

@@ -33,6 +33,13 @@ export type ListingDTO = {
   facets: { sizes: string[]; colors: { code: string; name: string; hex: string }[] };
   products: ProductCardDTO[]; total: number; page: number; totalPages: number;
 };
+export type ListingItemDTO = ProductCardDTO & {
+  sortOrder: number; publishedAt: string | null; isBestSeller: boolean; soldCount: number; manualSortOrder: number | null;
+  options: { size: string; colorCode: string; available: boolean }[];
+};
+export type CatalogListingDTO = Pick<ListingDTO, "title" | "description" | "bannerUrl" | "breadcrumb" | "subcategories" | "facets"> & { items: ListingItemDTO[]; defaultSort: string };
+export type SearchIndexItemDTO = ProductCardDTO & { n: string; soldCount: number };
+export type ProductAvailabilityDTO = Pick<ProductDetailDTO, "variants" | "price" | "compareAtPrice" | "discountPercent" | "isSoldOut">;
 export type CartQuoteDTO = {
   lines: { variantId: string; productId: string; slug: string; name: string; colorName: string; size: string; image: ImageDTO | null;
     unitPrice: number; compareAtPrice: number | null; requestedQuantity: number; quantity: number; maxQuantity: number; lineTotal: number;

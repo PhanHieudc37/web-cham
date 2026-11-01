@@ -13,8 +13,8 @@ export async function changeOrderStatusAction(input: unknown) {
   return runAction(async () => {
     const values = orderStatusInputSchema.parse(input);
     const actor = await requireRole("staff"), service = getOrderService();
-    await service.updateStatus(values, actor.id);
-    invalidate(CACHE_TAGS.products);
+    const transition = await service.updateStatus(values, actor.id);
+    if (transition.availableProductIds.length) invalidate(CACHE_TAGS.products);
     const order = await service.getAdminDetail(values.orderId);
     if (values.toStatus === "shipping" && order.trackingCode && order.customerEmail) after(async () => {
       try { await notifyOrderShipped(order, (await getPublicSettings()).shop.name); }

@@ -36,16 +36,28 @@ export function createOrderService(db: Database, secret: string) {
     if (hashToken(accessToken) !== order.accessTokenHash) throw new AppError("CONFLICT", "Đơn đã được tạo. Vui lòng tra cứu bằng mã đơn và số điện thoại.", { orderCode: order.code });
     return { orderCode: order.code, accessToken };
   }
+  async function stockStates(tx: DatabaseReader, productIds: string[], lock = false) {
+    if (!productIds.length) return [];
+    if (lock) await tx.select({ id: products.id }).from(products).where(inArray(products.id, productIds)).orderBy(asc(products.id)).for("update");
+    // Drizzle unqualifies Column chunks in a single-table projection. Keep this
+    // correlated reference explicitly qualified so "id" cannot resolve to v.id.
+    const query = tx.select({ id: products.id, available: sql<boolean>`exists(select 1 from product_variants v where v.product_id = ${products}.${sql.identifier("id")} and v.is_active and v.stock > 0)` })
+      .from(products).where(inArray(products.id, productIds)).orderBy(asc(products.id));
+    // Variant locks are acquired first in both checkout and restoration. Products
+    // then serialize transitions across orders touching different variants.
+    // Read in a new statement after a possible lock wait (fresh READ COMMITTED snapshot).
+    return query;
+  }
 
-  async function placeOrderWithOutcome(raw: CheckoutInput, ip: string): Promise<{ placement: Placement; createdOrderId: string | null }> {
+  async function placeOrderWithOutcome(raw: CheckoutInput, ip: string): Promise<{ placement: Placement; createdOrderId: string | null; soldOutProductIds: string[] }> {
     await rateLimit(`order:${ip}`, 5, 600, db);
-    if (raw.website) return { placement: { orderCode: createOrderCode("CS"), accessToken: randomBytes(32).toString("base64url") }, createdOrderId: null };
+    if (raw.website) return { placement: { orderCode: createOrderCode("CS"), accessToken: randomBytes(32).toString("base64url") }, createdOrderId: null, soldOutProductIds: [] };
     const input = checkoutSchema.parse(raw);
     return db.transaction(async (tx) => {
       // Serialize requests for this key before inspecting the unique idempotency row.
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${input.idempotencyKey}, 0))`);
       const [existing] = await tx.select().from(orders).where(eq(orders.idempotencyKey, input.idempotencyKey));
-      if (existing) return { placement: placement(existing), createdOrderId: null };
+      if (existing) return { placement: placement(existing), createdOrderId: null, soldOutProductIds: [] };
       const rows = await loadCartRows(tx, input.lines.map((line) => line.variantId), true);
       const config = await readSettings(tx);
       const quote = await buildCartQuote(tx, input.lines, config, rows);
@@ -53,6 +65,8 @@ export function createOrderService(db: Database, secret: string) {
       if (unavailable.length) throw new AppError("OUT_OF_STOCK", undefined, unavailable.map((line) => ({ variantId: line.variantId, available: line.maxQuantity })));
       if (quote.total !== input.expectedTotal) throw new AppError("PRICE_CHANGED", undefined, quote);
       if (input.paymentMethod === "bank_transfer" && !bankTransferEnabled(config.bank)) throw new AppError("VALIDATION_ERROR", "Shop chưa bật thanh toán chuyển khoản.", undefined, { paymentMethod: "Vui lòng chọn thanh toán khi nhận hàng" });
+      const productIds = [...new Set(rows.map((row) => row.productId))];
+      await stockStates(tx, productIds, true);
       const id = randomUUID();
       const accessToken = accessTokenFor({ id, idempotencyKey: input.idempotencyKey });
       let order: OrderRow | undefined;
@@ -86,7 +100,8 @@ export function createOrderService(db: Database, secret: string) {
         await tx.update(products).set({ soldCount: sql`${products.soldCount} + ${quantity}` }).where(eq(products.id, productId));
       }
       await tx.insert(orderEvents).values({ orderId: id, type: "created", toStatus: "pending" });
-      return { placement: { orderCode: order.code, accessToken }, createdOrderId: id };
+      const soldOutProductIds = (await stockStates(tx, productIds)).filter((product) => !product.available).map((product) => product.id);
+      return { placement: { orderCode: order.code, accessToken }, createdOrderId: id, soldOutProductIds };
     });
   }
   async function placeOrder(raw: CheckoutInput, ip: string): Promise<Placement> {
@@ -105,10 +120,13 @@ export function createOrderService(db: Database, secret: string) {
       if (!canTransition(order.status, input.toStatus)) throw new AppError("INVALID_TRANSITION");
       if (input.toStatus === "cancelled" && input.reason.trim().length < 2) throw new AppError("VALIDATION_ERROR", "Vui lòng nhập lý do hủy đơn.");
       const now = new Date();
+      let availableProductIds: string[] = [];
       if (restoresStock(input.toStatus)) {
         const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, order.id));
         const variantIds = items.flatMap((item) => item.variantId ? [item.variantId] : []);
         if (variantIds.length) await tx.select({ id: productVariants.id }).from(productVariants).where(inArray(productVariants.id, variantIds)).orderBy(asc(productVariants.id)).for("update");
+        const productIds = [...new Set(items.flatMap((item) => item.productId ? [item.productId] : []))];
+        const before = await stockStates(tx, productIds, true);
         for (const item of [...items].sort((a, b) => (a.variantId ?? "").localeCompare(b.variantId ?? ""))) {
           if (!item.variantId) continue;
           const [variant] = await tx.update(productVariants).set({ stock: sql`${productVariants.stock} + ${item.quantity}`, updatedAt: now })
@@ -120,6 +138,8 @@ export function createOrderService(db: Database, secret: string) {
         for (const [productId, quantity] of [...quantities].sort(([a], [b]) => a.localeCompare(b))) {
           await tx.update(products).set({ soldCount: sql`greatest(0, ${products.soldCount} - ${quantity})` }).where(eq(products.id, productId));
         }
+        const after = await stockStates(tx, productIds);
+        availableProductIds = before.filter((product) => !product.available && after.some((next) => next.id === product.id && next.available)).map((product) => product.id);
       }
       const codPaid = input.toStatus === "completed" && order.paymentMethod === "cod" && order.paymentStatus === "unpaid";
       await tx.update(orders).set({ status: input.toStatus, updatedAt: now,
@@ -130,7 +150,7 @@ export function createOrderService(db: Database, secret: string) {
       await tx.insert(orderEvents).values({ orderId: order.id, type: "status_changed", fromStatus: order.status, toStatus: input.toStatus, message: input.reason || null, actorId });
       if (input.toStatus === "shipping") await tx.insert(orderEvents).values({ orderId: order.id, type: "shipping_updated", message: [input.carrier ?? order.carrier, input.trackingCode ?? order.trackingCode].filter(Boolean).join(" · ") || null, actorId });
       if (codPaid) await tx.insert(orderEvents).values({ orderId: order.id, type: "payment_updated", message: "Đã nhận tiền COD khi hoàn thành đơn", actorId });
-      return { orderId: order.id };
+      return { orderId: order.id, availableProductIds };
     });
   }
 

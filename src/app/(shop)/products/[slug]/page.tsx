@@ -9,7 +9,7 @@ import { readCatalogPage } from "../../catalog-boundary";
 import { getPageMetadata, getSiteUrl } from "@/server/services/seo.service";
 import { productJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/shop/common/JsonLd";
-export const revalidate = 300;
+export const revalidate = 86400;
 export async function generateStaticParams() {
   // Generate on first visit, then reuse ISR; builds do not fan out database reads per product.
   return [];

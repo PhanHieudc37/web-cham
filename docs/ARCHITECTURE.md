@@ -18,7 +18,7 @@ FE gọi BE theo đúng 3 đường:
 1. **Đọc dữ liệu:** Server Component (page/layout) gọi thẳng service.
 2. **Ghi dữ liệu:** Client Component gọi **Server Action**.
 3. **Route Handler** (`/api/*`), dùng cho 3 trường hợp:
-   - client cần lấy dữ liệu theo yêu cầu (quote giỏ hàng, gợi ý tìm kiếm);
+   - client cần lấy dữ liệu theo yêu cầu (quote giỏ hàng, tồn kho/giá mới);
    - upload file;
    - dịch vụ bên ngoài gọi vào (webhook, cron).
 
@@ -26,7 +26,7 @@ FE gọi BE theo đúng 3 đường:
                  ┌─────────────────── Next.js trên Netlify Free ──────────────────────────┐
 Trình duyệt ───► │ Server Components (page/layout) ──► services ──► Drizzle ───────────────┼──► Postgres (Supabase)
                  │ Client Components ──► Server Actions ──► services                       │
-                 │                   └─► fetch /api/cart/quote, /api/search/suggest       │
+                 │                   └─► fetch /api/cart/quote, availability, search index │
 Admin upload ──► │ /api/admin/upload ──► media.service ────────────────────────────────────┼──► Supabase Storage (ảnh)
 Dịch vụ ngoài ─► │ /api/webhooks/*, /api/cron/* ──► services                              │
                  │ services ──► after(): Resend (email), Telegram                          │
@@ -81,7 +81,7 @@ Dịch vụ ngoài ─► │ /api/webhooks/*, /api/cron/* ──► services   
    │  └─ api/
    │     ├─ auth/[...all]/route.ts
    │     ├─ cart/quote/route.ts
-   │     ├─ search/suggest/route.ts
+   │     ├─ products/[id]/availability/route.ts
    │     ├─ admin/upload/route.ts
    │     ├─ admin/orders/export/route.ts
    │     ├─ webhooks/sepay/route.ts      # Phase 14b
@@ -373,7 +373,8 @@ DTO cho đơn hàng: `OrderSuccessDTO`, `OrderPublicDTO` (tra cứu, SĐT che b�
 |---|---|---|---|
 | `/api/auth/[...all]` | GET, POST | – | Better Auth |
 | `/api/cart/quote` | POST | công khai, 60 lần/phút/IP | `{ lines: {variantId, quantity}[], discountCode? }` → `CartQuoteDTO`. Không cache |
-| `/api/search/suggest?q=` | GET | công khai, 60 lần/phút/IP | Trả tối đa 6 `ProductCardDTO`. `Cache-Control: public, s-maxage=60` |
+| `/search-index.json` | GET | công khai, ISR 86400, tags products/categories | Mảng card công khai và chuỗi tìm không dấu; tải một lần mỗi tab, không có stock thô/khách/auth. Thay `/api/search/suggest` đã bỏ |
+| `/api/products/[id]/availability` | GET | công khai, no-store, UUID hợp lệ và sản phẩm được hiển thị | Một SELECT, ActionResult chứa giá/size/available/maxQuantity/lowStockCount; không trả stock thô |
 | `/api/admin/upload` | POST multipart | staff | `file`, `folder` → `{ url, path }` |
 | `/api/admin/orders/export` | GET | **admin** | CSV theo bộ lọc của danh sách đơn |
 | `/api/webhooks/sepay` (14b) | POST | header API key | Ghi giao dịch, khớp đơn |
@@ -384,20 +385,23 @@ DTO cho đơn hàng: `OrderSuccessDTO`, `OrderPublicDTO` (tra cứu, SĐT che b�
 ## 8. Cache
 
 - Mọi hàm đọc của `catalog.service` và `settings.service` được bọc bằng `cached(fn, keyParts, tags)` trong `src/server/cache.ts`.
-- Metadata danh mục dùng `getListingMetadata`, chỉ đọc tiêu đề/mô tả và phạm vi hiển thị, không gọi toàn bộ query sản phẩm/facet/card. Cache dùng các tag products/categories/collections như danh mục để thay đổi admin vẫn cập nhật ngay.
+- Phase 15B: layout/page/metadata danh mục dùng chung `getListingData` qua React `cache` và Data Cache. Dataset gồm card công khai, facets và lựa chọn size/màu có hàng; không có tồn kho thô. HTML chứa 12 card đầu; client lọc/sort/phân trang bằng hàm thuần đã đối chiếu SQL. Native `history.replaceState` tích hợp Next 16 cập nhật `useSearchParams` mà không phát sinh RSC request. Slug không hiển thị vẫn 404 trước loading boundary.
+- TTL mặc định 86400 giây, riêng home 3600 để banner hẹn giờ đổi trong vòng một giờ. Các lượt bán thông thường giữ cache (soldCount/bán chạy có thể cũ tới TTL hoặc lần sửa tiếp theo); giá và tồn mua hàng luôn đọc trực tiếp. Search index là tài nguyên JSON public theo hợp đồng riêng của Performance Plan, không bọc ActionResult; client giữ một bản tới khi reload tab.
 - Cache key có namespace băm từ host/database/user pooler, không gồm mật khẩu. Dữ liệu cache lưu trên đĩa của database kiểm thử và Supabase dev không dùng chung khi đổi môi trường trong cùng workspace.
 - Mỗi thao tác ghi gọi `invalidate(...tags)`.
 - File `cache.ts` dùng cơ chế cache của **đúng bản Next.js đang cài** (`unstable_cache` hoặc `"use cache"` + `cacheTag`, đọc docs của bản đó). Nhờ gói gọn ở một chỗ, sau này đổi cơ chế cache chỉ phải sửa một file.
 
 | Tag | Dữ liệu | Invalidate khi |
 |---|---|---|
-| `products` | danh sách, chi tiết, tìm kiếm, sitemap | lưu / lưu trữ sản phẩm; đặt đơn; hủy hoặc hoàn đơn (tồn kho và sold_count thay đổi) |
+| `products` | danh sách, chi tiết, tìm kiếm, sitemap | lưu/lưu trữ sản phẩm; đơn làm sản phẩm hết hàng hoàn toàn; hủy/hoàn làm sản phẩm có hàng trở lại. Dùng khóa sản phẩm theo thứ tự sau khóa biến thể để nhận đúng chuyển trạng thái khi mua đồng thời |
 | `categories` | menu, danh mục | sửa danh mục |
 | `collections` | bộ sưu tập | sửa bộ sưu tập |
 | `banners` | banner trang chủ | sửa banner |
 | `settings` | cài đặt công khai | lưu cài đặt |
 
 **Không cache:** `/api/cart/quote`, checkout, trang đặt hàng thành công, tra cứu đơn, toàn bộ admin. Tính đúng của giá và tồn kho khi đặt hàng **không phụ thuộc vào cache**, vì quote và `placeOrder` luôn đọc trực tiếp từ DB.
+
+Sau sửa admin, `warmPaths` chạy trong `after`, chỉ path public theo whitelist, tối đa 10 path, lần lượt/timeout 10 giây và tổng 45 giây; không chuyển tiếp cookie. Lỗi warm không đảo ngược thao tác đã lưu. GitHub workflow chờ health đúng SHA rồi warm tối đa 200 URL sitemap; workflow keep-warm gọi health mỗi 5 phút và DB mỗi giờ. Không bảo đảm function luôn ấm; request/compute vẫn tiêu credit Free. Quote thực hiện rate limit và tính quote song song, vẫn giữ giới hạn cũ.
 
 ---
 

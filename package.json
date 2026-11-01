@@ -25,6 +25,7 @@
     "e2e:orders": "playwright test --config playwright.orders.config.ts",
     "e2e:support": "playwright test --config playwright.support.config.ts",
     "e2e:production": "playwright test --config playwright.production.config.ts",
+    "e2e:performance": "playwright test --config playwright.performance.config.ts",
     "e2e:email-disabled": "playwright test --config playwright.email-disabled.config.ts",
     "production:check": "tsx --conditions=react-server scripts/production.ts check",
     "production:migrate": "tsx --conditions=react-server scripts/production.ts migrate",

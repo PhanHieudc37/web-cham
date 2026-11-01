@@ -1,0 +1,24 @@
+name: Warm public cache after deploy
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  warm:
+    if: "!contains(github.event.head_commit.message, '[skip netlify]')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    concurrency:
+      group: warm-public-production
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Wait for commit and warm sitemap
+        env:
+          PUBLIC_SITE_URL: https://chamstu.netlify.app
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: node scripts/warm-deployment.mjs

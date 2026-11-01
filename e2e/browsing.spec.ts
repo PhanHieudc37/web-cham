@@ -18,7 +18,7 @@ test.beforeEach(async ({ page, context }, info) => {
 });
 test.afterEach(async ({}, info) => { expect(errors.get(info.testId)).toEqual([]); errors.delete(info.testId); });
 
-test("SQL filters and sorting survive reload and reset the page", async ({ page }) => {
+test("Browser filters and sorting survive reload and reset the page", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/collections/all?sort=price-asc&page=2");
   const filter = page.getByRole("complementary", { name: "Bộ lọc sản phẩm" });
@@ -27,9 +27,11 @@ test("SQL filters and sorting survive reload and reset the page", async ({ page 
   await expect(filter.getByRole("button", { name: "L", exact: true })).toHaveAttribute("aria-pressed", "true");
   await filter.getByRole("button", { name: "Trắng", exact: true }).click();
   await expect(page).toHaveURL(/color=trang/);
-  await filter.getByLabel("Dưới 200.000₫", { exact: true }).check();
+  await filter.getByLabel("Dưới 200.000₫", { exact: true }).click();
+  await expect(filter.getByLabel("Dưới 200.000₫", { exact: true })).toBeChecked();
   await expect(page).toHaveURL(/price=under-200/);
-  await filter.getByLabel("Chỉ hiện sản phẩm còn hàng").check();
+  await filter.getByLabel("Chỉ hiện sản phẩm còn hàng").click();
+  await expect(filter.getByLabel("Chỉ hiện sản phẩm còn hàng")).toBeChecked();
   await expect(page).toHaveURL(/instock=1/);
   await page.getByRole("combobox", { name: "Sắp xếp theo:" }).click();
   await page.getByRole("option", { name: "Giá: Giảm dần", exact: true }).click();
@@ -53,9 +55,9 @@ test("pagination, automatic/category/manual collections and invalid query values
   await page.goto("/collections/all?sort=price-asc");
   await expect(page.getByTestId("product-card")).toHaveCount(12);
   const first = await page.getByTestId("product-card").first().getAttribute("href");
-  await page.getByRole("link", { name: "Trang 2", exact: true }).click();
+  await page.getByRole("button", { name: "Trang 2", exact: true }).click();
   await expect(page).toHaveURL(/page=2#product-grid/);
-  await expect(page.getByRole("link", { name: "Trang 2", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("button", { name: "Trang 2", exact: true })).toHaveAttribute("aria-current", "page");
   expect(await page.getByTestId("product-card").first().getAttribute("href")).not.toBe(first);
   expect(await page.locator("#product-grid").evaluate((node) => node.getBoundingClientRect().top)).toBeLessThan(200);
   await page.goto("/collections/all?size=INVALID&color=INVALID&price=no&sort=no&page=-1&instock=no");
@@ -75,7 +77,7 @@ test("search accepts unaccented Vietnamese, paginates, and suggests best sellers
   await expect(page.getByTestId("product-card").filter({ hasText: "Áo thun hai màu" })).toBeVisible();
   await page.getByLabel("Từ khóa tìm kiếm").fill("ao thun"); await page.getByRole("button", { name: "Tìm sản phẩm" }).click();
   await expect(page.getByTestId("product-card")).toHaveCount(12);
-  await page.getByRole("link", { name: "Trang 2", exact: true }).click();
+  await page.getByRole("button", { name: "Trang 2", exact: true }).click();
   await expect(page).toHaveURL(/q=ao\+thun&page=2/);
   await page.getByLabel("Từ khóa tìm kiếm").fill("khong-co-san-pham-nay"); await page.getByRole("button", { name: "Tìm sản phẩm" }).click();
   await expect(page.getByRole("heading", { name: "Không tìm thấy sản phẩm nào", exact: true })).toBeVisible();
@@ -137,9 +139,9 @@ for (const width of [375, 768, 1280]) test(`listing, search and product at ${wid
   await expect(page.getByRole("dialog").getByRole("columnheader", { name: "Dài áo (cm)" })).toBeVisible();
   await noOverflow(page); await page.screenshot({ path: `test-results/phase7-size-${width}.png`, caret: "initial" });
   await page.keyboard.press("Escape"); await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.getByRole("button", { name: "CHẤT LIỆU & BẢO QUẢN", exact: true }).click(); await expect(page.getByText("Chất liệu: Cotton", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "BẢNG SIZE", exact: true }).click(); await expect(page.getByRole("table", { name: "Bảng size áo thun thử" })).toBeVisible();
-  await page.getByRole("button", { name: "CHÍNH SÁCH ĐỔI TRẢ", exact: true }).click(); await expect(page.getByText("Đổi trả theo chính sách kiểm thử của shop.", { exact: true })).toBeVisible();
+  await page.locator("details").filter({ has: page.getByRole("heading", { name: "CHẤT LIỆU & BẢO QUẢN", exact: true }) }).locator("summary").click(); await expect(page.getByText("Chất liệu: Cotton", { exact: true })).toBeVisible();
+  await page.locator("details").filter({ has: page.getByRole("heading", { name: "BẢNG SIZE", exact: true }) }).locator("summary").click(); await expect(page.getByRole("table", { name: "Bảng size áo thun thử" })).toBeVisible();
+  await page.locator("details").filter({ has: page.getByRole("heading", { name: "CHÍNH SÁCH ĐỔI TRẢ", exact: true }) }).locator("summary").click(); await expect(page.getByText("Đổi trả theo chính sách kiểm thử của shop.", { exact: true })).toBeVisible();
   await noOverflow(page); await page.evaluate(() => window.scrollTo(0, 0)); await expect(page.locator("[data-sticky-buy-bar]")).toHaveCount(0); await page.screenshot({ path: `test-results/phase7-product-${width}.png`, fullPage: true, caret: "initial" });
   const related = page.getByRole("region", { name: "SẢN PHẨM LIÊN QUAN", exact: true });
   await expect(related.getByTestId("product-card")).toHaveCount(4);

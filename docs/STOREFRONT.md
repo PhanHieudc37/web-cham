@@ -116,7 +116,7 @@ HOME · NEW ARRIVAL · SHOP ▾ · [bộ sưu tập có show_in_menu] · BEST SE
 ### 2.4 Tìm kiếm (SearchOverlay)
 
 - Bấm icon kính lúp thì mở panel phủ ngay dưới header. Ô input tự focus, placeholder "Tìm kiếm sản phẩm...".
-- Gõ từ 2 ký tự trở lên: gọi `GET /api/search/suggest` (debounce 200ms), hiện tối đa 6 kết quả (ảnh nhỏ, tên, giá).
+- Gõ từ 2 ký tự trở lên: tìm cục bộ trên `/search-index.json`, tải đúng một lần khi mở tìm kiếm trong tab; hiện tối đa 6 kết quả (ảnh nhỏ, tên, giá), không request theo từng lần gõ.
 - Enter: chuyển tới `/search?q=...`. Esc: đóng panel.
 
 ### 2.5 Footer
@@ -216,7 +216,7 @@ Section nào không có dữ liệu thì không render.
   - Giá trị không hợp lệ trên URL thì bỏ qua, không báo lỗi.
 - **Phân trang:** 12 sản phẩm mỗi trang, có số trang và nút ‹ ›. Đổi trang thì cuộn lên đầu lưới.
 - **Không có kết quả:** hiện "Không tìm thấy sản phẩm phù hợp" kèm nút "Xóa bộ lọc".
-- Lọc, sắp xếp và phân trang chạy **trong SQL** (`catalog.service.getListing`), không lọc trên client.
+- Từ Phase 15B, trang được ISR cache; server gửi toàn bộ card/facets công khai, HTML vẫn chứa 12 card đầu. `src/lib/listing.ts` lọc/sắp xếp/phân trang ngay trên client, đã đối chiếu với SQL. Native History cập nhật URL và `useSearchParams` không gọi server. Dataset vượt 500 sản phẩm có cảnh báo lúc build/ISR, không tự cắt mất hàng. Link catalog/layout không tự prefetch theo viewport để tránh request khi kết quả làm thay đổi chiều cao trang.
 
 ---
 
@@ -225,6 +225,7 @@ Section nào không có dữ liệu thì không render.
 - Đầu trang là ô tìm kiếm lớn, điền sẵn `q`.
 - Dòng tiêu đề kết quả: `Có 5 kết quả cho “áo”`. Dùng lưới sản phẩm chuẩn, có phân trang.
 - Không có kết quả thì hiện "Không tìm thấy sản phẩm nào", kèm 4 sản phẩm BEST SELLER gợi ý.
+- `/search` là trang tĩnh + client; dùng chung index trong tab với SearchOverlay, bỏ dấu và xếp hạng bằng hàm thuần. Thay từ khóa/phân trang không gọi server; index được làm mới khi tải lại tab.
 
 ---
 
@@ -262,6 +263,7 @@ Section nào không có dữ liệu thì không render.
       - "BẢNG SIZE";
       - "CHÍNH SÁCH ĐỔI TRẢ" (lấy từ `returnPolicySummary`, kèm link trang chính sách).
 - Mặc định chọn sẵn màu đầu tiên còn hàng. **Không** chọn sẵn size.
+- HTML sản phẩm cache một ngày; khi mở/focus lại tab, client đọc availability no-store để cập nhật giá và giới hạn size. Chưa kiểm tra xong hoặc lỗi thì khóa nút mua, giữ chỗ để tránh nhảy layout; lỗi có nút thử lại. Quote/đặt đơn tiếp tục kiểm tra giá/kho ở server.
 - **StickyBuyBar** (chỉ trên mobile): khi 2 nút mua đã cuộn khỏi màn hình (theo dõi bằng IntersectionObserver), hiện một thanh dính ở đáy gồm ảnh nhỏ, giá và nút "THÊM VÀO GIỎ". Bấm khi chưa chọn size thì cuộn lên khu chọn size.
 - **SẢN PHẨM LIÊN QUAN:** 4 sản phẩm cùng danh mục, thiếu thì lấy thêm từ danh mục cha; không gồm sản phẩm đang xem.
 - Sản phẩm không tồn tại, hoặc đang `draft` / `archived`: trả 404.

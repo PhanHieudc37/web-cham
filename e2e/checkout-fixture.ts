@@ -26,6 +26,10 @@ try {
       break;
     case "price": await database.db.update(products).set({ price: 249000 }).where(eq(products.id, product.id)); break;
     case "empty": await database.db.update(productVariants).set({ stock: 0 }).where(eq(productVariants.id, variant.id)); break;
+    case "last-item":
+      await database.db.update(productVariants).set({ stock: 0 }).where(eq(productVariants.productId, product.id));
+      await database.db.update(productVariants).set({ stock: 1 }).where(eq(productVariants.id, variant.id));
+      break;
     case "read": break;
     default: throw new Error("Lệnh fixture không hợp lệ");
   }

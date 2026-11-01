@@ -7,7 +7,7 @@ import { isApplicationRequest, type PerformanceSample } from "../src/lib/perform
 import { performanceReport, type Measurement } from "./performance-report";
 
 const cli = parseArgs({ options: { stage: { type: "string", default: "baseline" }, network: { type: "string" }, credits: { type: "string", default: "chưa đọc được — chờ chủ shop cung cấp" } } });
-const stage = z.enum(["baseline", "15A"]).parse(cli.values.stage);
+const stage = z.enum(["baseline", "15A", "15B", "15C", "final"]).parse(cli.values.stage);
 const network = z.string().trim().min(1).max(150).parse(cli.values.network);
 const env = z.object({ NEXT_PUBLIC_SITE_URL: z.url(), ADMIN_SEED_EMAIL: z.email(), ADMIN_SEED_PASSWORD: z.string().min(1) }).parse(parse(readFileSync(".env.deploy.local")));
 const origin = new URL(env.NEXT_PUBLIC_SITE_URL).origin;

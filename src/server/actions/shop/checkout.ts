@@ -16,7 +16,7 @@ export async function placeOrderAction(input: unknown) {
     const service = getOrderService();
     const result = await service.placeOrderWithOutcome(values, await getClientIp());
     if (result.createdOrderId) {
-      invalidate(CACHE_TAGS.products);
+      if (result.soldOutProductIds.length) invalidate(CACHE_TAGS.products);
       const orderId = result.createdOrderId;
       after(async () => {
         try {

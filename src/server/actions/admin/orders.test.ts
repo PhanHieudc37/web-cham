@@ -10,7 +10,7 @@ vi.mock("@/server/services/notification.service", () => ({ notifyOrderShipped: m
 import { AppError } from "@/server/errors";
 import { addOrderNoteAction, changeOrderPaymentAction, changeOrderStatusAction, saveOrderShippingAction } from "./orders";
 const orderId = "00000000-0000-4000-8000-000000000010";
-beforeEach(() => { vi.clearAllMocks(); mocks.callbacks.length = 0; mocks.guard.mockResolvedValue({ id: "staff", role: "staff" }); mocks.status.mockResolvedValue({ orderId }); mocks.detail.mockResolvedValue({ id: orderId, trackingCode: "TRACK", customerEmail: "customer@example.test" }); });
+beforeEach(() => { vi.clearAllMocks(); mocks.callbacks.length = 0; mocks.guard.mockResolvedValue({ id: "staff", role: "staff" }); mocks.status.mockResolvedValue({ orderId, availableProductIds: [] }); mocks.detail.mockResolvedValue({ id: orderId, trackingCode: "TRACK", customerEmail: "customer@example.test" }); });
 it("validates before checking staff permissions and never calls services for denied users", async () => {
   expect(await changeOrderStatusAction({ orderId, toStatus: "cancelled", reason: "" })).toMatchObject({ ok: false, error: { code: "VALIDATION_ERROR" } }); expect(mocks.guard).not.toHaveBeenCalled();
   mocks.guard.mockRejectedValue(new AppError("UNAUTHORIZED"));
@@ -28,4 +28,9 @@ it("does not notify for ordinary shipping edits or missing customer email", asyn
   await saveOrderShippingAction({ orderId, carrier: "GHN", trackingCode: "EDIT" }); expect(mocks.callbacks).toHaveLength(0);
   mocks.detail.mockResolvedValue({ id: orderId, trackingCode: "TRACK", customerEmail: null });
   await changeOrderStatusAction({ orderId, toStatus: "shipping" }); expect(mocks.callbacks).toHaveLength(0);
+});
+it("invalidates catalog only when a restoration makes a sold-out product available", async () => {
+  await changeOrderStatusAction({ orderId, toStatus: "confirmed" }); expect(mocks.invalidate).not.toHaveBeenCalled();
+  mocks.status.mockResolvedValue({ orderId, availableProductIds: ["product-id"] });
+  await changeOrderStatusAction({ orderId, toStatus: "cancelled", reason: "Khách hủy" }); expect(mocks.invalidate).toHaveBeenCalledWith("products");
 });

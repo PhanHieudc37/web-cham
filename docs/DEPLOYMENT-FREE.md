@@ -8,6 +8,8 @@ Theo yêu cầu chủ shop ngày 30/10/2026: chỉ dùng gói miễn phí, khôn
 
 ## Chi phí và giới hạn
 
+Phase 15B bổ sung ISR danh mục/search, index tìm một lần mỗi tab và availability no-store; không cần đổi env Netlify. Workflow `warm-after-deploy.yml` đợi health đúng SHA rồi warm tối đa 200 URL sitemap. `keep-warm.yml` gọi health mỗi 5 phút, DB mỗi giờ (~9.360 request/30 ngày). Các lượt này vẫn tiêu request/compute credit, không bảo đảm mọi cold start biến mất. GitHub lịch có thể trễ hoặc tự tắt sau 60 ngày không hoạt động; cách bật lại tại README. Kiểm tra Usage sau một tuần. Giới hạn cả Phase 15 vẫn 4 production deploy, không nâng gói hoặc bật auto top-up.
+
 | Phần | Phương án |
 |---|---|
 | Web | Netlify Free, dùng URL HTTPS `*.netlify.app` do tài khoản thực sự cấp |

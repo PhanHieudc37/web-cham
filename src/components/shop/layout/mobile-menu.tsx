@@ -18,23 +18,23 @@ export function MobileMenu({ menu, settings, initiallyOpen = false }: { menu: Me
       <SheetTitle className="mt-1 text-xl font-bold tracking-tight">{shop.name.toUpperCase()}</SheetTitle>
       <SheetDescription className="sr-only">Danh mục và liên kết cửa hàng</SheetDescription>
       <nav aria-label="Menu di động" className="mt-8 text-sm font-semibold tracking-wider uppercase" onClick={(event) => { if ((event.target as HTMLElement).closest("a")) setOpen(false); }}>
-        <Link href="/" className="block border-b py-4">HOME</Link>
-        <Link href="/collections/new-arrival" className="block border-b py-4">NEW ARRIVAL</Link>
+        <Link prefetch={false} href="/" className="block border-b py-4">HOME</Link>
+        <Link prefetch={false} href="/collections/new-arrival" className="block border-b py-4">NEW ARRIVAL</Link>
         <Accordion type="single" collapsible>
           <AccordionItem value="shop"><AccordionTrigger className="py-4 font-semibold tracking-wider">SHOP</AccordionTrigger><AccordionContent className="h-auto!">
-            <Link href="/collections/all" className="mb-2 block py-3 text-xs">Xem tất cả sản phẩm</Link>
+            <Link prefetch={false} href="/collections/all" className="mb-2 block py-3 text-xs">Xem tất cả sản phẩm</Link>
             {menu.categories.map((category) => <details key={category.slug} className="border-t font-normal normal-case tracking-normal"><summary className="flex cursor-pointer list-none items-center justify-between py-3 text-sm font-medium">{category.name}<ChevronDown size={14} /></summary>
-              <div className="border-l pl-3"><Link href={`/collections/${category.slug}`} className="block py-2">Tất cả {category.name.toLocaleLowerCase("vi")}</Link>
-                {category.children.map((child) => <Link key={child.slug} href={`/collections/${child.slug}`} className="block py-2 text-muted">{child.name}</Link>)}
+              <div className="border-l pl-3"><Link prefetch={false} href={`/collections/${category.slug}`} className="block py-2">Tất cả {category.name.toLocaleLowerCase("vi")}</Link>
+                {category.children.map((child) => <Link prefetch={false} key={child.slug} href={`/collections/${child.slug}`} className="block py-2 text-muted">{child.name}</Link>)}
               </div>
             </details>)}
           </AccordionContent></AccordionItem>
         </Accordion>
-        {menu.collections.map((collection) => <Link key={collection.slug} href={`/collections/${collection.slug}`} className="block border-b py-4 wrap-break-word">{collection.title}</Link>)}
-        <Link href="/collections/best-seller" className="block border-b py-4">BEST SELLER</Link>
-        {menu.hasSale && <Link href="/collections/sale" className="block border-b py-4 text-sale">SALE</Link>}
-        <Link href="/gioi-thieu" className="block border-b py-4">ABOUT</Link>
-        <Link href="/kiem-tra-don-hang" className="block border-b py-4">CHECK ORDER</Link>
+        {menu.collections.map((collection) => <Link prefetch={false} key={collection.slug} href={`/collections/${collection.slug}`} className="block border-b py-4 wrap-break-word">{collection.title}</Link>)}
+        <Link prefetch={false} href="/collections/best-seller" className="block border-b py-4">BEST SELLER</Link>
+        {menu.hasSale && <Link prefetch={false} href="/collections/sale" className="block border-b py-4 text-sale">SALE</Link>}
+        <Link prefetch={false} href="/gioi-thieu" className="block border-b py-4">ABOUT</Link>
+        <Link prefetch={false} href="/kiem-tra-don-hang" className="block border-b py-4">CHECK ORDER</Link>
       </nav>
       {support && <div className="mt-10 space-y-3 text-sm"><p className="font-semibold">Bạn cần hỗ trợ?</p>
         {shop.phone && <a href={`tel:${shop.phone}`} className="block">{shop.phone}</a>}

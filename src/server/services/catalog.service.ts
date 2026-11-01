@@ -9,7 +9,7 @@ import { sortSizes } from "@/lib/domain/sizes";
 import { variantAvailability } from "@/lib/domain/variants";
 import { normalizeVietnamese } from "@/lib/normalize";
 import { parseListingFilters, type ListingFilters } from "@/lib/validation/listing";
-import type { HomeDTO, MenuDTO, ListingDTO, ProductCardDTO, ProductDetailDTO } from "@/types/dto";
+import type { CatalogListingDTO, HomeDTO, MenuDTO, ListingDTO, ProductCardDTO, ProductDetailDTO, SearchIndexItemDTO } from "@/types/dto";
 import { cached, CACHE_TAGS } from "@/server/cache";
 import { getDatabase, type DatabaseReader } from "@/server/db/client";
 import { banners, categories, collectionProducts, collections, productColors, productImages, products, productVariants, sizeCharts } from "@/server/db/schema";
@@ -125,6 +125,31 @@ export function createCatalogService(reader: DatabaseReader) {
       facets: availableFacets, products: await cards(rows), total, page, totalPages };
   }
 
+  async function getListingData(slug: string): Promise<CatalogListingDTO> {
+    const scope = await context(slug);
+    const rows = await base().where(and(...scope.conditions));
+    const ids = rows.map(({ product }) => product.id);
+    const [productCards, options, manual] = await Promise.all([
+      cards(rows),
+      ids.length ? reader.select({ productId: productVariants.productId, size: productVariants.size, colorCode: productColors.code, name: productColors.name, hex: productColors.hex, available: sql<boolean>`${productVariants.stock} > 0` })
+        .from(productVariants).innerJoin(productColors, eq(productVariants.colorId, productColors.id)).where(and(inArray(productVariants.productId, ids), eq(productVariants.isActive, true))) : Promise.resolve([]),
+      scope.manualId ? reader.select({ productId: collectionProducts.productId, sortOrder: collectionProducts.sortOrder }).from(collectionProducts).where(eq(collectionProducts.collectionId, scope.manualId)) : Promise.resolve([]),
+    ]);
+    if (rows.length > 500) console.warn("[catalog] A collection exceeds the 500-product browser-filter budget");
+    return { title: scope.title, description: scope.description, bannerUrl: scope.bannerUrl, breadcrumb: scope.breadcrumb, subcategories: scope.subcategories, defaultSort: scope.defaultSort,
+      facets: { sizes: sortSizes(options.map((option) => option.size)), colors: [...new Map(options.map(({ colorCode, name, hex }) => [colorCode, { code: colorCode, name, hex }])).values()].sort((a, b) => a.name.localeCompare(b.name, "vi")) },
+      items: productCards.map((card, index) => { const product = rows[index].product; return { ...card, sortOrder: product.sortOrder, publishedAt: product.publishedAt?.toISOString() ?? null,
+        isBestSeller: product.isBestSeller, soldCount: product.soldCount, manualSortOrder: manual.find((entry) => entry.productId === product.id)?.sortOrder ?? null,
+        options: options.filter((option) => option.productId === product.id).map(({ size, colorCode, available }) => ({ size, colorCode, available })) }; }),
+    };
+  }
+
+  async function getSearchIndex(): Promise<SearchIndexItemDTO[]> {
+    const rows = await base().where(visible);
+    const productCards = await cards(rows);
+    return productCards.map((card, index) => ({ ...card, n: rows[index].product.searchText, soldCount: rows[index].product.soldCount }));
+  }
+
   async function search(query: string, requestedPage = 1) {
     const normalized = normalizeVietnamese(query).slice(0, 200);
     if (normalized.length < 2) return { products: [] as ProductCardDTO[], total: 0, page: 1, totalPages: 1 };
@@ -194,14 +219,16 @@ export function createCatalogService(reader: DatabaseReader) {
     const scope = await context(slug);
     return { title: scope.title, description: scope.description };
   }
-  return { getListing, getListingMetadata, search, getProductDetail, getRelatedProducts, getMenu, getHome };
+  return { getListing, getListingData, getListingMetadata, getSearchIndex, search, getProductDetail, getRelatedProducts, getMenu, getHome };
 }
 
 export const getListing = cached(async (slug: string, filters: ListingFilters = emptyFilters()) => createCatalogService(getDatabase()).getListing(slug, filters), ["catalog-listing"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.collections]);
-export const getListingMetadata = cached(async (slug: string) => createCatalogService(getDatabase()).getListingMetadata(slug), ["catalog-listing-metadata"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.collections]);
+export const getListingData = cache(cached(async (slug: string) => createCatalogService(getDatabase()).getListingData(slug), ["catalog-listing-data"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.collections]));
+export const getListingMetadata = async (slug: string) => { const { title, description } = await getListingData(slug); return { title, description }; };
+export const getSearchIndex = cached(async () => createCatalogService(getDatabase()).getSearchIndex(), ["catalog-search-index"], [CACHE_TAGS.products, CACHE_TAGS.categories]);
 export const searchProducts = cached(async (query: string, page: number = 1) => createCatalogService(getDatabase()).search(query, page), ["catalog-search"], [CACHE_TAGS.products, CACHE_TAGS.categories]);
 // Metadata and page rendering share one read within a render, including cold ISR.
 export const getProductDetail = cache(cached(async (slug: string) => createCatalogService(getDatabase()).getProductDetail(slug), ["catalog-product"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.settings]));
 export const getRelatedProducts = cached(async (slug: string) => createCatalogService(getDatabase()).getRelatedProducts(slug), ["catalog-related"], [CACHE_TAGS.products, CACHE_TAGS.categories]);
 export const getMenu = cached(async () => createCatalogService(getDatabase()).getMenu(), ["catalog-menu"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.collections]);
-export const getHome = cached(async () => createCatalogService(getDatabase()).getHome(), ["catalog-home"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.collections, CACHE_TAGS.banners]);
+export const getHome = cached(async () => createCatalogService(getDatabase()).getHome(), ["catalog-home"], [CACHE_TAGS.products, CACHE_TAGS.categories, CACHE_TAGS.collections, CACHE_TAGS.banners], 3600);

@@ -6,6 +6,7 @@ import { getPublicSettings } from "@/server/services/settings.service";
 import { getPageMetadata, getSiteUrl } from "@/server/services/seo.service";
 import { organizationJsonLd } from "@/lib/seo";
 import { JsonLd } from "@/components/shop/common/JsonLd";
+export const revalidate = 3600;
 
 export async function generateMetadata() { return getPageMetadata({ path: "/" }); }
 
@@ -14,7 +15,6 @@ export default async function HomePage() {
   const storyImage = home.collections.find(({ bannerUrl }) => bannerUrl)?.bannerUrl ?? home.banners[0]?.desktopImageUrl ?? home.categories.find(({ imageUrl }) => imageUrl)?.imageUrl ?? null;
   return <>
     <h1 className="sr-only">{settings.shop.name} — Cửa hàng quần áo</h1><JsonLd data={organizationJsonLd(settings, getSiteUrl())} />
-    <h1 className="sr-only">{settings.shop.name}</h1>
     <HeroSlider banners={home.banners} />
     <CategoryTiles home={home} />
     <ProductSection title="BEST SELLER" slug="best-seller" products={home.bestSeller} />

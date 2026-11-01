@@ -11,7 +11,7 @@ export function Footer({ settings }: { settings: PublicSettingsDTO }) {
     <div className="shop-container">
       <div className="grid gap-x-9 gap-y-10 md:grid-cols-2 lg:grid-cols-4">
         <div>
-          <Link href="/" aria-label={`${shop.name} — Trang chủ`} className="text-2xl font-bold tracking-[-0.06em]">{shop.logoUrl ? <span className="relative block h-12 w-36 bg-white"><ShopImage src={shop.logoUrl} alt={shop.name} sizes="144px" className="object-contain" /></span> : shop.name.toUpperCase()}</Link>
+          <Link prefetch={false} href="/" aria-label={`${shop.name} — Trang chủ`} className="text-2xl font-bold tracking-[-0.06em]">{shop.logoUrl ? <span className="relative block h-12 w-36 bg-white"><ShopImage src={shop.logoUrl} alt={shop.name} sizes="144px" className="object-contain" /></span> : shop.name.toUpperCase()}</Link>
           {shop.description && <p className="mt-4 whitespace-pre-line text-xs leading-7 text-white/65">{shop.description}</p>}
           <div className="mt-5"><SocialLinks social={social} /></div>
         </div>
@@ -22,10 +22,10 @@ export function Footer({ settings }: { settings: PublicSettingsDTO }) {
           {shop.workingHours && <p>{shop.workingHours}</p>}
         </address></div>}
         <div><h2 className="mb-5 text-xs font-semibold tracking-[0.08em] uppercase">Chính sách</h2><ul className="space-y-3 text-xs text-white/65">
-          {[["Đổi trả", "/chinh-sach-doi-tra"], ["Bảo mật", "/chinh-sach-bao-mat"], ["Điều khoản dịch vụ", "/dieu-khoan-dich-vu"], ["Hướng dẫn chọn size", "/huong-dan-chon-size"], ["Kiểm tra đơn hàng", "/kiem-tra-don-hang"]].map(([label, href]) => <li key={href}><Link href={href} className="hover:text-white">{label}</Link></li>)}
+          {[["Đổi trả", "/chinh-sach-doi-tra"], ["Bảo mật", "/chinh-sach-bao-mat"], ["Điều khoản dịch vụ", "/dieu-khoan-dich-vu"], ["Hướng dẫn chọn size", "/huong-dan-chon-size"], ["Kiểm tra đơn hàng", "/kiem-tra-don-hang"]].map(([label, href]) => <li key={href}><Link prefetch={false} href={href} className="hover:text-white">{label}</Link></li>)}
         </ul></div>
         <div><h2 className="mb-5 text-xs font-semibold tracking-[0.08em] uppercase">Về {shop.name}</h2><ul className="space-y-3 text-xs text-white/65">
-          {[["Giới thiệu", "/gioi-thieu"], ["Liên hệ", "/lien-he"], ["Tìm kiếm", "/search"]].map(([label, href]) => <li key={href}><Link href={href} className="hover:text-white">{label}</Link></li>)}
+          {[["Giới thiệu", "/gioi-thieu"], ["Liên hệ", "/lien-he"], ["Tìm kiếm", "/search"]].map(([label, href]) => <li key={href}><Link prefetch={false} href={href} className="hover:text-white">{label}</Link></li>)}
         </ul></div>
       </div>
       {hasLegal && <div className="mt-10 space-y-2 border-t border-white/15 pt-6 text-xs text-white/65" aria-label="Thông tin pháp lý">

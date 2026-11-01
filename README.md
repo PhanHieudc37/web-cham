@@ -2,11 +2,19 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–12 đã triển khai trên dev/test**, gồm Supabase dev, storefront/giỏ/checkout/tra cứu/liên hệ, quản trị, SEO và kiểm thử production local. Dev ở Tokyo; production riêng đã tạo tại Singapore. Chủ shop đã duyệt nội dung giới thiệu/chính sách trong phiên làm Phase 12; các thời hạn vận hành chưa cung cấp vẫn cần xác nhận trước khi mở bán. Resend cần domain gửi riêng để gửi cho khách ngoài email đăng ký. Chưa mở bán production; GitHub Pages vẫn là bản duyệt riêng. Xem [báo cáo Phase 12](docs/PHASE-12-REPORT.md).
+Hiện tại: **Phase 0–12 đã triển khai trên dev/test**, gồm storefront/giỏ/checkout/tra cứu/liên hệ, quản trị, SEO và kiểm thử production local. Web chạy tại [chamstu.netlify.app](https://chamstu.netlify.app), admin tại [/admin/login](https://chamstu.netlify.app/admin/login). Production Supabase ở Ohio cùng Netlify Functions, dev Tokyo; Singapore cũ pause. Chưa nghiệm thu đơn thật hoặc mở email cho khách. Xem [báo cáo hiệu năng](docs/PERFORMANCE-REPORT.md).
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
-**Phase 13 đang chuẩn bị triển khai:** theo yêu cầu chỉ dùng miễn phí, phương án hiện tại là [Netlify Free + Supabase Free](docs/DEPLOYMENT-FREE.md), dùng URL `netlify.app` chưa cần mua domain web. Đã có lệnh migrate/seed/check tách khỏi dev và công cụ khôi phục admin. Supabase production Singapore đã tạo, migrate/seed và kiểm tra thành công; Netlify đã publish bản email-disabled tại [website công khai](https://chamstu.netlify.app); đăng nhập tại [/admin/login](https://chamstu.netlify.app/admin/login). Tài khoản production dùng `ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD` trong `.env.deploy.local` riêng, không dùng mật khẩu dev. Chưa có đơn thật hoàn thành. Email gửi tới khách vẫn cần domain sở hữu đã Verified; chưa coi đây là thông báo đã mở bán.
+**Hosting miễn phí:** [Netlify Free + Supabase Free](docs/DEPLOYMENT-FREE.md), chưa cần mua domain web. Đã có lệnh migrate/seed/check tách khỏi dev và công cụ khôi phục admin. Tài khoản production khởi tạo từ `ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD` trong `.env.deploy.local` riêng; sau khi đổi mật khẩu trong admin phải dùng mật khẩu mới. Email gửi khách cần domain Verified, hiện chủ động tắt email tự động.
+
+## Cache và giữ ấm trên Free
+
+Phase 15B đưa danh mục/tìm kiếm về ISR, lọc/sort/phân trang và gõ tìm kiếm xử lý trong trình duyệt. Giá/kho mua hàng được kiểm tra lại qua availability và quote; không lấy số liệu client làm căn cứ chốt đơn. `npm run e2e:performance` kiểm tra trên build production/database test riêng, không chạy đồng thời các bộ test khác.
+
+Workflow **Warm public cache after deploy** chờ `/api/health` báo đúng SHA vừa push, sau đó đọc sitemap và làm ấm các trang public (tối đa 200 URL). Commit tài liệu dùng `[skip netlify]` sẽ bỏ qua cả deploy và warm. Không gửi credential tới workflow. **Keep production function warm** gọi health mỗi 5 phút, thêm kiểm tra DB mỗi giờ; GitHub có thể chạy lịch trễ hoặc bỏ một lượt nên không bảo đảm hết cold start.
+
+GitHub tự tắt lịch của repo public sau 60 ngày không hoạt động. Vào **Actions → Keep production function warm → Enable workflow** để bật lại; có thể dùng [cron-job.org](https://cron-job.org) miễn phí gọi cùng URL nếu tự cấu hình thay thế. Không cần chạy cả hai lịch. Khoảng 9.360 probe/30 ngày vẫn tiêu request/compute Netlify; xem Usage mỗi tuần. Giữ Free và auto top-up tắt; hết credit có thể tạm dừng web tới kỳ sau. Phase 15 giới hạn bốn production deploy, số đã dùng được ghi trong báo cáo.
 
 ## Dành cho chủ shop
 
@@ -117,7 +125,7 @@ Chạy các bộ E2E và unit/integration lần lượt vì dùng chung database
 
 `npm run e2e:content` kiểm tra bộ sưu tập, banner, mọi nhóm cài đặt và cache Next.js thật. Setup tạo một route đọc cache tạm, giới hạn bởi cờ test + database `_test` + đăng nhập; teardown xóa route đó. Route bị Git bỏ qua và không có trong build bình thường. Nếu dừng test đột ngột, chạy `node -e "import('./e2e/content-cache-probe.mjs').then(m => m.removeProbe())"` để dọn probe. Lệnh cũng dùng PostgreSQL test riêng và chỉ dọn các ảnh Storage do nó tạo.
 
-`npm run e2e:storefront` kiểm tra trang chủ, menu, gợi ý tìm kiếm, rate limit, giảm chuyển động và cập nhật liên hệ từ admin ở 375/768/1280px. Dùng PostgreSQL test riêng, fixture ảnh local và cache probe được tạo/dọn như bộ content; không sửa dữ liệu thật. Chạy lần lượt với các bộ test khác. Cache public được tách theo database để không lẫn fixture với Supabase dev.
+`npm run e2e:storefront` kiểm tra trang chủ, menu, search index công khai, giảm chuyển động và cập nhật liên hệ từ admin ở 375/768/1280px. Dùng PostgreSQL test riêng, fixture ảnh local và cache probe được tạo/dọn như bộ content; không sửa dữ liệu thật. Chạy lần lượt với các bộ test khác. Cache public được tách theo database để không lẫn fixture với Supabase dev.
 
 ## Xem cửa hàng local
 
@@ -190,7 +198,7 @@ Thông tin mẫu vẫn dùng ảnh placeholder. Chủ shop thay bằng ảnh, m�
 - **Vận chuyển:** nhập phí nguyên VND; để trống một ngưỡng freeship để tắt ngưỡng đó. Đạt số lượng hoặc tổng tiền cấu hình thì được miễn phí vận chuyển. Để trống cả hai để tắt freeship.
 - **Thanh toán:** chọn ngân hàng từ danh sách BIN VietQR lưu sẵn trong code, điền số tài khoản và chủ tài khoản. Tên chủ tài khoản tự chuyển in hoa/không dấu. QR xem trước dùng **10.000₫**, chỉ để kiểm tra thông tin, không cần chuyển tiền. Chuyển khoản chỉ bật khi đủ thông tin.
 - **Pháp lý/SEO:** chỉ điền thông tin đã có; logo shop, logo BCT và ảnh chia sẻ có thể upload bằng chế độ giữ tỉ lệ. Không tự thêm thông tin pháp lý hoặc kênh liên hệ không có thật. Cấu hình số giờ tự hủy đơn hiện chỉ được lưu, chưa chạy tác vụ tự hủy của Phase 14.
-- Sau khi lưu, cache liên quan được xóa ngay. Không cần deploy lại khi sửa phí ship/liên hệ/banner. Trang chủ Phase 6 đã đọc các service public này; API gợi ý có cache CDN tối đa 60 giây theo kiến trúc. Bản GitHub Pages minh họa vẫn độc lập với Supabase.
+- Sau khi lưu, cache liên quan được xóa ngay. Không cần deploy lại khi sửa phí ship/liên hệ/banner. Trang chủ Phase 6 đã đọc các service public này; search index/danh mục dùng cache một ngày, lọc và tìm kiếm ở trình duyệt. Bản GitHub Pages minh họa vẫn độc lập với Supabase.
 
 Danh sách ngân hàng được lấy từ API VietQR ngày 28/10/2026 và lưu tại `src/lib/banks.ts`. Khi ngân hàng đổi BIN/tên, cập nhật từ nguồn chính thức rồi kiểm tra lại QR trước khi mở bán.
 

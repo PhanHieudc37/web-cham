@@ -12,7 +12,7 @@ export function PriceTag({ price, compareAtPrice }: Pick<ProductCardDTO, "price"
 }
 
 export function ProductCard({ product }: { product: ProductCardDTO }) {
-  return <Link href={`/products/${product.slug}`} className="product-card group block min-w-0" data-testid="product-card">
+  return <Link prefetch={false} href={`/products/${product.slug}`} className="product-card group block min-w-0" data-testid="product-card">
     <div className="relative aspect-square overflow-hidden bg-image-bg">
       <ShopImage src={product.image?.url ?? null} alt={product.image?.alt || product.name}
         sizes="(min-width:1024px) 25vw, (min-width:768px) 33vw, 50vw" className="object-contain" />
@@ -39,6 +39,6 @@ export function ProductSection({ title, slug, products }: { title: string; slug:
     <div className="mt-7 grid grid-cols-2 gap-x-3 gap-y-8 md:mt-9 md:grid-cols-3 md:gap-x-5 lg:grid-cols-4">
       {products.map((product) => <ProductCard key={product.id} product={product} />)}
     </div>
-    <div className="mt-8 text-center"><Link href={`/collections/${slug}`} className="shop-button">XEM TẤT CẢ<span className="sr-only"> {title}</span></Link></div>
+    <div className="mt-8 text-center"><Link prefetch={false} href={`/collections/${slug}`} className="shop-button">XEM TẤT CẢ<span className="sr-only"> {title}</span></Link></div>
   </section>;
 }

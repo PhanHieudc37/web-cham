@@ -33,7 +33,7 @@ for (const width of [375, 768, 1280]) test(`homepage and responsive overlays at 
   await page.setViewportSize({ width, height: 900 });
   const response = await page.goto("/");
   expect(response?.status()).toBe(200);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Cham.stu");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Cham.stu — Cửa hàng quần áo");
   const sections = page.locator("main > section");
   expect(await sections.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")))).toEqual(["Banner cửa hàng", "Danh mục sản phẩm", "BEST SELLER", "NEW ARRIVAL", "Bộ sưu tập thử", "SALE", "Câu chuyện thương hiệu", "Cam kết của cửa hàng"]);
   await expect(page.getByRole("region", { name: "BEST SELLER", exact: true }).getByTestId("product-card")).toHaveCount(8);
@@ -102,33 +102,19 @@ for (const width of [375, 768, 1280]) test(`homepage and responsive overlays at 
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 });
 
-test("search debounce, cancellation and public API validation/rate limit", async ({ page, context }) => {
-  const requests: string[] = [];
-  page.on("request", (request) => { if (request.url().includes("/api/search/suggest")) requests.push(request.url()); });
-  await page.goto("/");
-  await page.getByRole("button", { name: "Mở tìm kiếm" }).click();
+test("search loads a public index once and typing makes no suggest requests", async ({ page, context }) => {
+  const indexes: string[] = [], suggestions: string[] = [];
+  page.on("request", (request) => { if (request.url().includes("/search-index.json")) indexes.push(request.url()); if (request.url().includes("/api/search/suggest")) suggestions.push(request.url()); });
+  await page.goto("/"); await page.getByRole("button", { name: "Mở tìm kiếm" }).click();
   const input = page.getByLabel("Tìm kiếm sản phẩm", { exact: true });
-  await input.fill("a");
-  await page.waitForTimeout(300);
-  expect(requests).toHaveLength(0);
-  await input.fill("ao"); await input.fill("ao kiem"); await input.fill("ao kiem thu");
-  await expect(page.getByRole("dialog").locator("li")).toHaveCount(6);
-  expect(requests).toHaveLength(1);
-  await input.fill("zzzzzz");
-  await expect(page.getByRole("status").filter({ hasText: "Không tìm thấy" })).toBeVisible();
-  await input.fill("a");
-  await expect(page.getByRole("dialog").locator("li")).toHaveCount(0);
-  const invalid = await context.request.get("/api/search/suggest?q=a");
-  expect(invalid.status()).toBe(400); expect(invalid.headers()["cache-control"]).toBe("no-store");
-  const valid = await context.request.get("/api/search/suggest?q=ao%20kiem%20thu");
-  expect(valid.status()).toBe(200); expect(valid.headers()["cache-control"]).toBe("public, s-maxage=60");
-  const body = await valid.json(); expect(body.ok).toBe(true); expect(body.data).toHaveLength(6);
-  expect(body.data[0]).not.toHaveProperty("variants");
-  const responses = await Promise.all(Array.from({ length: 61 }, () => context.request.get("/api/search/suggest?q=zz", { headers: { "x-forwarded-for": "203.0.113.250" } })));
-  expect(responses.filter((response) => response.status() === 200)).toHaveLength(60);
-  const limited = responses.find((response) => response.status() === 429)!;
-  expect((await limited.json()).error.code).toBe("RATE_LIMITED");
-  expect(limited.headers()["cache-control"]).toBe("no-store");
+  await input.fill("ao kiem thu"); await expect(page.getByRole("dialog").locator("li")).toHaveCount(6);
+  expect(indexes).toHaveLength(1);
+  await input.fill("zzzzzz"); await expect(page.getByRole("status").filter({ hasText: "Không tìm thấy" })).toBeVisible();
+  await input.fill("ao kiem thu"); await expect(page.getByRole("dialog").locator("li")).toHaveCount(6);
+  expect(indexes).toHaveLength(1); expect(suggestions).toHaveLength(0);
+  const index = await context.request.get("/search-index.json"); expect(index.status()).toBe(200);
+  const body = await index.json(); expect(Array.isArray(body)).toBe(true); expect(body[0]).not.toHaveProperty("variants"); expect(body[0]).not.toHaveProperty("stock");
+  expect((await context.request.get("/api/search/suggest?q=ao")).status()).toBe(404);
 });
 
 test("sliders rotate normally and stay still with reduced motion", async ({ page }) => {
