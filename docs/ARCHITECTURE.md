@@ -4,7 +4,7 @@
 
 Toàn bộ FE và BE nằm trong **một ứng dụng Next.js**.
 
-Cập nhật theo yêu cầu miễn phí ngày 30/10/2026: hosting mặc định chuyển từ Vercel sang **Netlify Free**, không đổi framework, database hoặc các tầng dưới. Adapter Next.js do Netlify quản lý; chưa nghiệm thu trên hosting. Region function Free không mặc định là `sin1`; đo độ trễ với database khi triển khai. Xem `DEPLOYMENT-FREE.md`.
+Cập nhật theo yêu cầu miễn phí ngày 30/10/2026: hosting mặc định là **Netlify Free**, adapter Next.js do Netlify quản lý. Phase 15A ngày 01/11/2026 đã xác minh Functions ở Ohio (`us-east-2`) và chuyển Supabase production/Storage cùng region; dev vẫn Tokyo, Singapore cũ pause. SSR, đăng nhập/guard, private headers và health đã kiểm tra trên hosting; nghiệm thu đơn thật/email của Phase 13 vẫn còn chờ. Xem `DEPLOYMENT-FREE.md`.
 
 - **FE**:
   - Server Components render HTML ở server.
@@ -244,7 +244,7 @@ router.push(`/checkout/success?code=${res.data.orderCode}&t=${res.data.accessTok
 
 Route Handler trả JSON cùng format với `ActionResult`. HTTP status lấy theo bảng mã lỗi ở mục 6.1.
 
-Ngoại lệ vận hành được giao trong Phase 15A: `GET /api/health` dùng hợp đồng `{ ok, commit, dbMs }`, public/no-store; `?db=1` mới chạy `select 1` qua service. `commit` là SHA công khai nhúng lúc build từ Netlify `COMMIT_REF`, không phải secret hoặc biến runtime được chép toàn bộ. Không rate-limit ghi DB cho probe; lỗi chỉ trả HTTP 400/503 và ba trường trên. Các endpoint nghiệp vụ vẫn giữ ActionResult. Route mới hiện mới kiểm tra local, chờ deploy 15A.
+Ngoại lệ vận hành được giao trong Phase 15A: `GET /api/health` dùng hợp đồng `{ ok, commit, dbMs }`, public/no-store; `?db=1` mới chạy `select 1` qua service. `commit` là SHA công khai nhúng lúc build từ Netlify `COMMIT_REF`, không phải secret hoặc biến runtime được chép toàn bộ. Không rate-limit ghi DB cho probe; lỗi chỉ trả HTTP 400/503 và ba trường trên. Các endpoint nghiệp vụ vẫn giữ ActionResult. Route đã kiểm tra local và production, SHA trùng commit đang deploy; số đo/dao động tại `PERFORMANCE-REPORT.md`.
 
 ---
 

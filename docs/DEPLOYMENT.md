@@ -14,7 +14,7 @@ Hướng dẫn Phase 13, kiểm tra tài liệu nhà cung cấp ngày 30/10/2026
 ## 2. Tạo Supabase production riêng
 
 1. Dashboard Supabase → New project; đặt tên phân biệt, ví dụ `cham-stu-prod`. Đây là tên đề xuất, không phải project đã được tạo.
-2. Hướng dẫn Singapore/Vercel `sin1` là cấu hình cũ. Production mới dùng **East US (Ohio), `us-east-2`**, cùng region Netlify Free đã xác minh. Phase 15A đã được chủ shop duyệt tạo/pause project và đổi env; xem [trạng thái chuyển](PHASE-15A-REPORT.md). Project dev ở Tokyo; không đổi dữ liệu/config hoặc xóa project đó. Dev được pause tạm theo xác nhận riêng để nhường quota và phải resume sau khi Singapore pause.
+2. Hướng dẫn Singapore/Vercel `sin1` là cấu hình cũ. Production dùng **East US (Ohio), `us-east-2`**, cùng region Netlify Free đã xác minh. Phase 15A đã được chủ shop duyệt và hoàn tất tạo/pause project, đổi env/deploy #1; xem [kết quả chuyển](PHASE-15A-REPORT.md). Singapore cũ đã pause, không xóa. Dev Tokyo đã resume healthy, giữ URL/mật khẩu và dữ liệu/config; không tạo project thứ ba active hoặc nâng gói.
 3. Sinh mật khẩu database mạnh, lưu trong trình quản lý mật khẩu. Đợi project sẵn sàng.
 4. Connect → lấy **Transaction pooler, cổng 6543** cho `DATABASE_URL`, **Session pooler, cổng 5432** cho `DIRECT_URL`. Cả hai phải thuộc project prod. Thay chỗ mật khẩu bằng mật khẩu thật, percent-encode ký tự đặc biệt; thêm `?sslmode=require` nếu URI chưa có query. Không sao chép URI chỉ còn `[YOUR-PASSWORD]`.
 5. Settings/API Keys → lấy Secret key server (`sb_secret_...` hoặc legacy service_role), URL project. Không dùng anon/publishable key cho app này.
@@ -120,7 +120,7 @@ Không chạy Vitest/Playwright hoặc các script `e2e/` trên database product
 | Hạng mục | Trạng thái hiện tại |
 |---|---|
 | Supabase dev / bucket media | Có, dùng cho local; không phải bằng chứng production |
-| Supabase prod Singapore | Đã tạo, migrate/seed không sample và production:check pass |
+| Supabase prod Ohio | `cham-stu-prod-us`, migrate/seed không sample, production:check và kiểm tra hosting 15A pass; Singapore cũ đã pause, dev Tokyo đã resume |
 | Vercel project, env và URL Ready | Chưa có kết nối tài khoản / chưa triển khai |
 | Domain web / Resend Verified | Dùng URL netlify.app; email disabled, chưa có domain gửi thư |
 | Đơn thật → Hoàn thành | Chưa thực hiện, Phase 13 chưa nghiệm thu |
