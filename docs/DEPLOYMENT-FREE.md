@@ -1,10 +1,12 @@
 # Triển khai miễn phí — Netlify + Supabase
 
-**Phase 15A đã hoàn tất (01/11/2026):** database/Storage production **Ohio (`us-east-2`)**, cùng region Netlify Functions. Project `cham-stu-prod-us` đã migrate/seed/check, ba biến Netlify Production trỏ Ohio, deploy #1 commit `251cdbd` đã Ready và kiểm tra pass. Singapore cũ đã pause, không xóa; dev Tokyo đã resume healthy, URL/mật khẩu cũ vẫn đọc được 20 bảng. Không tạo thêm project Singapore theo hướng dẫn cũ; xem [số đo và rollback](PHASE-15A-REPORT.md). Ngân sách Phase 15 tối đa 4 production deploy; đã dùng **1/4**, commit chỉ sửa tài liệu dùng `[skip netlify]`.
+**Phase 15A đã hoàn tất (01/11/2026):** database/Storage production **Ohio (`us-east-2`)**, cùng region Netlify Functions. Project `cham-stu-prod-us` đã migrate/seed/check, ba biến Netlify Production trỏ Ohio, deploy #1 commit `251cdbd` đã Ready và kiểm tra pass. Singapore cũ đã pause, không xóa; dev Tokyo đã resume healthy, URL/mật khẩu cũ vẫn đọc được 20 bảng. Không tạo thêm project Singapore theo hướng dẫn cũ; xem [số đo và rollback](PHASE-15A-REPORT.md). Ngân sách Phase 15 tối đa 4 production deploy; đã dùng **2/4**, commit chỉ sửa tài liệu dùng `[skip netlify]`.
 
 **Cập nhật được chủ shop duyệt 31/10/2026:** khi chưa có domain gửi thư, đặt `EMAIL_DELIVERY=disabled` trong `.env.deploy.local` và Netlify Production. Khi đó có thể migrate, seed không sample, kiểm tra database và deploy mà không cần `RESEND_API_KEY`/`EMAIL_FROM`/`SHOP_NOTIFY_EMAIL`. Giao diện thông báo chưa gửi email; chủ shop theo dõi đơn/tin nhắn trong admin, khách lưu mã để tra cứu. Không điền sender/key giả. Những yêu cầu Resend Verified bên dưới áp dụng khi chuyển `EMAIL_DELIVERY=resend` (mặc định), và phần nghiệm thu mail/đơn thật vẫn chờ.
 
 Theo yêu cầu chủ shop ngày 30/10/2026: chỉ dùng gói miễn phí, không mua domain hoặc đăng ký dịch vụ trả phí. Phương án này thay Vercel làm lựa chọn mặc định của Phase 13; giữ nguyên Next.js, Better Auth, PostgreSQL và Storage hiện tại. **Đã có bản online không email được xác minh tại https://chamstu.netlify.app; chưa nghiệm thu email hoặc đơn thật tới Hoàn thành.**
+
+**15B:** commit `7da8d0c`, deploy #2 Ready; warm 12 URL success, TTFB public median 46–48 ms và 18 lượt hosting responsive pass. Xem [báo cáo/giới hạn](PHASE-15B-REPORT.md).
 
 ## Chi phí và giới hạn
 
