@@ -2,6 +2,10 @@
 
 Ngày: 30/10/2026. **Trạng thái: đã có bản online miễn phí không email; chưa nghiệm thu email và đơn thật tới Hoàn thành.**
 
+## Đổi hostname ngày 01/11/2026
+
+Theo lựa chọn của chủ shop, đã đổi cùng project Netlify từ `astonishing-fox-bde038` thành `chamstu`, URL web https://chamstu.netlify.app và admin https://chamstu.netlify.app/admin/login. Đã xác minh vẫn gói Free, project công khai; đồng bộ `NEXT_PUBLIC_SITE_URL` và `BETTER_AUTH_URL` trong Netlify Production và `.env.deploy.local`, cập nhật metadata local của Netlify. Không thay tài khoản, mật khẩu, database hay email mode. Link trong báo cáo này đã cập nhật theo miền hiện tại. Đang build lại để canonical/sitemap/auth cùng dùng miền mới; sẽ kiểm tra HTTPS và đăng nhập thực tế sau Ready.
+
 ## Chế độ miễn phí không email được duyệt ngày 31/10/2026
 
 ### Sửa trải nghiệm đăng nhập sau phản hồi chủ shop
@@ -14,7 +18,7 @@ Chủ shop đã đồng ý triển khai Netlify với `EMAIL_DELIVERY=disabled` 
 
 ## Cập nhật thực tế ngày 31/10/2026
 
-- Đã xác minh token Netlify và Supabase trong các file local được Git ignore. Netlify đã có project `astonishing-fox-bde038`, liên kết đúng repository `PhanHieudc37/web-cham`; đã có deployment Ready và URL công khai https://astonishing-fox-bde038.netlify.app, đăng nhập admin production thành công.
+- Đã xác minh token Netlify và Supabase trong các file local được Git ignore. Netlify đã có project `astonishing-fox-bde038`, liên kết đúng repository `PhanHieudc37/web-cham`; đã có deployment Ready và URL công khai https://chamstu.netlify.app, đăng nhập admin production thành công.
 - Đã xác minh organization Supabase `cham.stu` đang ở gói Free và tạo project riêng `cham-stu-prod` tại Singapore. Giữ nguyên project dev Tokyo.
 - Đã điền kết nối production thật vào `.env.deploy.local`; `SELECT 1` thành công qua transaction pooler 6543 và session pooler 5432. Đã migrate và seed không sample thành công; `production:check` pass với 20 bảng RLS, 0 policy public, 1 admin hoạt động, 0 sản phẩm mẫu và bucket public.
 - Đã tạo và xác minh bucket `media` public, giới hạn 2 MB, cho phép WebP/JPEG/PNG. Server key đã được lấy đầy đủ bằng Management API và kiểm tra qua Storage.
@@ -25,7 +29,7 @@ Chủ shop đã đồng ý triển khai Netlify với `EMAIL_DELIVERY=disabled` 
 
 ## Giới hạn bàn giao bản online
 
-- Website: https://astonishing-fox-bde038.netlify.app; quản trị: https://astonishing-fox-bde038.netlify.app/admin/login.
+- Website: https://chamstu.netlify.app; quản trị: https://chamstu.netlify.app/admin/login.
 - Commit ứng dụng đang chạy: `14c840c`; deployment `6ae56977bc8771e1945df927` Ready. Các cập nhật báo cáo sau đó không cần build lại ứng dụng.
 - Tài khoản/mật khẩu production nằm trong `.env.deploy.local`, biến `ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD`; không đưa vào chat hoặc Git.
 - Không thêm sản phẩm giả để lấp trang trống. Chủ shop cần nhập danh mục, sản phẩm/ảnh, tồn kho, banner, liên hệ và ngân hàng thật trong admin production; dev vẫn tách riêng.

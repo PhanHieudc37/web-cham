@@ -6,7 +6,7 @@ Hiện tại: **Phase 0–12 đã triển khai trên dev/test**, gồm Supabase 
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
-**Phase 13 đang chuẩn bị triển khai:** theo yêu cầu chỉ dùng miễn phí, phương án hiện tại là [Netlify Free + Supabase Free](docs/DEPLOYMENT-FREE.md), dùng URL `netlify.app` chưa cần mua domain web. Đã có lệnh migrate/seed/check tách khỏi dev và công cụ khôi phục admin. Supabase production Singapore đã tạo, migrate/seed và kiểm tra thành công; Netlify đã publish bản email-disabled tại [website công khai](https://astonishing-fox-bde038.netlify.app); đăng nhập tại [/admin/login](https://astonishing-fox-bde038.netlify.app/admin/login). Tài khoản production dùng `ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD` trong `.env.deploy.local` riêng, không dùng mật khẩu dev. Chưa có đơn thật hoàn thành. Email gửi tới khách vẫn cần domain sở hữu đã Verified; chưa coi đây là thông báo đã mở bán.
+**Phase 13 đang chuẩn bị triển khai:** theo yêu cầu chỉ dùng miễn phí, phương án hiện tại là [Netlify Free + Supabase Free](docs/DEPLOYMENT-FREE.md), dùng URL `netlify.app` chưa cần mua domain web. Đã có lệnh migrate/seed/check tách khỏi dev và công cụ khôi phục admin. Supabase production Singapore đã tạo, migrate/seed và kiểm tra thành công; Netlify đã publish bản email-disabled tại [website công khai](https://chamstu.netlify.app); đăng nhập tại [/admin/login](https://chamstu.netlify.app/admin/login). Tài khoản production dùng `ADMIN_SEED_EMAIL`/`ADMIN_SEED_PASSWORD` trong `.env.deploy.local` riêng, không dùng mật khẩu dev. Chưa có đơn thật hoàn thành. Email gửi tới khách vẫn cần domain sở hữu đã Verified; chưa coi đây là thông báo đã mở bán.
 
 ## Dành cho chủ shop
 
