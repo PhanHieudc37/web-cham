@@ -13,6 +13,7 @@
     "preview:dev": "node scripts/build-preview.mjs && node scripts/serve-preview.mjs",
     "preview:test": "playwright test --config playwright.preview.config.ts",
     "test": "vitest run",
+    "perf:measure": "tsx scripts/measure-performance.ts",
     "e2e": "playwright test --config playwright.production.config.ts",
     "e2e:admin": "playwright test --config playwright.admin.config.ts",
     "e2e:catalog": "playwright test --config playwright.catalog.config.ts",
