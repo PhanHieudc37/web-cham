@@ -1,6 +1,6 @@
 # Triển khai miễn phí — Netlify + Supabase
 
-**Phase 15A đang chuẩn bị (01/11/2026):** Netlify Functions đã xác minh ở Ohio (`us-east-2`); dự kiến chuyển database/Storage production sang Ohio để giảm độ trễ. Production hiện vẫn là Singapore, dev Tokyo vẫn active. Chưa đổi env hoặc tạo/pause project; phải có xác nhận chủ shop và giải quyết giới hạn 2 project Free trước. Không làm theo bước Singapore bên dưới để tạo thêm project mới trong đợt này; xem [phương án chuyển và rollback](PHASE-15A-REPORT.md). Ngân sách Phase 15 tối đa 4 production deploy; 15.0 dùng `[skip netlify]`, hiện đã dùng 0/4.
+**Phase 15A đang triển khai (01/11/2026):** chủ shop đã duyệt, đã tạo database/Storage production **Ohio (`us-east-2`)** cùng region Netlify Functions. Project `cham-stu-prod-us` đã migrate/seed/check, ba biến Netlify Production đã trỏ Ohio, đang deploy #1. Singapore còn active tới khi kiểm tra bản mới xong; Tokyo tạm pause để nhường suất và sẽ resume sau đó. Không tạo thêm project Singapore theo hướng dẫn cũ; xem [phương án chuyển và rollback](PHASE-15A-REPORT.md). Ngân sách Phase 15 tối đa 4 production deploy; lần này là #1/4, các commit công cụ/tài liệu trước dùng `[skip netlify]`.
 
 **Cập nhật được chủ shop duyệt 31/10/2026:** khi chưa có domain gửi thư, đặt `EMAIL_DELIVERY=disabled` trong `.env.deploy.local` và Netlify Production. Khi đó có thể migrate, seed không sample, kiểm tra database và deploy mà không cần `RESEND_API_KEY`/`EMAIL_FROM`/`SHOP_NOTIFY_EMAIL`. Giao diện thông báo chưa gửi email; chủ shop theo dõi đơn/tin nhắn trong admin, khách lưu mã để tra cứu. Không điền sender/key giả. Những yêu cầu Resend Verified bên dưới áp dụng khi chuyển `EMAIL_DELIVERY=resend` (mặc định), và phần nghiệm thu mail/đơn thật vẫn chờ.
 
@@ -36,7 +36,7 @@ Nếu deploy đầu tiên thất bại khi chưa có env/database, hoàn tất c
 
 ## 2. Database production và seed
 
-Làm [bước Supabase prod và bucket media](DEPLOYMENT.md#2-tạo-supabase-production-riêng), giữ project dev hiện tại. Giữ region database Singapore theo plan hiện tại. Netlify Free không tương đương region `sin1` trong `vercel.json`; cần kiểm tra độ trễ thực tế, không tự nâng gói để đổi region. [Tùy chọn region Functions](https://docs.netlify.com/build/functions/configuration/).
+Làm [bước Supabase prod và bucket media](DEPLOYMENT.md#2-tạo-supabase-production-riêng), dùng region **East US (Ohio), `us-east-2`** cùng Netlify Functions Free đã xác minh. Giữ dữ liệu/config dev Tokyo; mọi pause/create project phải được chủ shop duyệt. `sin1` trong `vercel.json` không điều khiển Netlify; không tự nâng gói để đổi region. [Tùy chọn region Functions](https://docs.netlify.com/build/functions/configuration/).
 
 Chuẩn bị `.env.deploy.local` theo [bảng biến production](DEPLOYMENT.md#5-file-riêng-cho-migrateseedcheck), dùng URL Netlify thật cho **cả** `NEXT_PUBLIC_SITE_URL` và `BETTER_AUTH_URL`. Không dùng `.env` dev làm production; không chạy test hoặc seed sample trên prod.
 

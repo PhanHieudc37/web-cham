@@ -6,7 +6,7 @@
 
 ## Tiến độ thực tế — 30/10/2026
 
-- **Phase 15 (giao thêm 01/11/2026):** theo [PERFORMANCE-PLAN.md](PERFORMANCE-PLAN.md), chỉ nhận 15.0 và 15A. **15.0:** có công cụ đo, Baseline Wi-Fi và kiểm tra pass; commit `724c44a`, không deploy. **15A:** đang chuẩn bị Ohio (`us-east-2`) để cùng region Netlify; production vẫn ở Singapore, chưa đổi env/project. Chờ duyệt thứ tự xử lý giới hạn 2 project Free; xem [báo cáo 15A](PHASE-15A-REPORT.md) và [số đo](PERFORMANCE-REPORT.md). Chưa làm 15B/15C/15D.
+- **Phase 15 (giao thêm 01/11/2026):** theo [PERFORMANCE-PLAN.md](PERFORMANCE-PLAN.md), chỉ nhận 15.0 và 15A. **15.0:** có công cụ đo, Baseline Wi-Fi và kiểm tra pass; commit `724c44a`, không deploy. **15A:** chủ shop đã duyệt phương án quota Free; đã tạo Ohio (`us-east-2`), migrate/seed/check và cập nhật ba env Production, đang deploy #1 và chờ đo trên hosting. Singapore vẫn active để kiểm tra chuyển, dev Tokyo tạm pause sẽ resume sau đó; xem [báo cáo 15A](PHASE-15A-REPORT.md) và [số đo](PERFORMANCE-REPORT.md). Chưa làm 15B/15C/15D.
 
 - **Phase 0:** đã nghiệm thu; commit `e346d1f`.
 - **GitHub:** code trong repo công khai [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`. Có thêm milestone bản duyệt giao diện tĩnh trên GitHub Pages theo yêu cầu riêng, xem bên dưới.
@@ -86,7 +86,7 @@ Không đổi nếu chưa được đồng ý.
 |---|---|
 | Framework | Next.js (bản stable mới nhất, App Router), React, TypeScript strict |
 | Giao diện | Tailwind CSS v4 + shadcn/ui (Radix), dùng cho cả cửa hàng và admin |
-| Database | PostgreSQL trên **Supabase** (region Singapore) |
+| Database | PostgreSQL trên **Supabase**; production mới **Ohio (`us-east-2`)** theo Phase 15A đã được duyệt, dev Tokyo; Singapore giữ làm bản cũ tới khi kiểm tra chuyển xong |
 | ORM / migration | **Drizzle ORM** + `drizzle-kit`, driver `postgres` (postgres.js) |
 | Đăng nhập | **Better Auth** (email + mật khẩu, plugin `admin`), Drizzle adapter |
 | Lưu ảnh | **Supabase Storage**, bucket public `media` |

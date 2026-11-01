@@ -1,6 +1,17 @@
 # Phase 15A — Chuẩn bị đưa database về Ohio
 
-Ngày 01/11/2026. **Chưa nghiệm thu 15A; chưa chuyển project hoặc biến môi trường Netlify.**
+Ngày 01/11/2026. **Đang triển khai 15A, chưa nghiệm thu số đo trên hosting mới.**
+
+## Chuyển hạ tầng đã được duyệt
+
+Chủ shop đã xác nhận toàn bộ phương án: pause dev Tokyo tạm thời, tạo Ohio Free, đổi ba credential Netlify Production và deploy #1, sau kiểm tra mới pause Singapore và resume Tokyo. Không xóa project, không chép dữ liệu kinh doanh.
+
+- Đã kiểm kê lại Singapore ngay trước chuyển: vẫn 0 sản phẩm/đơn/tin nhắn/ảnh/tài khoản ngoài admin, settings đều mặc định.
+- Đã pause dev Tokyo để nhường suất và tạo **`cham-stu-prod-us`**, ref `uywuukctknnipapeifqv`, region **`us-east-2`**, organization vẫn Free. Singapore chưa pause trong giai đoạn kiểm tra bản mới.
+- Đã cập nhật `.env.deploy.local`, giữ cấu hình cũ trong file rollback `.env.deploy.before-phase15a.local` được Git ignore. Admin Ohio có mật khẩu mới trong `ADMIN_SEED_PASSWORD`, chỉ lưu local; không chép auth/session cũ hoặc đưa mật khẩu lên Netlify/Git.
+- Đã tạo bucket media public, 2 MB, WebP/JPEG/PNG; chạy `production:migrate`, `production:seed` không sample và `production:check` pass: 20 bảng RLS, 0 public policy, 1 admin, 0 sample. Cả transaction 6543 và session 5432 pooler Ohio `SELECT 1` qua TLS thành công.
+- Đã thay/xác minh đúng ba biến Netlify `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, giữ All scopes và chỉ Production như được duyệt. Không có biến khác chứa ref Singapore ngoài hai URL này; key cũ được thay cùng nhóm. Netlify vẫn credit-free, auto top-up tắt, email disabled.
+- Bản code health đã pass lint/typecheck/build và 210 test trước khi dev pause; lần push này kích hoạt **deploy #1/4**. Chờ Ready và số đo thực tế để kết luận 15A; chưa coi mục tiêu DB/admin đã đạt.
 
 ## Kiểm kê và điều kiện chuyển
 
@@ -32,7 +43,7 @@ Chạy lại inventory: `node --conditions=react-server --import=tsx scripts/ins
 
 **Kiểm tra phần chuẩn bị:** lint/typecheck/build pass, **210/210 unit/integration pass (36 file)**. Đã chạy build production trên localhost để kiểm tra health: `/api/health` HTTP 200, `dbMs:null`; `?db=1` HTTP 200, số đo DB hữu hạn; `?db=0` HTTP 400. Cả ba giữ no-store/noindex và chỉ có `ok`, `commit`, `dbMs`. Build dùng một SHA giả lập riêng cho kiểm thử, sau đó khởi động với SHA runtime khác; health vẫn trả SHA lúc build, xác minh đã nhúng đúng. Probe local dùng dev Tokyo, không dùng số đó để nghiệm thu Ohio. `production:check` hiện tại trên Singapore pass: 20 bảng RLS, 0 public policy, 1 admin hoạt động, 0 sample và media public; email vẫn tắt. Không đổi UI/schema; không cần đo lại ba độ rộng cho endpoint vận hành.
 
-## Điểm khác và phương án cần duyệt
+## Điểm khác và phương án được chủ shop duyệt
 
 1. Kế hoạch yêu cầu tạo project Ohio trước rồi mới pause Singapore và giữ dev Tokyo. Với hai project active đã đầy, không thể làm đúng thứ tự đó ở Free. Đề xuất **tạm pause dev Tokyo trước**, tạo/migrate/seed Ohio trong khi Singapore vẫn phục vụ web; sau chuyển và kiểm tra thành công mới pause Singapore, rồi resume Tokyo. Không xóa project, không đổi dữ liệu/config dev. Local dựa Supabase dev sẽ tạm không dùng được trong thời gian pause.
 2. Đổi ba credential runtime Netlify chỉ context **Production**: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`; cập nhật thêm biến có ref cũ nếu kiểm kê env phát hiện. Giữ kiểu lưu All scopes hiện có trên Free theo xác nhận trước của chủ shop, không mở cho Preview. `.env.deploy.local` đổi cả `DIRECT_URL`; mật khẩu admin mới chỉ lưu local, không đưa lên Netlify/Git.
@@ -42,6 +53,6 @@ Chạy lại inventory: `node --conditions=react-server --import=tsx scripts/ins
 
 ## Chưa làm / cần chủ shop
 
-- Chờ xác nhận riêng việc pause/resume dev tạm thời, tạo Ohio, pause Singapore sau chuyển và đổi env Netlify Production. Chưa có thao tác quản lý project hoặc đổi env nào trong Phase 15.
+- Đã có xác nhận riêng; đang hoàn tất kiểm tra bản mới trước khi pause Singapore và resume dev Tokyo.
 - Chưa có số đo `/api/health?db=1` production hoặc mốc sau 15A; không coi mục tiêu DB <10 ms/admin <1 s đã đạt. Cần migrate/seed/check, deploy #1, đo lại cùng Wi-Fi rồi ghi kết quả thật.
 - Không làm Phase 15B/15C/15D, không nâng gói hoặc mua add-on, không thay cookie cache/guard admin.
