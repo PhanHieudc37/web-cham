@@ -6,7 +6,8 @@ Người dùng chính là chủ shop và nhân viên. Họ sẽ thao tác **nhi�
 
 ## 1. Quy ước chung
 
-- Không tự prefetch các link menu admin, ô tổng quan hoặc link chi tiết đơn: chỉ đọc dữ liệu khi người dùng điều hướng, tránh hàng loạt request đồng thời tới database ở xa. Bộ đếm menu gộp trong một SQL; doanh thu và cấu hình tổng quan đọc song song, không cache dữ liệu quản trị qua request.
+- Không prefetch theo viewport. Từ Phase 15C, link menu/bảng chỉ tải trước khi hover, focus hoặc touch, tối đa một lần/link/30 giây. Router Cache ở trình duyệt giữ 30 giây; server luôn kiểm tra session/user mới và không CDN cache dữ liệu quản trị. Bộ đếm menu một SQL; page đọc độc lập song song với guard, doanh thu/tài khoản vẫn chờ quyền phụ thuộc trước khi đọc.
+- Trạng thái đơn/nhận tiền, xử lý tin nhắn và công tắc hiển thị phản hồi ngay bằng optimistic update. Lỗi thì hoàn tác và hiện toast; xác nhận nguy hiểm vẫn giữ dialog. Sau lưu dùng DTO server hoặc revalidation đường dẫn liên quan, Back phải thấy trạng thái mới. Không lấy trạng thái lạc quan làm căn cứ thanh toán hoặc tính kho.
 
 - Khi `EMAIL_DELIVERY=disabled`, đầu khu vực quản trị hiện thông báo email tự động đang tắt. Chủ shop kiểm tra Đơn hàng/Tin nhắn trực tiếp và liên hệ khách qua điện thoại/Zalo; thao tác giao hàng không hứa đã gửi email.
 

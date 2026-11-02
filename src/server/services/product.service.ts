@@ -1,20 +1,20 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { and, asc, count, desc, eq, exists, ilike, inArray, lte, ne, notInArray, or, sql } from "drizzle-orm";
+import { and, asc, eq, exists, ilike, inArray, lte, ne, notInArray, or, sql } from "drizzle-orm";
 import type { z } from "zod";
-import { ADMIN_PAGE_SIZE } from "@/lib/constants";
+import { defaultSettings } from "@/lib/validation/settings";
 import { createSku } from "@/lib/domain/variants";
 import { normalizeVietnamese } from "@/lib/normalize";
 import { productInputSchema, type ProductInput, type sizeChartInputSchema } from "@/lib/validation/product";
 import type { ProductEditorDTO, ProductListItemDTO, ProductOptionsDTO, StockMovementDTO } from "@/types/catalog-admin";
 import { getDatabase, type Database } from "@/server/db/client";
-import { categories, collectionProducts, collections, orders, productColors, productImages, products, productVariants, sizeCharts, stockMovements, user } from "@/server/db/schema";
+import { readDatabasePage } from "@/server/db/pagination";
+import { categories, collectionProducts, collections, orders, productColors, productImages, products, productVariants, settings, sizeCharts, stockMovements, user } from "@/server/db/schema";
 import { AppError } from "@/server/errors";
 import { createCategoryService } from "./category.service";
 import { catalogSlug, lockCatalog, refreshSearchText } from "./catalog-write";
 import { assertStoredMedia, removeUnusedMedia } from "./media.service";
-import { getSetting } from "./settings.service";
 
 export type ProductFilters = { query?: string; categoryId?: string; status?: "draft" | "active" | "archived"; lowStock?: boolean; page?: number };
 export function createProductService(db: Database, removeMedia = removeUnusedMedia) {
@@ -26,38 +26,33 @@ export function createProductService(db: Database, removeMedia = removeUnusedMed
     return { categories: allCategories, collections: allCollections, sizeCharts: charts };
   }
   async function list(filters: ProductFilters) {
-    const config = await getSetting("orders", db);
     const query = normalizeVietnamese(filters.query ?? "").slice(0, 100).replace(/[\\%_]/g, "\\$&");
     const condition = and(query ? or(ilike(products.searchText, `%${query}%`), ilike(products.code, `%${query}%`)) : undefined,
       filters.categoryId ? eq(products.categoryId, filters.categoryId) : undefined, filters.status ? eq(products.status, filters.status) : undefined,
-      filters.lowStock ? exists(db.select({ id: productVariants.id }).from(productVariants).where(and(eq(productVariants.productId, products.id), eq(productVariants.isActive, true), lte(productVariants.stock, config.lowStockThreshold)))) : undefined);
-    const [total] = await db.select({ total: count() }).from(products).where(condition);
-    const totalPages = Math.max(1, Math.ceil(total.total / ADMIN_PAGE_SIZE)), page = Math.min(Math.max(1, Math.floor(filters.page ?? 1) || 1), totalPages);
-    const rows = await db.select({ id: products.id, name: products.name, code: products.code, slug: products.slug, price: products.price, compareAtPrice: products.compareAtPrice, categoryName: categories.name,
+      filters.lowStock ? exists(db.select({ id: productVariants.id }).from(productVariants).where(and(eq(productVariants.productId, products.id), eq(productVariants.isActive, true), lte(productVariants.stock,
+        sql`coalesce((select (${settings.value}->>'lowStockThreshold')::integer from ${settings} where ${settings.key} = 'orders'), ${defaultSettings.orders.lowStockThreshold})`)))) : undefined);
+    const result = await readDatabasePage<ProductListItemDTO>(db, { id: products.id, page: filters.page ?? 1, where: condition,
+      from: sql`${products} inner join ${categories} on ${products.categoryId} = ${categories.id}`, order: sql`${products.updatedAt} desc, ${products.id} asc`,
+      fields: { id: products.id, name: products.name, code: products.code, slug: products.slug, price: products.price, compareAtPrice: products.compareAtPrice, categoryName: categories.name,
       stock: sql<number>`coalesce((select sum(pv.stock) from product_variants pv where pv.product_id = ${products.id} and pv.is_active), 0)::integer`,
       imageUrl: sql<string | null>`(select pi.url from product_images pi where pi.product_id = ${products.id} order by pi.sort_order, pi.id limit 1)`,
-      status: products.status, updatedAt: products.updatedAt }).from(products).innerJoin(categories, eq(products.categoryId, categories.id)).where(condition)
-      .orderBy(desc(products.updatedAt), asc(products.id)).limit(ADMIN_PAGE_SIZE).offset((page - 1) * ADMIN_PAGE_SIZE);
-    return { products: rows.map((row): ProductListItemDTO => ({ ...row, updatedAt: row.updatedAt.toISOString() })), total: total.total, page, totalPages };
+      status: products.status, updatedAt: products.updatedAt } });
+    return { products: result.items.map((row) => ({ ...row, updatedAt: new Date(row.updatedAt).toISOString() })), total: result.total, page: result.page, totalPages: result.totalPages };
   }
   async function get(id: string): Promise<ProductEditorDTO> {
-    const [product] = await db.select().from(products).where(eq(products.id, id));
-    if (!product) throw new AppError("NOT_FOUND");
-    const [colors, variants, images, linked] = await Promise.all([
-      db.select().from(productColors).where(eq(productColors.productId, id)).orderBy(asc(productColors.sortOrder), asc(productColors.id)),
-      db.select().from(productVariants).where(eq(productVariants.productId, id)).orderBy(asc(productVariants.id)),
-      db.select().from(productImages).where(eq(productImages.productId, id)).orderBy(asc(productImages.sortOrder), asc(productImages.id)),
-      db.select().from(collectionProducts).where(eq(collectionProducts.productId, id)),
-    ]);
-    const codeFor = (colorId: string) => colors.find((color) => color.id === colorId)?.code.toLowerCase() ?? "";
+    const [row] = await db.select({ product: products,
+      colors: sql<ProductInput["colors"]>`coalesce((select jsonb_agg(jsonb_build_object('id', c.id, 'name', c.name, 'code', lower(c.code), 'hex', c.hex) order by c.sort_order, c.id) from product_colors c where c.product_id = ${products}.${sql.identifier("id")}), '[]'::jsonb)`,
+      variants: sql<ProductInput["variants"]>`coalesce((select jsonb_agg(jsonb_build_object('id', v.id, 'colorCode', lower(c.code), 'size', v.size, 'sku', v.sku, 'stock', v.stock, 'expectedStock', v.stock, 'isActive', v.is_active) order by v.id) from product_variants v join product_colors c on c.id = v.color_id where v.product_id = ${products}.${sql.identifier("id")}), '[]'::jsonb)`,
+      images: sql<ProductInput["images"]>`coalesce((select jsonb_agg(jsonb_build_object('id', i.id, 'url', i.url, 'storagePath', i.storage_path, 'alt', i.alt, 'colorCode', lower(c.code)) order by i.sort_order, i.id) from product_images i left join product_colors c on c.id = i.color_id where i.product_id = ${products}.${sql.identifier("id")}), '[]'::jsonb)`,
+      collectionIds: sql<string[]>`coalesce((select jsonb_agg(cp.collection_id order by cp.sort_order, cp.collection_id) from collection_products cp where cp.product_id = ${products}.${sql.identifier("id")}), '[]'::jsonb)`,
+    }).from(products).where(eq(products.id, id));
+    if (!row) throw new AppError("NOT_FOUND");
+    const { product } = row;
     return { publishedAt: product.publishedAt?.toISOString() ?? null, values: {
       id, code: product.code, name: product.name, slug: product.slug, categoryId: product.categoryId, status: product.status, price: product.price, compareAtPrice: product.compareAtPrice,
       description: product.description, material: product.material ?? "", fit: product.fit ?? "", care: product.care, sizeChartId: product.sizeChartId,
       isNew: product.isNew, isBestSeller: product.isBestSeller, sortOrder: product.sortOrder, seoTitle: product.seoTitle ?? "", seoDescription: product.seoDescription ?? "", stockNote: "",
-      colors: colors.map(({ id, name, code, hex }) => ({ id, name, code: code.toLowerCase(), hex })),
-      variants: variants.map((variant) => ({ id: variant.id, colorCode: codeFor(variant.colorId), size: variant.size, sku: variant.sku, stock: variant.stock, expectedStock: variant.stock, isActive: variant.isActive })),
-      images: images.map((image) => ({ id: image.id, url: image.url, storagePath: image.storagePath, alt: image.alt, colorCode: image.colorId ? codeFor(image.colorId) : null })),
-      collectionIds: linked.map((entry) => entry.collectionId),
+      colors: row.colors, variants: row.variants, images: row.images, collectionIds: row.collectionIds,
     } };
   }
   async function save(raw: ProductInput, actorId: string) {
@@ -157,14 +152,11 @@ export function createProductService(db: Database, removeMedia = removeUnusedMed
   }
   async function history(productId: string, requestedPage = 1) {
     const condition = eq(productVariants.productId, productId);
-    const [total] = await db.select({ total: count() }).from(stockMovements).innerJoin(productVariants, eq(stockMovements.variantId, productVariants.id)).where(condition);
-    const totalPages = Math.max(1, Math.ceil(total.total / ADMIN_PAGE_SIZE)), page = Math.min(Math.max(1, Math.floor(requestedPage) || 1), totalPages);
-    const rows = await db.select({ id: stockMovements.id, color: productColors.name, size: productVariants.size, delta: stockMovements.delta, stockAfter: stockMovements.stockAfter,
-      reason: stockMovements.reason, orderId: stockMovements.orderId, orderCode: orders.code, actorName: user.name, note: stockMovements.note, createdAt: stockMovements.createdAt }).from(stockMovements)
-      .innerJoin(productVariants, eq(stockMovements.variantId, productVariants.id)).innerJoin(productColors, eq(productVariants.colorId, productColors.id))
-      .leftJoin(orders, eq(stockMovements.orderId, orders.id)).leftJoin(user, eq(stockMovements.actorId, user.id)).where(condition).orderBy(desc(stockMovements.createdAt), desc(stockMovements.id)).limit(ADMIN_PAGE_SIZE).offset((page - 1) * ADMIN_PAGE_SIZE);
-    return { movements: rows.map((row): StockMovementDTO => ({ id: row.id, variant: `${row.color} / ${row.size}`, delta: row.delta, stockAfter: row.stockAfter, reason: row.reason,
-      orderId: row.orderId, orderCode: row.orderCode, actorName: row.actorName, note: row.note, createdAt: row.createdAt.toISOString() })), total: total.total, totalPages, page };
+    const result = await readDatabasePage<Omit<StockMovementDTO, "variant"> & { color: string; size: string }>(db, { id: stockMovements.id, page: requestedPage, where: condition,
+      from: sql`${stockMovements} inner join ${productVariants} on ${stockMovements.variantId} = ${productVariants.id} inner join ${productColors} on ${productVariants.colorId} = ${productColors.id} left join ${orders} on ${stockMovements.orderId} = ${orders.id} left join ${user} on ${stockMovements.actorId} = ${user.id}`,
+      order: sql`${stockMovements.createdAt} desc, ${stockMovements.id} desc`, fields: { id: stockMovements.id, color: productColors.name, size: productVariants.size, delta: stockMovements.delta, stockAfter: stockMovements.stockAfter,
+        reason: stockMovements.reason, orderId: stockMovements.orderId, orderCode: orders.code, actorName: user.name, note: stockMovements.note, createdAt: stockMovements.createdAt } });
+    return { movements: result.items.map(({ color, size, ...row }): StockMovementDTO => ({ ...row, variant: `${color} / ${size}`, createdAt: new Date(row.createdAt).toISOString() })), total: result.total, totalPages: result.totalPages, page: result.page };
   }
   async function createSizeChart(input: z.output<typeof sizeChartInputSchema>) {
     const [chart] = await db.insert(sizeCharts).values({ ...input, note: input.note || null }).returning({ id: sizeCharts.id }); return chart;

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/admin/common/intent-link";
 import { ORDER_STATUSES, ORDER_STATUS_LABELS } from "@/lib/constants";
 import { orderQuery, type OrderFilters } from "@/lib/order-admin";
 import type { OrderListDTO } from "@/types/order-admin";

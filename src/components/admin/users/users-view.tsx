@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/components/admin/common/intent-link";
 import { useState } from "react";
 import { KeyRound, LockKeyhole, Plus, Search, ShieldCheck, UserRoundCog, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -15,7 +14,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { CreateUserForm, ResetUserPassword } from "./user-forms";
 
 export function UsersView({ users, total, page, totalPages, query, actorId }: { users: AdminUserDTO[]; total: number; page: number; totalPages: number; query: string; actorId: string }) {
-  const router = useRouter();
   const [creating, setCreating] = useState(false), [resetting, setResetting] = useState<AdminUserDTO | null>(null);
   const [confirmation, setConfirmation] = useState<{ user: AdminUserDTO; operation: "role" | "ban" } | null>(null);
   const [pending, setPending] = useState(false), [error, setError] = useState("");
@@ -40,7 +38,7 @@ export function UsersView({ users, total, page, totalPages, query, actorId }: { 
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}<DialogFooter><Button variant="outline" className="h-11" disabled={pending} onClick={() => setConfirmation(null)}>Quay lại</Button><Button className="h-11" disabled={pending} onClick={async () => {
         if (!confirmation) return; setPending(true); setError("");
         const result = confirmation.operation === "role" ? await setUserRoleAction({ userId: confirmation.user.id, role: confirmation.user.role === "admin" ? "staff" : "admin" }) : await setUserBanAction({ userId: confirmation.user.id, banned: !confirmation.user.banned });
-        setPending(false); if (!result.ok) { setError(result.error.message); return; } toast.success("Đã lưu"); setConfirmation(null); router.refresh();
+        setPending(false); if (!result.ok) { setError(result.error.message); return; } toast.success("Đã lưu"); setConfirmation(null);
       }}>{pending ? "Đang lưu…" : "Xác nhận"}</Button></DialogFooter></DialogContent></Dialog>
   </div>;
 }

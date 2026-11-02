@@ -7,7 +7,9 @@ async function handle(request: Request) {
   if (!(request.method === "GET" && path === "/api/auth/get-session")) {
     return Response.json({ ok: false, error: { code: "FORBIDDEN", message: "Thao tác này không được phép." } }, { status: 403 });
   }
-  return toNextJsHandler(getAuth()).GET(request);
+  const response = await toNextJsHandler(getAuth()).GET(request);
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
 }
 export const GET = handle;
 export const POST = handle;

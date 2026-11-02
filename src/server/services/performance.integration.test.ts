@@ -17,6 +17,11 @@ import { createCatalogService } from "./catalog.service";
 import { getProductAvailability } from "./availability.service";
 import { quoteCart } from "./cart.service";
 import { createOrderService } from "./order.service";
+import { createOrderAdminService } from "./order-admin.service";
+import { createProductService } from "./product.service";
+import { createContactService } from "./contact.service";
+import { orderFiltersSchema } from "@/lib/order-admin";
+import { readDatabasePage } from "@/server/db/pagination";
 
 const url = process.env.TEST_DATABASE_URL;
 describe.skipIf(!url)("cached storefront equivalence and fresh availability", () => {
@@ -111,5 +116,33 @@ describe.skipIf(!url)("cached storefront equivalence and fresh availability", ()
     const results = await Promise.all(inputs.map((input, index) => service.placeOrderWithOutcome(input, `198.51.100.${index + 10}`)));
     expect(results.flatMap((result) => result.soldOutProductIds)).toEqual([ids[0]]);
     expect((await getProductAvailability(ids[0], database.db)).isSoldOut).toBe(true);
+  });
+  it("keeps admin data reads within query budgets with populated and empty results", async () => {
+    const orderId = randomUUID();
+    await database.db.insert(schema.orders).values({ id: orderId, code: `PERF${orderId.slice(0, 8)}`, idempotencyKey: orderId, accessTokenHash: "0".repeat(64), customerName: "Khách kiểm thử", customerPhone: "0912345678", province: "Tỉnh kiểm thử", ward: "Phường kiểm thử", addressLine: "Địa chỉ kiểm thử", paymentMethod: "cod", subtotal: 100000, shippingFee: 30000, total: 130000 });
+    await database.db.insert(schema.orderItems).values({ orderId, productId: ids[0], variantId: variantIds[0][0], productName: "Áo kiểm thử", productSlug: "ao-0", colorName: "Đen", size: "M", sku: "PERF0-DEN", unitPrice: 100000, quantity: 1, lineTotal: 100000 });
+    const queries: string[] = [];
+    const tracked = drizzle(database.connection, { schema, casing: "snake_case", logger: { logQuery(query) { queries.push(query); } } });
+    const admin = createOrderAdminService(tracked), product = createProductService(tracked), order = createOrderService(tracked, "performance-query-budget-secret-at-least-32-characters");
+    await admin.dashboard("admin"); expect(queries).toHaveLength(4); queries.length = 0;
+    expect((await admin.dashboard("staff")).revenue).toBeNull(); expect(queries).toHaveLength(3); queries.length = 0;
+    expect((await admin.list(orderFiltersSchema.parse({ page: "999" }))).items).toHaveLength(1); expect(queries).toHaveLength(2); queries.length = 0;
+    expect((await order.getAdminDetail(orderId)).items).toHaveLength(1); expect(queries).toHaveLength(4); queries.length = 0;
+    expect((await product.list({ page: 999, lowStock: true })).products.length).toBeGreaterThan(0); expect(queries).toHaveLength(1); queries.length = 0;
+    const [detail, options, history] = await Promise.all([product.get(ids[0]), product.options(), product.history(ids[0], 999)]);
+    expect(queries).toHaveLength(5); expect(detail.values.variants.map((variant) => variant.colorCode).sort()).toEqual(["den", "trang"]);
+    expect(detail.values.variants.every((variant) => variant.stock === 3 && variant.expectedStock === 3)).toBe(true);
+    expect(detail.values.images).toHaveLength(1); expect(options.categories).toHaveLength(3); expect(history).toMatchObject({ total: 0, page: 1, totalPages: 1, movements: [] });
+    queries.length = 0;
+    await createContactService(tracked).list({ status: "new", page: 999 }); expect(queries).toHaveLength(2);
+  });
+  it("clamps pagination inside one snapshot without losing totals on empty or out-of-range pages", async () => {
+    const fields = { id: products.id, code: products.code };
+    const input = { id: products.id, fields, from: sql`${products}`, order: sql`${products.code} asc`, pageSize: 3 };
+    const last = await readDatabasePage<{ id: string; code: string }>(database.db, { ...input, page: 999 });
+    expect(last).toMatchObject({ total: 15, page: 5, totalPages: 5 }); expect(last.items).toHaveLength(3);
+    const empty = await readDatabasePage(database.db, { ...input, page: 999, where: sql`false` });
+    expect(empty).toEqual({ total: 0, page: 1, totalPages: 1, items: [] });
+    expect((await readDatabasePage(database.db, { ...input, page: Infinity })).page).toBe(1);
   });
 });

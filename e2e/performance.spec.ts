@@ -7,7 +7,11 @@ for (const width of [375, 768, 1280]) test(`cached listing filters and local sea
   await page.setViewportSize({ width, height: 900 });
   const html = await request.get("/collections/all");
   expect(html.status()).toBe(200); expect((await html.text()).match(/data-testid="product-card"/g)?.length).toBe(12);
+  // The cart's initial quote is debounced after hydration. networkidle alone
+  // can finish before that timer starts; settle it before measuring filters.
+  const initialQuote = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/cart/quote" && response.request().method() === "POST");
   await page.goto("/collections/all"); await page.locator('[data-filters-ready="true"]').waitFor();
+  expect((await initialQuote).ok()).toBe(true);
   await page.waitForLoadState("networkidle");
   const requests: string[] = [];
   page.on("request", (request) => { if (isApplicationRequest(request.url(), new URL(page.url()).origin, request.resourceType())) requests.push(new URL(request.url()).pathname); });

@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import Link from "@/components/admin/common/intent-link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ArrowUpRight, ChartNoAxesCombined, ChevronDown, CircleUserRound, Images, LayoutGrid, LayoutList, LogOut, Menu, MessageSquare, Package, Settings, ShoppingBag, Tags, Users, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { roleLabel, type SessionUserDTO } from "@/lib/auth";
 import { signOutAction } from "@/server/actions/admin/auth";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -24,7 +25,8 @@ const navigation = [
   { href: "/admin/users", label: "Tài khoản", icon: Users, admin: true, ready: true },
 ];
 export function AdminShell({ person, pendingOrders, newMessages, children }: { person: SessionUserDTO; pendingOrders: number; newMessages: number; children: React.ReactNode }) {
-  const path = usePathname(), router = useRouter();
+  const path = usePathname();
+  const hydrated = useHydrated();
   const [menuOpen, setMenuOpen] = useState(false), [passwordOpen, setPasswordOpen] = useState(false), [leaving, setLeaving] = useState(false);
   const title = navigation.find((item) => item.href === path || (item.href !== "/admin" && path.startsWith(`${item.href}/`)))?.label ?? "Quản trị";
   const sidebar = <div className="flex h-full flex-col">
@@ -38,17 +40,17 @@ export function AdminShell({ person, pendingOrders, newMessages, children }: { p
     })}</nav>
     <div className="mt-auto p-5"><div className="rounded-md border border-stone-200 bg-stone-50 p-3 text-xs leading-5 text-stone-500"><span className="mb-1 flex items-center gap-2 font-medium text-stone-800"><span className="size-1.5 rounded-full bg-emerald-600" />Không gian làm việc</span>Quản lý shop từ máy tính và điện thoại.</div></div>
   </div>;
-  return <div className="admin-theme min-h-dvh bg-[#f7f7f6] text-stone-900">
+  return <div data-admin-ready={hydrated} className="admin-theme min-h-dvh bg-[#f7f7f6] text-stone-900">
     <a className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:p-3" href="#admin-content">Đến nội dung chính</a>
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r bg-white lg:block print:hidden">{sidebar}</aside>
     <Sheet open={menuOpen} onOpenChange={setMenuOpen}><SheetContent side="left" className="w-[280px] gap-0 p-0"><SheetHeader className="sr-only"><SheetTitle>Menu quản trị</SheetTitle><SheetDescription>Điều hướng các chức năng cửa hàng.</SheetDescription></SheetHeader>{sidebar}</SheetContent></Sheet>
     <div className="min-w-0 lg:pl-60 print:pl-0">
       <header className="sticky top-0 z-20 flex h-[72px] items-center justify-between gap-2 border-b bg-white px-4 md:px-8 print:hidden">
-        <div className="flex min-w-0 items-center gap-3"><Button size="icon" variant="ghost" className="size-11 lg:hidden" aria-label="Mở menu quản trị" onClick={() => setMenuOpen(true)}><Menu size={21} /></Button><span className="truncate text-sm font-medium">{title}</span></div>
+        <div className="flex min-w-0 items-center gap-3"><Button disabled={!hydrated} size="icon" variant="ghost" className="size-11 lg:hidden" aria-label="Mở menu quản trị" onClick={() => setMenuOpen(true)}><Menu size={21} /></Button><span className="truncate text-sm font-medium">{title}</span></div>
         <div className="flex shrink-0 items-center gap-2 md:gap-5"><Link prefetch={false} href="/" target="_blank" className="flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-900"><span className="hidden sm:inline">Xem cửa hàng</span><ArrowUpRight size={17} /><span className="sr-only sm:hidden">Xem cửa hàng</span></Link><span className="h-7 w-px bg-stone-200" />
-          <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="h-auto min-h-11 gap-2 px-1.5" aria-label="Menu tài khoản"><span className="flex size-8 items-center justify-center rounded-full bg-stone-100"><CircleUserRound size={19} strokeWidth={1.5} /></span><span className="hidden max-w-40 text-left md:block"><span className="block truncate text-xs font-medium">{person.name}</span><span className="block text-[10px] font-normal text-stone-500">{roleLabel(person.role)}</span></span><ChevronDown size={13} /></Button></DropdownMenuTrigger>
+          <DropdownMenu><DropdownMenuTrigger asChild><Button disabled={!hydrated} variant="ghost" className="h-auto min-h-11 gap-2 px-1.5" aria-label="Menu tài khoản"><span className="flex size-8 items-center justify-center rounded-full bg-stone-100"><CircleUserRound size={19} strokeWidth={1.5} /></span><span className="hidden max-w-40 text-left md:block"><span className="block truncate text-xs font-medium">{person.name}</span><span className="block text-[10px] font-normal text-stone-500">{roleLabel(person.role)}</span></span><ChevronDown size={13} /></Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-60"><DropdownMenuLabel className="break-words">{person.name}<span className="block text-xs font-normal text-muted-foreground">{roleLabel(person.role)}</span></DropdownMenuLabel><DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => setPasswordOpen(true)}><KeyRound />Đổi mật khẩu</DropdownMenuItem><DropdownMenuItem disabled={leaving} onSelect={async () => { setLeaving(true); const result = await signOutAction({}); if (!result.ok) { toast.error(result.error.message); setLeaving(false); return; } router.replace("/admin/login"); router.refresh(); }}><LogOut />{leaving ? "Đang đăng xuất…" : "Đăng xuất"}</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setPasswordOpen(true)}><KeyRound />Đổi mật khẩu</DropdownMenuItem><DropdownMenuItem disabled={leaving} onSelect={async () => { setLeaving(true); const result = await signOutAction({}); if (!result.ok) { toast.error(result.error.message); setLeaving(false); return; } window.location.replace("/admin/login"); }}><LogOut />{leaving ? "Đang đăng xuất…" : "Đăng xuất"}</DropdownMenuItem>
             </DropdownMenuContent></DropdownMenu>
         </div>
       </header>

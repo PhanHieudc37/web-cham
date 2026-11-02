@@ -1,11 +1,12 @@
 import "server-only";
 
-import { and, count, desc, eq } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import type { z } from "zod";
-import { ADMIN_PAGE_SIZE, PUBLIC_FORM_LIMITS } from "@/lib/constants";
+import { PUBLIC_FORM_LIMITS } from "@/lib/constants";
 import type { ContactInput, contactFiltersSchema } from "@/lib/validation/contact";
 import type { ContactListDTO, ContactMessageDTO } from "@/types/contact";
 import { getDatabase, type Database } from "@/server/db/client";
+import { readDatabasePage } from "@/server/db/pagination";
 import { contactMessages, user } from "@/server/db/schema";
 import { AppError } from "@/server/errors";
 import { rateLimit } from "@/server/rate-limit";
@@ -19,11 +20,13 @@ export function createContactService(db: Database) {
     return { id: message.id, name: input.name, phone: input.phone, email: input.email || null, message: input.message, status: "new", createdAt: message.createdAt.toISOString(), handledAt: null, handledByName: null };
   }
   async function list(input: z.output<typeof contactFiltersSchema>): Promise<ContactListDTO> {
-    const grouped = await db.select({ status: contactMessages.status, count: count() }).from(contactMessages).groupBy(contactMessages.status);
+    const [grouped, result] = await Promise.all([
+      db.select({ status: contactMessages.status, count: count() }).from(contactMessages).groupBy(contactMessages.status),
+      readDatabasePage<ContactMessageDTO>(db, { id: contactMessages.id, fields: selection, from: sql`${contactMessages} left join ${user} on ${user.id} = ${contactMessages.handledBy}`,
+        where: eq(contactMessages.status, input.status), order: sql`${contactMessages.createdAt} desc, ${contactMessages.id} desc`, page: input.page }),
+    ]);
     const counts = { new: grouped.find((row) => row.status === "new")?.count ?? 0, handled: grouped.find((row) => row.status === "handled")?.count ?? 0 };
-    const total = counts[input.status], totalPages = Math.max(1, Math.ceil(total / ADMIN_PAGE_SIZE)), page = Math.min(input.page, totalPages);
-    const rows = await db.select(selection).from(contactMessages).leftJoin(user, eq(user.id, contactMessages.handledBy)).where(eq(contactMessages.status, input.status)).orderBy(desc(contactMessages.createdAt), desc(contactMessages.id)).limit(ADMIN_PAGE_SIZE).offset((page - 1) * ADMIN_PAGE_SIZE);
-    return { items: rows.map((row) => ({ ...row, createdAt: row.createdAt.toISOString(), handledAt: row.handledAt?.toISOString() ?? null })), page, totalPages, total, counts };
+    return { ...result, items: result.items.map((row) => ({ ...row, createdAt: new Date(row.createdAt).toISOString(), handledAt: row.handledAt ? new Date(row.handledAt).toISOString() : null })), counts };
   }
   async function markHandled(id: string, actorId: string) {
     // Only the first handler wins; retries preserve their identity and timestamp.

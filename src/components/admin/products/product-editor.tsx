@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/admin/common/intent-link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
@@ -47,7 +47,7 @@ export function ProductEditor({ product, options, history, initialTab = "details
       <TabsContent value="details"><form onSubmit={form.handleSubmit(async (values) => {
         if (busy) return; setError(""); const result = await saveProductAction({ ...values, slug: !product && !form.formState.dirtyFields.slug ? undefined : values.slug || undefined });
         if (!result.ok) { setError(result.error.message); for (const key of ["code", "slug", "categoryId", "colors", "variants", "images", "status"] as const) if (result.error.fields?.[key]) form.setError(key, { message: result.error.fields[key] }); return; }
-        toast.success("Đã lưu"); form.reset(result.data.product.values); router.push(`/admin/products/${result.data.id}`); router.refresh();
+        toast.success("Đã lưu"); form.reset(result.data.product.values); router.push(`/admin/products/${result.data.id}`);
       }, () => { setError("Vui lòng kiểm tra các ô thông tin bên dưới."); })}>
         <fieldset disabled={!hydrated} className="contents">{error && <p role="alert" className="mb-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-destructive">{error}</p>}
         <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_280px]"><div className="min-w-0 space-y-6">

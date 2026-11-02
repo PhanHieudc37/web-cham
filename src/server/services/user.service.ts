@@ -71,10 +71,11 @@ export function createUserService(db: Database, authConfig: AuthConfiguration) {
   return { list, create, setRole: (input: z.output<typeof setRoleSchema>, actorId: string) => update(input, actorId), setBan: (input: z.output<typeof setBanSchema>, actorId: string) => update(input, actorId), resetPassword };
 }
 export const getUserService = () => createUserService(getDatabase(), getAuthConfiguration());
-export async function getAdminShellData(person: SessionUserDTO) {
+export async function getAdminBadgeCounts() {
   const db = getDatabase();
   const [counts] = await db.execute<{ pendingOrders: number; newMessages: number }>(sql`SELECT
     (SELECT count(*)::integer FROM ${orders} WHERE ${orders.status} = 'pending') AS "pendingOrders",
     (SELECT count(*)::integer FROM ${contactMessages} WHERE ${contactMessages.status} = 'new') AS "newMessages"`);
-  return { person, pendingOrders: counts.pendingOrders, newMessages: counts.newMessages };
+  return { pendingOrders: counts.pendingOrders, newMessages: counts.newMessages };
 }
+export async function getAdminShellData(person: SessionUserDTO) { return { person, ...await getAdminBadgeCounts() }; }

@@ -1,6 +1,7 @@
 "use server";
 
 import { after } from "next/server";
+import { refreshAdminPaths } from "@/server/admin-refresh";
 import { orderNoteSchema, orderPaymentSchema, orderStatusInputSchema, shippingInputSchema } from "@/lib/validation/order-admin";
 import { requireRole } from "@/server/auth/guards";
 import { CACHE_TAGS, invalidate } from "@/server/cache";
@@ -16,6 +17,7 @@ export async function changeOrderStatusAction(input: unknown) {
     const transition = await service.updateStatus(values, actor.id);
     if (transition.availableProductIds.length) invalidate(CACHE_TAGS.products);
     const order = await service.getAdminDetail(values.orderId);
+    refreshAdminPaths(["/admin", "/admin/orders", `/admin/orders/${values.orderId}`, "/admin/products", "/admin/products/[id]"], true);
     if (values.toStatus === "shipping" && order.trackingCode && order.customerEmail) after(async () => {
       try { await notifyOrderShipped(order, (await getPublicSettings()).shop.name); }
       catch { console.error("[notification] Shipping notification failed", { orderCode: order.code }); }
@@ -29,7 +31,9 @@ export async function changeOrderPaymentAction(input: unknown) {
     const actor = await requireRole("staff"), service = getOrderService();
     if (values.paymentStatus === "paid") await service.markPaid(values.orderId, actor.id);
     else await service.markRefunded(values.orderId, actor.id);
-    return service.getAdminDetail(values.orderId);
+    const order = await service.getAdminDetail(values.orderId);
+    refreshAdminPaths(["/admin", "/admin/orders", `/admin/orders/${values.orderId}`]);
+    return order;
   });
 }
 export async function saveOrderShippingAction(input: unknown) {
@@ -37,7 +41,9 @@ export async function saveOrderShippingAction(input: unknown) {
     const values = shippingInputSchema.parse(input);
     const actor = await requireRole("staff"), service = getOrderService();
     await service.updateShipping(values.orderId, values.carrier, values.trackingCode, actor.id);
-    return service.getAdminDetail(values.orderId);
+    const order = await service.getAdminDetail(values.orderId);
+    refreshAdminPaths(["/admin/orders", `/admin/orders/${values.orderId}`]);
+    return order;
   });
 }
 export async function addOrderNoteAction(input: unknown) {
@@ -45,6 +51,8 @@ export async function addOrderNoteAction(input: unknown) {
     const values = orderNoteSchema.parse(input);
     const actor = await requireRole("staff"), service = getOrderService();
     await service.addNote(values.orderId, values.message, actor.id);
-    return service.getAdminDetail(values.orderId);
+    const order = await service.getAdminDetail(values.orderId);
+    refreshAdminPaths([`/admin/orders/${values.orderId}`]);
+    return order;
   });
 }

@@ -1,4 +1,5 @@
 import "server-only";
+vi.mock("@/server/admin-refresh", () => ({ refreshAdminPaths: vi.fn() }));
 import { beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ guard: vi.fn(), handle: vi.fn() }));
 vi.mock("@/server/auth/guards", () => ({ requireRole: mocks.guard }));

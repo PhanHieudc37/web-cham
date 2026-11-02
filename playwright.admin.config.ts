@@ -11,7 +11,7 @@ for (const other of [process.env.DATABASE_URL, process.env.DIRECT_URL].filter((v
   if (parsed.host === target.host && parsed.pathname === target.pathname) throw new Error("Không chạy E2E trên database dev/prod");
 }
 export default defineConfig({
-  testDir: "./e2e", testMatch: "admin.spec.ts", fullyParallel: false, workers: 1, timeout: 60000,
+  testDir: "./e2e", testMatch: "admin.spec.ts", outputDir: "test-results/admin-regression", fullyParallel: false, workers: 1, timeout: 60000,
   expect: { timeout: 15000 },
   globalSetup: "./e2e/setup-admin.mjs", reporter: "list",
   use: { baseURL: "http://localhost:3100", trace: "retain-on-failure" },

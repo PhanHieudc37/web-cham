@@ -18,6 +18,7 @@ import { buildCartQuote, loadCartRows } from "./cart.service";
 import { readSettings } from "./settings.service";
 
 type OrderRow = typeof orders.$inferSelect;
+type KnownOrderEvents = (typeof orderEvents.$inferSelect)[] | Promise<(typeof orderEvents.$inferSelect)[]>;
 type Placement = { orderCode: string; accessToken: string };
 const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
@@ -166,11 +167,11 @@ export function createOrderService(db: Database, secret: string) {
     });
   }
 
-  async function publicDTO(order: OrderRow, masked: boolean): Promise<OrderPublicDTO> {
+  async function publicDTO(order: OrderRow, masked: boolean, knownEvents?: KnownOrderEvents): Promise<OrderPublicDTO> {
     const [items, events] = await Promise.all([
       db.select({ id: orderItems.id, productId: orderItems.productId, productSlug: orderItems.productSlug, productName: orderItems.productName, colorName: orderItems.colorName,
         size: orderItems.size, sku: orderItems.sku, imageUrl: orderItems.imageUrl, unitPrice: orderItems.unitPrice, quantity: orderItems.quantity, lineTotal: orderItems.lineTotal }).from(orderItems).where(eq(orderItems.orderId, order.id)),
-      db.select().from(orderEvents).where(eq(orderEvents.orderId, order.id)).orderBy(asc(orderEvents.createdAt), asc(orderEvents.id)),
+      knownEvents ? Promise.resolve(knownEvents) : db.select().from(orderEvents).where(eq(orderEvents.orderId, order.id)).orderBy(asc(orderEvents.createdAt), asc(orderEvents.id)),
     ]);
     return { code: order.code, createdAt: order.createdAt.toISOString(), status: order.status, paymentMethod: order.paymentMethod, paymentStatus: order.paymentStatus,
       customerName: order.customerName, customerPhone: masked ? maskPhone(order.customerPhone) : order.customerPhone, items, total: order.total, carrier: order.carrier,
@@ -179,9 +180,9 @@ export function createOrderService(db: Database, secret: string) {
         message: null, createdAt: event.createdAt.toISOString() })),
     };
   }
-  async function successDTO(order: OrderRow): Promise<OrderSuccessDTO> {
-    const config = await readSettings(db);
-    return { ...await publicDTO(order, false), customerEmail: order.customerEmail, province: order.province, ward: order.ward, addressLine: order.addressLine,
+  async function successDTO(order: OrderRow, knownEvents?: KnownOrderEvents): Promise<OrderSuccessDTO> {
+    const [config, publicData] = await Promise.all([readSettings(db), publicDTO(order, false, knownEvents)]);
+    return { ...publicData, customerEmail: order.customerEmail, province: order.province, ward: order.ward, addressLine: order.addressLine,
       subtotal: order.subtotal, discountAmount: order.discountAmount, shippingFee: order.shippingFee, bank: order.paymentMethod === "bank_transfer" && bankTransferEnabled(config.bank) ? config.bank : null };
   }
   async function lookup(raw: z.output<typeof orderLookupSchema>, ip: string): Promise<OrderPublicDTO> {
@@ -204,8 +205,9 @@ export function createOrderService(db: Database, secret: string) {
   async function getAdminDetail(id: string): Promise<OrderAdminDetailDTO> {
     const [order] = await db.select().from(orders).where(eq(orders.id, id));
     if (!order) throw new AppError("NOT_FOUND");
-    const history = await db.select({ event: orderEvents, actorName: user.name }).from(orderEvents).leftJoin(user, eq(user.id, orderEvents.actorId)).where(eq(orderEvents.orderId, id)).orderBy(asc(orderEvents.createdAt), asc(orderEvents.id));
-    return { ...await successDTO(order), id, adminNote: order.adminNote, note: order.note, paidAt: order.paidAt?.toISOString() ?? null,
+    const historyPromise = db.select({ event: orderEvents, actorName: user.name }).from(orderEvents).leftJoin(user, eq(user.id, orderEvents.actorId)).where(eq(orderEvents.orderId, id)).orderBy(asc(orderEvents.createdAt), asc(orderEvents.id)).then((rows) => rows);
+    const [history, detail] = await Promise.all([historyPromise, successDTO(order, historyPromise.then((rows) => rows.map(({ event }) => event)))]);
+    return { ...detail, id, adminNote: order.adminNote, note: order.note, paidAt: order.paidAt?.toISOString() ?? null,
       events: history.map(({ event, actorName }) => ({ id: event.id, type: event.type, fromStatus: event.fromStatus, toStatus: event.toStatus, message: event.message, createdAt: event.createdAt.toISOString(), actorName })) };
   }
   async function updateShipping(orderId: string, carrier: string, trackingCode: string, actorId: string) {

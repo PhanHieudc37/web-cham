@@ -399,7 +399,7 @@ DTO cho đơn hàng: `OrderSuccessDTO`, `OrderPublicDTO` (tra cứu, SĐT che b�
 | `banners` | banner trang chủ | sửa banner |
 | `settings` | cài đặt công khai | lưu cài đặt |
 
-**Không cache:** `/api/cart/quote`, checkout, trang đặt hàng thành công, tra cứu đơn, toàn bộ admin. Tính đúng của giá và tồn kho khi đặt hàng **không phụ thuộc vào cache**, vì quote và `placeOrder` luôn đọc trực tiếp từ DB.
+**Không cache dữ liệu nghiệp vụ:** `/api/cart/quote`, trang đặt hàng thành công, tra cứu đơn, admin đã đăng nhập. HTML giỏ/checkout không có thông tin khách có thể dựng sẵn, nhưng quote/chốt đơn luôn đọc DB. Từ 15C, riêng GET `/admin/login` là HTML tĩnh không có tài khoản, ISR một ngày/noindex; client kiểm tra session qua API private/no-store sau hydration. POST login và các trang admin khác vẫn private/no-store.
 
 Sau sửa admin, `warmPaths` chạy trong `after`, chỉ path public theo whitelist, tối đa 10 path, lần lượt/timeout 10 giây và tổng 45 giây; không chuyển tiếp cookie. Lỗi warm không đảo ngược thao tác đã lưu. GitHub workflow chờ health đúng SHA rồi warm tối đa 200 URL sitemap; workflow keep-warm gọi health mỗi 5 phút và DB mỗi giờ. Không bảo đảm function luôn ấm; request/compute vẫn tiêu credit Free. Quote thực hiện rate limit và tính quote song song, vẫn giữ giới hạn cũ.
 
@@ -409,13 +409,17 @@ Sau sửa admin, `warmPaths` chạy trong `after`, chỉ path public theo whitel
 
 - **Cấu hình Better Auth** (`src/server/auth/auth.ts`):
   - Drizzle adapter (provider `pg`).
-  - Bật `advanced.database.joins` của Better Auth 1.7.14 với relations Drizzle đã có, đọc session/user bằng một SELECT. Vẫn tắt cookie cache và kiểm tra role/banned lại từ DB trong guard. Khi hoàn toàn không có session cookie, trả anonymous trước khi khởi tạo auth; cookie hiện diện vẫn phải xác minh đầy đủ.
+  - Bật `advanced.database.joins` của Better Auth 1.7.14 với relations Drizzle đã có, đọc session/user bằng một SELECT mới mỗi request; guard kiểm tra role/banned từ user của join, không SELECT user lần hai. Cookie cache/secondary storage đều tắt. Khi không có session cookie, trả anonymous trước khi khởi tạo auth; cookie hiện diện vẫn phải xác minh đầy đủ. React cache chỉ khử lượt đọc trong cùng render, không giữ quyền qua request.
   - `emailAndPassword` bật, mật khẩu tối thiểu 8 ký tự.
   - **Tắt đăng ký công khai** cho tới Phase 14d.
   - Plugin `admin` (role, khóa tài khoản), plugin `nextCookies` (để Server Action set được cookie).
   - Bật rate limit có sẵn của Better Auth.
   - Route: `src/app/api/auth/[...all]/route.ts`.
 - **Role:** `user` (khách) < `staff` < `admin`.
+
+Phase 15C: `readAuthorizedPage` chạy lượt đọc độc lập song song với guard nhưng không để dữ liệu/lỗi đọc vượt guard; action ghi vẫn validate → quyền → service. Tổng quan/doanh thu và tài khoản chờ role/actor trước lượt đọc phụ thuộc. `readDatabasePage` lấy tổng và phân trang một snapshot, xếp hạng ID trước để không dựng ảnh/JSON cho toàn bộ danh sách.
+
+`experimental.staleTimes` giữ Router Cache trong trình duyệt 30 giây (dynamic và explicit prefetch); không thêm Data Cache/CDN cache cho dữ liệu admin. Link admin tắt viewport prefetch, chỉ tải trước khi hover/focus/touch. Mọi mutation làm mới path liên quan; thay đơn/tin còn làm mới layout chứa badge. Optimistic UI chỉ là phản hồi tạm, dùng DTO server/revalidation khi thành công và hoàn tác/toast khi lỗi. Đăng nhập/đăng xuất mở document mới để không tái sử dụng payload của tài khoản trước.
 
   | Chức năng | staff | admin |
   |---|---|---|

@@ -62,6 +62,16 @@ describe.skipIf(!testUrl)("Better Auth accounts and sessions", () => {
     const current = await joinedAuth.api.getSession({ headers, query: { disableCookieCache: true } });
     expect(current?.user).toMatchObject({ id: staffId, role: "staff" });
     expect(queries.filter((query) => /^select\b/i.test(query))).toHaveLength(1);
+    // Change the database directly without revoking the session: a cookie or an
+    // old session payload must never keep granting the previous role/ban state.
+    await database.db.update(user).set({ role: "admin" }).where(eq(user.id, staffId));
+    queries.length = 0;
+    expect((await joinedAuth.api.getSession({ headers, query: { disableCookieCache: true } }))?.user.role).toBe("admin");
+    expect(queries.filter((query) => /^select\b/i.test(query))).toHaveLength(1);
+    await database.db.update(user).set({ banned: true }).where(eq(user.id, staffId));
+    queries.length = 0;
+    expect((await joinedAuth.api.getSession({ headers, query: { disableCookieCache: true } }))?.user.banned).toBe(true);
+    expect(queries.filter((query) => /^select\b/i.test(query))).toHaveLength(1);
   });
   it("creates accounts through Better Auth with hashed passwords and rejects duplicate email", async () => {
     const result = await service.create({ name: "Thành viên mới", email: "new@example.test", password, role: "staff" }, adminId);

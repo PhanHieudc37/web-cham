@@ -1,4 +1,5 @@
 "use server";
+import { refreshAdminPaths } from "@/server/admin-refresh";
 
 import { warmCatalog } from "@/server/warming";
 import { z } from "zod";
@@ -9,7 +10,7 @@ import { CACHE_TAGS, invalidate } from "@/server/cache";
 import { runAction } from "@/server/run-action";
 import { getCategoryService } from "@/server/services/category.service";
 
-function refresh() { invalidate(CACHE_TAGS.categories, CACHE_TAGS.products); }
+function refresh() { invalidate(CACHE_TAGS.categories, CACHE_TAGS.products); refreshAdminPaths(["/admin/categories", "/admin/products", "/admin/products/[id]", "/admin/products/new"]); }
 export async function saveCategoryAction(input: unknown) {
   return runAction(async () => { const values = categoryInputSchema.parse(input); await requireRole("staff"); const result = await getCategoryService().save(values); refresh(); warmCatalog("category", result.id); return result; });
 }

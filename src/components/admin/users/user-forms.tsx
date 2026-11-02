@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
@@ -15,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { FormField } from "../common/form-field";
 
 export function CreateUserForm({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  const router = useRouter(), [error, setError] = useState("");
+  const [error, setError] = useState("");
   const form = useForm<z.output<typeof createUserSchema>>({ resolver: zodResolver(createUserSchema), defaultValues: { name: "", email: "", password: "", role: "staff" } });
   useUnsavedChanges(open && form.formState.isDirty);
   return <Dialog open={open} onOpenChange={(value) => { if (form.formState.isSubmitting) return; if (!value && form.formState.isDirty && !window.confirm("Bạn có thay đổi chưa lưu. Bạn muốn đóng?")) return; form.reset(); setError(""); onOpenChange(value); }}>
@@ -23,7 +22,7 @@ export function CreateUserForm({ open, onOpenChange }: { open: boolean; onOpenCh
       <form className="space-y-4" onSubmit={form.handleSubmit(async (values) => {
         setError(""); const result = await createUserAction(values);
         if (!result.ok) { setError(result.error.message); if (result.error.fields?.email) form.setError("email", { message: result.error.fields.email }); return; }
-        toast.success("Đã thêm tài khoản"); form.reset(); onOpenChange(false); router.refresh();
+        toast.success("Đã thêm tài khoản"); form.reset(); onOpenChange(false);
       })}>
         <FormField id="name" label="Họ và tên" autoComplete="off" {...form.register("name")} error={form.formState.errors.name?.message} />
         <FormField id="create-email" label="Email" type="email" autoComplete="off" {...form.register("email")} error={form.formState.errors.email?.message} />

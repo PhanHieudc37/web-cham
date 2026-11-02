@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/admin/common/intent-link";
 import { ShieldAlert } from "lucide-react";
 import { requireRolePage } from "@/server/auth/guards";
 

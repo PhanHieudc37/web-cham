@@ -1,17 +1,34 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { z } from "zod";
+import { z } from "zod";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { loginSchema } from "@/lib/validation/auth";
-import { safeAdminNext } from "@/lib/auth";
+import { hasRole, safeAdminNext } from "@/lib/auth";
 import { signInAction } from "@/server/actions/admin/auth";
 import { Button } from "@/components/ui/button";
 import { FormField } from "./common/form-field";
 
 const subscribe = () => () => undefined;
+const sessionSchema = z.object({ user: z.object({ role: z.string().nullish(), banned: z.boolean().nullish() }) }).nullable();
+
+export function LoginEntry() {
+  const next = safeAdminNext(useSearchParams().get("next"));
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/auth/get-session?disableCookieCache=true", { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10000)]) })
+      .then(async (response) => response.ok ? response.json() as Promise<unknown> : null)
+      .then((payload: unknown) => {
+        const result = sessionSchema.safeParse(payload);
+        if (!controller.signal.aborted && result.success && result.data && !result.data.user.banned && hasRole(result.data.user.role, "staff") && window.location.pathname === "/admin/login") window.location.replace(next);
+      }).catch(() => { /* Login remains available when this optional check fails. */ });
+    return () => controller.abort();
+  }, [next]);
+  return <LoginForm key={next} next={next} />;
+}
 
 export function LoginForm({ next }: { next: string }) {
   const hydrated = useSyncExternalStore(subscribe, () => true, () => false);

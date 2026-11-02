@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/admin/common/intent-link";
 import { formatPrice } from "@/lib/format";
 import type { DashboardDTO } from "@/types/order-admin";
 import { AdminImage } from "@/components/admin/common/admin-image";

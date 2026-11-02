@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/admin/common/intent-link";
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
 import { formatDateTime, formatPrice } from "@/lib/format";
 import type { OrderAdminListItemDTO } from "@/types/dto";

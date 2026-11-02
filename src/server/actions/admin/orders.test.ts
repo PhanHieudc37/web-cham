@@ -1,4 +1,5 @@
 import "server-only";
+vi.mock("@/server/admin-refresh", () => ({ refreshAdminPaths: vi.fn() }));
 import { beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ guard: vi.fn(), status: vi.fn(), paid: vi.fn(), refund: vi.fn(), shipping: vi.fn(), note: vi.fn(), detail: vi.fn(), notify: vi.fn(), invalidate: vi.fn(), callbacks: [] as (() => Promise<void>)[] }));
 vi.mock("next/server", () => ({ after: (callback: () => Promise<void>) => mocks.callbacks.push(callback) }));
