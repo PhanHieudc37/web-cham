@@ -2,6 +2,40 @@
 
 Ngân sách Phase 15: tối đa 4 deploy production; 15.0 không deploy.
 
+## Kết quả cuối — 02/11/2026
+
+Production **`d3ec07b`**, deploy #4 Ready **20:50:36 +07:00**. Giữ Netlify/Supabase Free; API xác nhận hạn mức 300, auto top-up false. Đã dùng **4/4 deploy**, không deploy các thử nghiệm font. Số dư Usage cuối chưa được cung cấp; **188/300 là mốc trước #3**, không phải số dư hiện tại. Chi phí bốn deploy thành công là 60 credit theo [bảng credit Netlify](https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/how-credits-work/); usage cộng thêm, xem [ước tính probe](DEPLOYMENT-FREE.md#trạng-thái-hiện-tại).
+
+Cùng Windows/Wi-Fi Việt Nam, 1 warm + 5 lượt/ca. Bảng sau là median; public dùng TTFB, admin dùng thời gian tới heading. Các lượt chậm và p90 nằm đầy đủ ở từng mốc bên dưới.
+
+| Ca / đơn vị ms | Baseline | Sau 15A | Sau 15B + 15C cuối |
+|---|---:|---:|---:|
+| Trang chủ — TTFB | 48 | 54 | 50 |
+| Danh mục — TTFB | 392 | 438 | 50 |
+| Tìm kiếm — TTFB | 342 | 370 | 52 |
+| Quote giỏ rỗng — nhận JSON | 955 | 314 | 365 |
+| Đăng nhập → tổng quan | 4919 | 1212 | 1476 |
+| Admin tổng quan | 2284 | 736 | 568 |
+| Admin đơn hàng | 2237 | 742 | 438 |
+| Admin sản phẩm | 2256 | 471 | 454 |
+| Back về danh sách | 23 | 13 | 14 |
+
+Public cuối TTFB median 50–52 ms và Edge HIT từ lượt sau. Admin reload ba trang đạt median <700/p90 <1200; Back 0 request. Login median đạt <1500, p90 2838 là một lượt chậm còn giữ. SELECT 1 cuối 1,81/16,66/3,88/77,15/3,31 ms, median **3,88 ms**.
+
+Chuyển menu đo riêng, chờ đúng heading và không cố đợi hover: tổng quan **712/1191 ms**, đơn **701/1197 ms**, sản phẩm **408/698 ms** (median/p90), mỗi lượt một RSC. Đã bỏ race 3 request của bản #3, nhưng hai median đầu vẫn vượt mục tiêu 700 ms; **chưa nghiệm thu mọi mục tiêu 15C**. Không so thời gian reload với click rồi gọi cả hai cùng một phép đo.
+
+| Menu — 1 warm rồi 5 lượt, ms làm tròn | Lượt 1 | Lượt 2 | Lượt 3 | Lượt 4 | Lượt 5 |
+|---|---:|---:|---:|---:|---:|
+| Tổng quan | 712 | 411 | 1191 | 432 | 1173 |
+| Đơn hàng | 1197 | 695 | 716 | 701 | 395 |
+| Sản phẩm | 698 | 408 | 398 | 389 | 419 |
+
+Document nguồn `/admin/messages` được mở mới mỗi lượt; viewport 1280×900, chờ hydration/heading nguồn, click link sidebar rồi chờ đúng heading đích, không cố chờ prefetch. Thời gian gồm thao tác Playwright và mạng, không phải riêng thời gian SQL. Các request cùng đích của mỗi lượt đều đúng một, `next-router-prefetch` không bật khi click nhanh.
+
+Lighthouse mobile cùng CLI 12.8.2/CPU 2×: trang chủ **96/100/100**, sản phẩm dev mẫu **91/100/100**; chưa giữ được mốc P=95 của sản phẩm Phase 12. Hai thử nghiệm font không cải thiện cả hai trang đã bỏ, giữ nguyên font gốc. Xem [toàn bộ batch và giới hạn 15D](PHASE-15D-REPORT.md).
+
+Không có sản phẩm/chi tiết đơn/form sản phẩm production để đo; chưa đo cold start kiểm soát 30 phút hoặc usage riêng một tuần. Keep-warm GitHub quan sát chạy trễ nhiều giờ, không bảo đảm function luôn ấm. Không thêm cron/dịch vụ/tài khoản bên ngoài trong phiên này. [Báo cáo 15C](PHASE-15C-REPORT.md) phân biệt kết quả đạt, chưa đạt và chưa đo.
+
 
 ## Baseline — Phase 15.0 — 2026-11-01 21:56:16 +07:00
 
@@ -104,6 +138,9 @@ Ngân sách Phase 15: tối đa 4 deploy production; 15.0 không deploy.
 |---|---|---|---|
 | — | 15.0 | `724c44a` và chuẩn bị `8c071c8`, dùng `[skip netlify]` | Không deploy |
 | #1 | 15A | `251cdbd`, deployment `6ae7562256127a90fa565c62` | Ready; đã dùng 1/4 |
+| #2 | 15B | `7da8d0c`, deployment `6ae768594df3675f2f0950d1` | Ready 01/11 23:27:59 +07; 2/4 |
+| #3 | 15C | `270d05c`, deployment `6ae88ac49550b5e6b0878430` | Ready 02/11 20:07:48 +07; 3/4 |
+| #4 | 15C sửa intent | `d3ec07b`, deployment `6ae894fc2b2f40deba388096` | Ready 02/11 20:50:36 +07; **4/4** |
 
 Giới hạn cả Phase 15 là 4 deploy production. Commit chỉ sửa tài liệu và công cụ đo dùng `[skip netlify]` để giữ lượt cho 15A/15B/15C.
 
@@ -409,3 +446,90 @@ Supabase connector xác minh `cham-stu-prod-us` Ohio và `cham-stu-dev` Tokyo đ
 | Admin — Back về danh sách đơn | 3 | — | — | 14 | 0 | — | — |
 | Admin — Back về danh sách đơn | 4 | — | — | 11 | 0 | — | — |
 | Admin — Back về danh sách đơn | 5 | — | — | 32 | 0 | — | — |
+
+## Sau Phase 15B + 15C — 2026-11-02 20:53:09 +07:00
+
+- Đo trực tiếp trên máy Windows của chủ shop tại Việt Nam; mạng: Wi-Fi; nhà mạng/VPN chưa xác minh (do chủ shop cung cấp). Không mô phỏng tốc độ/CPU. Chưa xác minh nhà mạng hoặc VPN.
+- Origin: https://chamstu.netlify.app; commit production: `d3ec07bcb83b61ab4539c7a7df77840a11c8165f`; Chromium 156.0.8078.4, headless, viewport 1280×720.
+- Credit Netlify: **188/300 còn lại trước deploy #3 do chủ shop xác nhận; sau deploy #4 chưa có số dư Usage mới**. Số production deploy đã dùng xem sổ triển khai theo từng mốc bên dưới; không suy đoán số dư từ số lần deploy.
+- Mỗi ca: 1 lượt làm ấm bỏ khỏi thống kê → 5 lượt tuần tự, dùng lại browser context/cache. Mỗi lượt đợi heading nội dung, đếm request ứng dụng tới 1 giây sau heading; không tính ảnh/file tĩnh/third-party. Prefetch/RSC và API cùng origin vẫn được tính.
+- TTFB điều hướng = responseStart − startTime của Navigation Timing; đăng nhập = TTFB POST Server Action của form login, nội dung = từ bấm Đăng nhập tới heading tổng quan. Back = thời gian từ thao tác Back tới heading danh sách, không ép reload; nếu không có response mạng thì TTFB/header là —. Quote = POST tới khi nhận JSON, không phải heading.
+- Trung vị = median; p90 dùng nearest-rank (với 5 lượt là giá trị lớn nhất). Đây là mẫu nhỏ khi đã làm ấm, không phải SLA, Lighthouse hoặc phép đo cold-start.
+- Chỉ đọc nghiệp vụ production. Login tạo phiên xác thực; quote vẫn ghi rate_limits theo hành vi hiện tại. Không tạo đơn/sản phẩm/tin nhắn; không xuất cookie, password, tên khách, mã đơn hoặc response body vào báo cáo.
+
+| Ca đo | TTFB median / p90 (ms) | Nội dung median / p90 (ms) | Request median / p90 | Kết quả |
+|---|---:|---:|---:|---|
+| Cửa hàng — trang chủ | 50 / 68 | 106 / 141 | 2 / 2 | 5/5 lượt |
+| Cửa hàng — danh mục | 50 / 52 | 111 / 143 | 2 / 2 | 5/5 lượt |
+| Cửa hàng — danh mục có bộ lọc | 51 / 57 | 114 / 135 | 2 / 2 | 5/5 lượt |
+| Cửa hàng — tìm kiếm | 52 / 352 | 111 / 412 | 3 / 3 | 5/5 lượt |
+| Cửa hàng — giới thiệu | 51 / 58 | 103 / 134 | 2 / 2 | 5/5 lượt |
+| Cửa hàng — sản phẩm | — / — | — / — | — / — | Không có sản phẩm public; không tạo dữ liệu giả |
+| Cửa hàng — quote giỏ rỗng | 365 / 454 | 365 / 454 | 1 / 1 | 5/5 lượt |
+| Admin — đăng nhập → tổng quan | 589 / 1382 | 1476 / 2838 | 2 / 2 | 5/5 lượt |
+| Admin — tổng quan | 417 / 589 | 568 / 955 | 1 / 1 | 5/5 lượt |
+| Admin — đơn hàng | 348 / 402 | 438 / 482 | 1 / 1 | 5/5 lượt |
+| Admin — sản phẩm | 390 / 439 | 454 / 513 | 1 / 1 | 5/5 lượt |
+| Admin — chi tiết đơn | — / — | — / — | — / — | Chưa có dữ liệu hiện hữu để đo |
+| Admin — form sản phẩm | — / — | — / — | — / — | Chưa có dữ liệu hiện hữu để đo |
+| Admin — Back về danh sách đơn | — / — | 14 / 16 | 0 / 0 | 5/5 lượt |
+
+### Từng lượt đo
+
+| Ca đo | Lượt | HTTP | TTFB (ms) | Nội dung (ms) | Request | Cache-Status | Age |
+|---|---:|---:|---:|---:|---:|---|---|
+| Cửa hàng — trang chủ | 1 | 200 | 50 | 114 | 2 | "Netlify Edge"; hit; ttl=3557 | 43 |
+| Cửa hàng — trang chủ | 2 | 200 | 50 | 101 | 2 | "Netlify Edge"; hit; ttl=3556 | 43 |
+| Cửa hàng — trang chủ | 3 | 200 | 49 | 99 | 2 | "Netlify Edge"; hit; ttl=3555 | 43 |
+| Cửa hàng — trang chủ | 4 | 200 | 68 | 141 | 2 | "Netlify Edge"; hit; ttl=3554 | 43 |
+| Cửa hàng — trang chủ | 5 | 200 | 52 | 106 | 2 | "Netlify Edge"; hit; ttl=3552 | 43 |
+| Cửa hàng — danh mục | 1 | 200 | 50 | 143 | 2 | "Netlify Edge"; hit; ttl=86377 | 22 |
+| Cửa hàng — danh mục | 2 | 200 | 50 | 109 | 2 | "Netlify Edge"; hit; ttl=86376 | 22 |
+| Cửa hàng — danh mục | 3 | 200 | 48 | 108 | 2 | "Netlify Edge"; hit; ttl=86375 | 22 |
+| Cửa hàng — danh mục | 4 | 200 | 52 | 114 | 2 | "Netlify Edge"; hit; ttl=86373 | 22 |
+| Cửa hàng — danh mục | 5 | 200 | 49 | 111 | 2 | "Netlify Edge"; hit; ttl=86372 | 22 |
+| Cửa hàng — danh mục có bộ lọc | 1 | 200 | 57 | 135 | 2 | "Netlify Edge"; hit; ttl=86370 | 29 |
+| Cửa hàng — danh mục có bộ lọc | 2 | 200 | 51 | 120 | 2 | "Netlify Edge"; hit; ttl=86369 | 29 |
+| Cửa hàng — danh mục có bộ lọc | 3 | 200 | 49 | 109 | 2 | "Netlify Edge"; hit; ttl=86368 | 29 |
+| Cửa hàng — danh mục có bộ lọc | 4 | 200 | 55 | 114 | 2 | "Netlify Edge"; hit; ttl=86367 | 29 |
+| Cửa hàng — danh mục có bộ lọc | 5 | 200 | 50 | 107 | 2 | "Netlify Edge"; hit; ttl=86365 | 29 |
+| Cửa hàng — tìm kiếm | 1 | 200 | 352 | 412 | 3 | "Next.js"; hit "Netlify Durable"; fwd=stale; ttl=-86482; stored "Netlify Edge"; fwd=stale; fwd-status=200; ttl=-86482; stored | 1 |
+| Cửa hàng — tìm kiếm | 2 | 200 | 52 | 117 | 3 | "Netlify Edge"; hit; ttl=86397 | 1 |
+| Cửa hàng — tìm kiếm | 3 | 200 | 49 | 104 | 3 | "Netlify Edge"; hit; ttl=86396 | 1 |
+| Cửa hàng — tìm kiếm | 4 | 200 | 52 | 106 | 3 | "Netlify Edge"; hit; ttl=86395 | 1 |
+| Cửa hàng — tìm kiếm | 5 | 200 | 51 | 111 | 3 | "Netlify Edge"; hit; ttl=86394 | 1 |
+| Cửa hàng — giới thiệu | 1 | 200 | 50 | 103 | 2 | "Netlify Edge"; hit; ttl=86357 | 41 |
+| Cửa hàng — giới thiệu | 2 | 200 | 48 | 103 | 2 | "Netlify Edge"; hit; ttl=86356 | 41 |
+| Cửa hàng — giới thiệu | 3 | 200 | 58 | 134 | 2 | "Netlify Edge"; hit; ttl=86355 | 41 |
+| Cửa hàng — giới thiệu | 4 | 200 | 51 | 101 | 2 | "Netlify Edge"; hit; ttl=86354 | 41 |
+| Cửa hàng — giới thiệu | 5 | 200 | 53 | 106 | 2 | "Netlify Edge"; hit; ttl=86353 | 41 |
+| Cửa hàng — quote giỏ rỗng | 1 | 200 | 313 | 313 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 1 |
+| Cửa hàng — quote giỏ rỗng | 2 | 200 | 365 | 365 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Cửa hàng — quote giỏ rỗng | 3 | 200 | 454 | 454 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 2 |
+| Cửa hàng — quote giỏ rỗng | 4 | 200 | 369 | 371 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Cửa hàng — quote giỏ rỗng | 5 | 200 | 316 | 316 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Admin — đăng nhập → tổng quan | 1 | 200 | 576 | 1476 | 2 | "Next.js"; hit, "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 1 |
+| Admin — đăng nhập → tổng quan | 2 | 200 | 589 | 1250 | 2 | "Next.js"; hit, "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 1 |
+| Admin — đăng nhập → tổng quan | 3 | 200 | 570 | 1494 | 2 | "Next.js"; hit, "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Admin — đăng nhập → tổng quan | 4 | 200 | 1382 | 2838 | 2 | "Next.js"; hit, "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 3 |
+| Admin — đăng nhập → tổng quan | 5 | 200 | 639 | 1167 | 2 | "Next.js"; hit, "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 1 |
+| Admin — tổng quan | 1 | 200 | 395 | 465 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Admin — tổng quan | 2 | 200 | 417 | 493 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 1 |
+| Admin — tổng quan | 3 | 200 | 421 | 568 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Admin — tổng quan | 4 | 200 | 589 | 955 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Admin — tổng quan | 5 | 200 | 371 | 753 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 1 |
+| Admin — đơn hàng | 1 | 200 | 402 | 482 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Admin — đơn hàng | 2 | 200 | 337 | 413 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Admin — đơn hàng | 3 | 200 | 347 | 438 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Admin — đơn hàng | 4 | 200 | 364 | 447 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Admin — đơn hàng | 5 | 200 | 348 | 430 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Admin — sản phẩm | 1 | 200 | 402 | 469 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 1 |
+| Admin — sản phẩm | 2 | 200 | 369 | 452 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Admin — sản phẩm | 3 | 200 | 390 | 454 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 1 |
+| Admin — sản phẩm | 4 | 200 | 365 | 432 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 0 |
+| Admin — sản phẩm | 5 | 200 | 439 | 513 | 1 | "Netlify Durable"; fwd=bypass, "Netlify Edge"; fwd=miss; fwd-status=200 | 1 |
+| Admin — Back về danh sách đơn | 1 | — | — | 14 | 0 | — | — |
+| Admin — Back về danh sách đơn | 2 | — | — | 13 | 0 | — | — |
+| Admin — Back về danh sách đơn | 3 | — | — | 16 | 0 | — | — |
+| Admin — Back về danh sách đơn | 4 | — | — | 12 | 0 | — | — |
+| Admin — Back về danh sách đơn | 5 | — | — | 14 | 0 | — | — |

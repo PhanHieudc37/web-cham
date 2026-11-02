@@ -2,7 +2,7 @@
 
 Website cửa hàng và trang quản trị, phát triển theo từng phase trong [docs/PLAN.md](docs/PLAN.md).
 
-Hiện tại: **Phase 0–12 đã triển khai trên dev/test**, gồm storefront/giỏ/checkout/tra cứu/liên hệ, quản trị, SEO và kiểm thử production local. Web chạy tại [chamstu.netlify.app](https://chamstu.netlify.app), admin tại [/admin/login](https://chamstu.netlify.app/admin/login). Production Supabase ở Ohio cùng Netlify Functions, dev Tokyo; Singapore cũ pause. Chưa nghiệm thu đơn thật hoặc mở email cho khách. Xem [báo cáo hiệu năng](docs/PERFORMANCE-REPORT.md).
+Hiện tại: **Phase 0–12 đã triển khai trên dev/test**, gồm storefront/giỏ/checkout/tra cứu/liên hệ, quản trị, SEO và kiểm thử production local. Web chạy tại [chamstu.netlify.app](https://chamstu.netlify.app), admin tại [/admin/login](https://chamstu.netlify.app/admin/login). Production Supabase ở Ohio cùng Netlify Functions, dev Tokyo; Singapore cũ pause. Chưa nghiệm thu đơn thật hoặc mở email cho khách. Đã deploy tối ưu 15A/B/C và hoàn tất báo cáo 15D; còn các tiêu chí đo chưa đạt/chưa đủ dữ liệu, xem [báo cáo hiệu năng](docs/PERFORMANCE-REPORT.md) và [nghiệm thu 15D](docs/PHASE-15D-REPORT.md).
 
 Code công khai tại [PhanHieudc37/web-cham](https://github.com/PhanHieudc37/web-cham), nhánh `main`.
 
