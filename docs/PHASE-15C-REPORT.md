@@ -1,6 +1,6 @@
 # Phase 15C — Tăng tốc trang quản trị
 
-Nghiệm thu local ngày 02/11/2026, tiếp tục sau 15B theo yêu cầu tối ưu trên gói Free. Lint/typecheck/231 test/build và 60 E2E liên quan pass. Chờ deploy 15C; Phase 15 hiện đã dùng 2/4 production deploy. Không đổi env Netlify/project Supabase, không thêm thư viện hoặc migration.
+Triển khai ngày 02/11/2026, tiếp tục sau 15B theo yêu cầu tối ưu trên gói Free. Lint/typecheck/231 test/build và 60 E2E liên quan pass. Commit `270d05cee7f593d3d63afd23799e7cd0ce3de023`, deploy #3 `6ae88ac49550b5e6b0878430` Ready lúc **20:07:48 +07:00**; Phase 15 đã dùng **3/4 production deploy**. Không đổi env Netlify/project Supabase, không thêm thư viện hoặc migration.
 
 ## Đã triển khai ở local
 
@@ -23,6 +23,23 @@ Nghiệm thu local ngày 02/11/2026, tiếp tục sau 15B theo yêu cầu tối 
 - Hồi quy đơn hàng gồm 6 ca đầu và ca phân quyền/404 chạy lại sau sửa. Kiểm tra catalog dùng ảnh test trên dev Storage tách production và dọn cuối bộ test; xác minh ảnh gốc 1920×480 còn nguyên, thumbnail lazy lấy qua `/_next/image` với width ≤192 thay vì tải ảnh gốc cho ô nhỏ. Đã xem screenshot 375/768/1280px, không tràn ngang.
 - Sau sửa QR, các assertion content đều qua nhưng lần chạy đó fail tại cleanup Storage dev do lỗi kết nối (có cả một timeout ảnh upstream). Đã đối chiếu hai object với row `Banner kiểm thử` trong DB `_test`, xóa đúng hai path này thành công, không đụng ảnh shop. Chạy lại toàn bộ content trước nghiệm thu; không che lỗi bằng bỏ cleanup.
 - Lần chạy lại content 7/7 pass, cleanup thành công. Hồi quy lọc thấy quote giỏ nền trong cửa sổ đo; controller giỏ có debounce 300 ms sau hydration và refresh khi focus, không phụ thuộc query bộ lọc. Sửa bộ test chờ response quote ban đầu trước cửa sổ đo, vẫn giữ kiểm tra không có request nào trong toàn bộ lượt lọc/tìm; không loại route quote khỏi bộ đếm hoặc sửa hành vi app để test qua.
-- Hồi quy phân quyền/khóa tài khoản, luồng đơn/ảnh/form đã pass. Cần deploy #3, đo cùng Wi-Fi trên production và kiểm tra hosting. Không tạo dữ liệu giả trên production để đo chi tiết đơn/form sản phẩm; hai ca đó sẽ ghi N/A nếu vẫn chưa có dữ liệu thật.
+- Hồi quy phân quyền/khóa tài khoản, luồng đơn/ảnh/form đã pass. `production:check` pass: 20 bảng RLS, 0 policy public, 1 admin active, không sample, bucket đúng, email tắt theo lựa chọn Free. Quét 478 file source và 76 artifact client build: 0 giá trị secret thật. Còn đo cùng Wi-Fi trên production và kiểm tra hosting. Không tạo dữ liệu giả trên production để đo chi tiết đơn/form sản phẩm; hai ca đó sẽ ghi N/A nếu vẫn chưa có dữ liệu thật.
 - Tiêu chí cold start sau 30 phút và tiêu thụ keep-warm một tuần chưa có phép đo kiểm soát; không suy ra từ các lượt warm. Chủ shop xác nhận **còn 188/300 credit** ngày 02/11/2026 trước deploy #3; so với mốc 221 trước 15A đã tiêu khoảng 33 credit, gồm hai deploy (30 credit) và usage khác. Không coi 188 là số dư sau 15C.
 - Đọc GitHub API ngày 02/11: keep-warm active, các run schedule gần nhất đều success nhưng thời điểm UTC 01:28 → 05:42 → 09:23 cách nhau nhiều giờ dù cron cấu hình 5 phút. Vì vậy không được báo function “luôn ấm” hoặc suy ra tiêu thụ thực từ 9.360 request lý thuyết. Chưa tự thêm cron bên ngoài/tài khoản mới.
+
+## Kiểm tra sau deploy #3
+
+- `/api/health` đúng SHA `270d05c`, no-store. Năm lượt SELECT 1: **112,66 / 2,47 / 2,62 / 59,50 / 2,31 ms**, trung vị **2,62 ms**, đạt mục tiêu trung vị <10 ms; giữ cả hai lượt chậm trong báo cáo.
+- [Workflow warm sau deploy](https://github.com/PhanHieudc37/web-cham/actions/runs/41450078501), job `125292827903`, tất cả step success, gồm đợi SHA và warm sitemap. Không tự suy ra Edge HIT ở Việt Nam chỉ từ job chạy tại Mỹ.
+- Hosting read-only: 18 trang công khai và 9 lượt admin ở 375/768/1280px pass, không tràn ngang/page error/viewport prefetch. Guard, GET session no-store, URL UUID sai 404, redirect phiên có sẵn đều pass; script ban đầu chọn heading exact thiếu số lượng sản phẩm nên phải sửa selector, không sửa app để qua smoke.
+- Mốc đo `final` lúc 20:11:05 vẫn là **deploy #3**: public TTFB median 46–48 ms; admin reload tổng quan/đơn/sản phẩm median 712/484/450 ms, p90 1191/513/478 ms; login median 1363 ms, p90 1677 ms; Back 14 ms, p90 32 ms và 0 request. Tổng quan reload chưa đạt ngưỡng median 700 ms.
+
+## Bản sửa điều hướng sau phép đo #3 — đang kiểm tra local
+
+Đo riêng click menu từ document `/admin/messages` mới, không cố ý chờ hover, 1 warm + 5 lượt: tổng quan/đơn/sản phẩm median **1187/1201/1099 ms**, p90 **1213/1478/1132 ms**, mỗi lượt có **3 RSC request** tới cùng đích. Đây là kết quả chưa đạt, không thay thế hoặc bỏ khỏi bảng reload ở trên. Script đầu chưa chờ đúng tên heading đích (chỉ chờ h1); thời gian này không dùng để nghiệm thu, nhưng log request trùng xác nhận vấn đề cần sửa.
+
+Đã đọc guide và implementation Next 16.4.3 đang cài: `router.prefetch()` mặc định AUTO/PPR, khác Full. Thử public `<Link prefetch={true}>` sau intent: tree trả xong nhưng full dynamic stream chưa kết thúc sau 120 giây trong E2E, nên **bỏ thử nghiệm, không deploy**. Không import `PrefetchKind` nội bộ hoặc ép kiểu để vượt type. Chờ riêng tree response không đồng nghĩa đã tải dữ liệu xong.
+
+Bản sửa đang kiểm tra giữ `prefetch={false}` và `router.prefetch` như plan, nhưng chờ intent ổn định **150 ms**. Click, mouse leave, blur hoặc unmount hủy lịch chưa chạy; fast click chỉ điều hướng, không đua với prefetch vừa khởi tạo. Hover/focus/touch giữ lâu vẫn prefetch loading boundary, tối đa một lượt/link/30 giây. Test mới đo số RSC của click nhanh và sau hover, không cố đợi full private stream để cho qua. Chưa dùng deploy #4 tới khi kiểm tra này và các check bắt buộc pass.
+
+Nghiệm thu bản sửa lúc 20:36 ngày 02/11: admin-performance **4/4 pass**, click nhanh đúng một RSC, sau hover không có hơn một request bổ sung; 375/768/1280px và optimistic rollback pass. **Lint/typecheck/231 test/build đều pass**. Chưa thay số đo hosting #3 bằng kết quả local này.

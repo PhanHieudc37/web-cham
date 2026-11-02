@@ -36,8 +36,20 @@ for (const width of [375, 768, 1280]) test(`static login, intent prefetch, optim
   const prefetches: string[] = []; page.on("request", (request) => { if (request.headers()["next-router-prefetch"]) prefetches.push(request.url()); });
   await login(page); await page.waitForLoadState("networkidle"); await page.waitForTimeout(500); expect(prefetches).toEqual([]);
   if (width === 1280) {
-    const prefetched = page.waitForRequest((request) => Boolean(request.headers()["next-router-prefetch"]) && new URL(request.url()).pathname === "/admin/products");
-    await page.locator('aside a[href="/admin/products"]').hover(); await prefetched;
+    const productRequests: string[] = [];
+    page.on("request", (request) => { if (new URL(request.url()).pathname === "/admin/products" && request.headers().rsc === "1") productRequests.push(request.url()); });
+    const link = page.locator('aside a[href="/admin/products"]');
+    await link.click(); await expect(page.locator("main h1")).toContainText("Sản phẩm");
+    await page.waitForTimeout(500); expect(productRequests).toHaveLength(1);
+    await page.mouse.move(width - 1, 899); await page.goto("/admin/orders"); productRequests.length = 0;
+    const prefetched = page.waitForResponse((response) => Boolean(response.request().headers()["next-router-prefetch"]) && new URL(response.url()).pathname === "/admin/products");
+    await link.hover(); await (await prefetched).finished();
+    await page.waitForLoadState("networkidle");
+    const prefetchedRequests = productRequests.length;
+    expect(prefetchedRequests).toBeGreaterThan(0);
+    await link.click(); await expect(page.locator("main h1")).toContainText("Sản phẩm");
+    await page.waitForTimeout(500); expect(productRequests.length - prefetchedRequests).toBeLessThanOrEqual(1);
+    await page.mouse.move(width - 1, 899); await page.goto("/admin/orders");
   }
   await page.getByRole("link", { name: data.code, exact: true }).filter({ visible: true }).click();
   await page.getByRole("button", { name: "Xác nhận đơn", exact: true }).click();

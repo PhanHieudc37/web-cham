@@ -419,7 +419,7 @@ Sau sửa admin, `warmPaths` chạy trong `after`, chỉ path public theo whitel
 
 Phase 15C: `readAuthorizedPage` chạy lượt đọc độc lập song song với guard nhưng không để dữ liệu/lỗi đọc vượt guard; action ghi vẫn validate → quyền → service. Tổng quan/doanh thu và tài khoản chờ role/actor trước lượt đọc phụ thuộc. `readDatabasePage` lấy tổng và phân trang một snapshot, xếp hạng ID trước để không dựng ảnh/JSON cho toàn bộ danh sách.
 
-`experimental.staleTimes` giữ Router Cache trong trình duyệt 30 giây (dynamic và explicit prefetch); không thêm Data Cache/CDN cache cho dữ liệu admin. Link admin tắt viewport prefetch, chỉ tải trước khi hover/focus/touch. Mọi mutation làm mới path liên quan; thay đơn/tin còn làm mới layout chứa badge. Optimistic UI chỉ là phản hồi tạm, dùng DTO server/revalidation khi thành công và hoàn tác/toast khi lỗi. Đăng nhập/đăng xuất mở document mới để không tái sử dụng payload của tài khoản trước.
+`experimental.staleTimes` giữ Router Cache trong trình duyệt 30 giây (dynamic và explicit prefetch); không thêm Data Cache/CDN cache cho dữ liệu admin. Link admin tắt viewport prefetch, chỉ tải trước khi hover/focus/touch giữ 150 ms; click nhanh/rời link/blur hủy lịch đang chờ để không đua request điều hướng. Mọi mutation làm mới path liên quan; thay đơn/tin còn làm mới layout chứa badge. Optimistic UI chỉ là phản hồi tạm, dùng DTO server/revalidation khi thành công và hoàn tác/toast khi lỗi. Đăng nhập/đăng xuất mở document mới để không tái sử dụng payload của tài khoản trước.
 
   | Chức năng | staff | admin |
   |---|---|---|
